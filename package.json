@@ -1,0 +1,37 @@
+{
+  "name": "calendar-booking-api",
+  "version": "1.0.0",
+  "description": "Calendar Call Booking API - TypeSpec specification for Hexlet educational project",
+  "type": "module",
+  "scripts": {
+    "build": "tsp compile main.tsp --emit @typespec/openapi3",
+    "compile": "tsp compile main.tsp",
+    "format": "tsp format \"**/*.tsp\"",
+    "format:check": "tsp format \"**/*.tsp\" --check",
+    "validate": "tsp compile main.tsp --no-emit",
+    "clean": "rm -rf tsp-output/"
+  },
+  "dependencies": {
+    "@typespec/compiler": "^0.63.0",
+    "@typespec/http": "^0.63.0",
+    "@typespec/rest": "^0.63.0",
+    "@typespec/openapi3": "^0.63.0"
+  },
+  "devDependencies": {
+    "@typespec/prettier-plugin-typespec": "^0.63.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true,
+  "keywords": [
+    "typespec",
+    "openapi",
+    "api",
+    "calendar",
+    "booking",
+    "hexlet"
+  ],
+  "author": "",
+  "license": "ISC"
+}
