@@ -3,6 +3,7 @@ export { Booking, CreateBookingRequest, CancelBookingRequest } from './model/boo
 export {
   currentBookingAtom,
   bookingErrorAtom,
+  isBookingSuccessAtom,
   fetchBooking,
   createBooking,
   cancelBooking,

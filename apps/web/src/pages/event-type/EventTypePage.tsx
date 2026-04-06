@@ -35,7 +35,7 @@ export const EventTypePage = reatomComponent(({ params }: EventTypePageProps) =>
 
   useEffect(() => {
     if (id) {
-      fetchEventTypeById(id);
+      wrap(fetchEventTypeById(id));
     }
   }, [id]);
 

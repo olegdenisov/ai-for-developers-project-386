@@ -10,6 +10,9 @@ export const currentBookingAtom = atom<Booking | null>(null, 'currentBooking');
 // Atom to store booking creation error
 export const bookingErrorAtom = atom<string | null>(null, 'bookingError');
 
+// Atom to track booking success state
+export const isBookingSuccessAtom = atom<boolean>(false, 'isBookingSuccess');
+
 // Async action to fetch a booking by ID
 export const fetchBooking = action(async (id: string) => {
   const response = await wrap(api.getBooking(id));
@@ -24,6 +27,7 @@ export const fetchBooking = action(async (id: string) => {
 // Async action to create a booking
 export const createBooking = action(async (data: CreateBookingRequest) => {
   bookingErrorAtom.set(null);
+  isBookingSuccessAtom.set(false);
   
   const response = await wrap(api.createBooking(data));
   
@@ -36,6 +40,7 @@ export const createBooking = action(async (data: CreateBookingRequest) => {
   
   const booking = await wrap(response.json());
   currentBookingAtom.set(booking);
+  isBookingSuccessAtom.set(true);
   return booking;
 }, 'createBooking').extend(withAsync());
 
@@ -54,6 +59,7 @@ export const cancelBooking = action(async (id: string, reason?: string) => {
 export const clearCurrentBooking = action(() => {
   currentBookingAtom.set(null);
   bookingErrorAtom.set(null);
+  isBookingSuccessAtom.set(false);
 }, 'clearCurrentBooking');
 
 // Computed: check if operations are pending

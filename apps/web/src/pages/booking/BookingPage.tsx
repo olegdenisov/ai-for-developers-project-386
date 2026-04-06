@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAtom } from '@reatom/jsx';
 import { wrap, reatomComponent } from '@reatom/core';
 import {
@@ -20,6 +19,7 @@ import {
   createBooking,
   currentBookingAtom,
   bookingErrorAtom,
+  isBookingSuccessAtom,
 } from '@entities/booking';
 import { bookingFormSchema, BookingFormData } from '@features/create-booking';
 import { navigate } from '@app/router/routes';
@@ -27,12 +27,11 @@ import { Layout, ErrorMessage, LoadingSpinner } from '@shared/ui';
 import { formatDateTime } from '@shared/lib';
 
 export const BookingPage = reatomComponent(() => {
-  const [isSuccess, setIsSuccess] = useState(false);
-  
   const eventType = useAtom(selectedEventTypeAtom);
   const slot = useAtom(selectedSlotAtom);
   const booking = useAtom(currentBookingAtom);
   const error = useAtom(bookingErrorAtom);
+  const isSuccess = useAtom(isBookingSuccessAtom);
   const isSubmitting = createBooking.pending();
 
   const form = useForm<BookingFormData>({
@@ -53,7 +52,6 @@ export const BookingPage = reatomComponent(() => {
           slotId: slot.id,
           ...values,
         });
-      setIsSuccess(true);
     } catch (err) {
       // Error is handled by the atom
     }

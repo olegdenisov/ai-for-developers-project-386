@@ -1,4 +1,4 @@
-import { reatomRouter } from '@reatom/core';
+import { reatomRouter } from '@reatom/url';
 
 // Route definitions
 export const router = reatomRouter({

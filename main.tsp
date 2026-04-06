@@ -6,10 +6,9 @@ using TypeSpec.Http;
 using TypeSpec.Rest;
 using TypeSpec.OpenAPI;
 
-@service({
-  title: "Calendar Call Booking API",
-  version: "1.0.0",
-})
+// Service metadata will be added manually to generated OpenAPI
+@server("https://api.calendar-booking.example.com", "Production server")
+@server("http://localhost:3000", "Development server")
 @server("https://api.calendar-booking.example.com", "Production server")
 @server("http://localhost:3000", "Development server")
 namespace CalendarBooking;
@@ -61,10 +60,10 @@ model EventType {
   @maxValue(480)
   durationMinutes: int32;
 
-  @visibility("read")
+  /** Автоматически генерируемая метка времени создания */
   createdAt: utcDateTime;
 
-  @visibility("read")
+  /** Автоматически генерируемая метка времени обновления */
   updatedAt: utcDateTime;
 }
 
@@ -90,7 +89,7 @@ model Slot {
   /** Опциональная ссылка на тип события, если слот привязан к конкретному типу */
   eventTypeId?: string;
 
-  @visibility("read")
+  /** Автоматически генерируемая метка времени создания */
   createdAt: utcDateTime;
 }
 
@@ -125,10 +124,10 @@ model Booking {
   /** Статус бронирования */
   status: BookingStatus;
 
-  @visibility("read")
+  /** Автоматически генерируемая метка времени создания */
   createdAt: utcDateTime;
 
-  @visibility("read")
+  /** Автоматически генерируемая метка времени обновления */
   updatedAt: utcDateTime;
 }
 
