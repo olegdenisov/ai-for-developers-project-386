@@ -6,5 +6,5 @@ export {
   updateFormField,
   setFormErrors,
   clearForm,
-} from './model/bookingForm.atom';
-export { submitBookingForm } from './model/createBooking.action';
+  submitBookingForm,
+} from './model/model';

@@ -5,4 +5,4 @@ export {
   selectDate,
   changeCalendarView,
   calendarLoadingAtom,
-} from './model/slotCalendar.atom';
+} from './model/model';
