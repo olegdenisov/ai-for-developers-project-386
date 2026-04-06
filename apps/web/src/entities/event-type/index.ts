@@ -1,5 +1,5 @@
 // Public API for event-type entity
-export type { EventType, CreateEventTypeRequest, UpdateEventTypeRequest } from './model/event-type.types';
+export type { EventType, CreateEventTypeRequest, UpdateEventTypeRequest } from './model/types';
 export {
   eventTypesAtom,
   selectedEventTypeAtom,
@@ -7,4 +7,4 @@ export {
   fetchEventTypeById,
   isFetchingEventTypes,
   isFetchingEventType,
-} from './model/event-type.atom';
+} from './model/model';

@@ -1,6 +1,6 @@
 import { atom, action, wrap, withAsync, computed } from '@reatom/core';
 import { PublicApi } from '@calendar-booking/api-client';
-import { EventType } from './event-type.types';
+import { EventType } from './types';
 
 const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 

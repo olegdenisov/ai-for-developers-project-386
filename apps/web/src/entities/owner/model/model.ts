@@ -1,5 +1,5 @@
 import { atom, action, wrap, withAsync, computed } from '@reatom/core';
-import { Owner } from './owner.types';
+import { Owner } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 

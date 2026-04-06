@@ -1,5 +1,5 @@
 // Public API for slot entity
-export type { Slot, SlotWithBooking } from './model/slot.types';
+export type { Slot, SlotWithBooking } from './model/types';
 export {
   availableSlotsAtom,
   selectedSlotAtom,
@@ -8,4 +8,4 @@ export {
   selectSlot,
   clearSelectedSlot,
   isFetchingSlots,
-} from './model/slot.atom';
+} from './model/model';

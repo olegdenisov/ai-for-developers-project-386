@@ -1,6 +1,6 @@
 import { atom, action, wrap, withAsync, computed } from '@reatom/core';
 import { PublicApi } from '@calendar-booking/api-client';
-import { Booking, CreateBookingRequest } from './booking.types';
+import { Booking, CreateBookingRequest } from './types';
 
 const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
@@ -28,16 +28,16 @@ export const fetchBooking = action(async (id: string) => {
 export const createBooking = action(async (data: CreateBookingRequest) => {
   bookingErrorAtom.set(null);
   isBookingSuccessAtom.set(false);
-  
+
   const response = await wrap(api.createBooking(data));
-  
+
   if (!response.ok) {
     const error = await wrap(response.json());
     const errorMessage = error.message || 'Failed to create booking';
     bookingErrorAtom.set(errorMessage);
     throw new Error(errorMessage);
   }
-  
+
   const booking = await wrap(response.json());
   currentBookingAtom.set(booking);
   isBookingSuccessAtom.set(true);
