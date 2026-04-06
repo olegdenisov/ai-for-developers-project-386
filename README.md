@@ -43,6 +43,37 @@ pnpm db:seed
 
 ### Разработка
 
+#### Три режима разработки
+
+| Режим | Команда | Запущенные сервисы | Когда использовать |
+|-------|---------|-------------------|------------------|
+| **Моки** | `pnpm dev:mock` | Prism (3100) + Web (5173) | Разработка UI без бэкенда |
+| **Полный** | `pnpm docker:up` | Postgres + API + Web | Интеграционное тестирование |
+| **Turbo** | `pnpm dev` | API + Web (через turbo) | Разработка с реальным API |
+
+#### Разработка с моками (Prism)
+
+Для изолированной разработки фронтенда без запущенного API и БД:
+
+```bash
+# Запуск Prism mock-сервера и фронтенда одной командой
+pnpm dev:mock
+
+# Или пошагово:
+pnpm mock:up                    # Запуск Prism на порту 3100
+cd apps/web && pnpm dev --mode mock  # Запуск Vite с .env.mock
+
+# Остановка
+pnpm mock:down
+```
+
+**Принцип работы:**
+- Prism генерирует моки на основе OpenAPI спецификации (`tsp-output/openapi.json`)
+- Фронтенд обращается к `http://localhost:3100` вместо реального API
+- При изменении `main.tsp` → `pnpm generate:openapi` → Prism автоматически подхватывает новую спецификацию
+
+#### Разработка с реальным API
+
 ```bash
 # Запуск всех сервисов в режиме разработки
 pnpm dev
@@ -109,6 +140,7 @@ docker-compose -f docker/docker-compose.yml up -d postgres
 - **pnpm** - Package manager
 - **TypeSpec** - API спецификация
 - **Docker** - Контейнеризация
+- **Prism** - Mock сервер для разработки (на основе OpenAPI)
 
 ## 📋 API Endpoints
 
@@ -201,16 +233,38 @@ apps/web/src/
 
 ## 📦 Скрипты
 
+### Основные
+
 | Скрипт | Описание |
 |--------|----------|
 | `pnpm dev` | Запуск всех сервисов в dev режиме |
+| `pnpm dev:mock` | Разработка с Prism моками (Web + Mock API) |
 | `pnpm build` | Сборка всех пакетов |
 | `pnpm generate:all` | Генерация типов и API клиента |
+
+### База данных
+
+| Скрипт | Описание |
+|--------|----------|
 | `pnpm db:migrate` | Prisma миграции |
 | `pnpm db:seed` | Seed базы данных |
 | `pnpm db:studio` | Prisma Studio |
-| `pnpm docker:up` | Запуск Docker |
-| `pnpm docker:down` | Остановка Docker |
+
+### Docker (полный стек)
+
+| Скрипт | Описание |
+|--------|----------|
+| `pnpm docker:up` | Запуск PostgreSQL + API + Web |
+| `pnpm docker:down` | Остановка всех сервисов |
+| `pnpm docker:logs` | Просмотр логов |
+
+### Mock сервер (Prism)
+
+| Скрипт | Описание |
+|--------|----------|
+| `pnpm mock:up` | Запуск Prism mock-сервера на порту 3100 |
+| `pnpm mock:down` | Остановка mock-сервера |
+| `pnpm mock:logs` | Просмотр логов Prism |
 
 ## 🔧 Environment Variables
 
@@ -222,9 +276,18 @@ WEB_URL=http://localhost:5173
 ```
 
 ### Frontend (`apps/web/.env`)
+
 ```
 VITE_API_URL=http://localhost:3000
 ```
+
+### Frontend для моков (`apps/web/.env.mock`)
+
+```
+VITE_API_URL=http://localhost:3100
+```
+
+> При запуске с `pnpm dev:mock` Vite автоматически использует `.env.mock` вместо стандартного `.env`
 
 ## 📄 Лицензия
 
