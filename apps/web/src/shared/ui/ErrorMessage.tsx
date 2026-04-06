@@ -1,5 +1,5 @@
 import { Alert } from '@mantine/core';
-import { IconAlertCircle } from '@mantine/icons';
+import { IconAlertCircle } from '@tabler/icons-react';
 
 interface ErrorMessageProps {
   message: string;

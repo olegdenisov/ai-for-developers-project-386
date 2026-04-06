@@ -28,5 +28,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // Vite 8: используется Rolldown вместо Rollup
+    // rolldownOptions доступен для тонкой настройки
   },
+  // Vite 8: Oxc используется для трансформации вместо esbuild
+  // JSX автоматически обрабатывается через @vitejs/plugin-react
+  clearScreen: false,
+  cacheDir: '../../node_modules/.vite/web',
 });

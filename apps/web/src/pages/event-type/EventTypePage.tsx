@@ -3,7 +3,7 @@ import { useAtom } from '@reatom/jsx';
 import { wrap, reatomComponent } from '@reatom/core';
 import { Container, Title, Text, Button, Stack, Group, Card, Radio, Badge } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
-import { IconArrowLeft, IconClock } from '@mantine/icons';
+import { IconArrowLeft, IconClock } from '@tabler/icons-react';
 import { selectedEventTypeAtom, fetchEventTypeById } from '@entities/event-type';
 import { availableSlotsAtom, selectedSlotAtom, selectSlot } from '@entities/slot';
 import { selectDate, selectedDateAtom, calendarLoadingAtom } from '@features/view-slots';

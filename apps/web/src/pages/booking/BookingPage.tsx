@@ -11,8 +11,7 @@ import {
   Textarea,
   Group,
 } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { zodResolver } from 'mantine-form-zod-resolver';
+import { useForm, zodResolver } from '@mantine/form';
 import { selectedEventTypeAtom } from '@entities/event-type';
 import { selectedSlotAtom } from '@entities/slot';
 import {

@@ -1,7 +1,7 @@
 import { useAtom } from '@reatom/jsx';
 import { reatomComponent } from '@reatom/core';
 import { Container, Title, Text, SimpleGrid, Card, Badge, Stack, Button } from '@mantine/core';
-import { IconClock } from '@mantine/icons';
+import { IconClock } from '@tabler/icons-react';
 import { eventTypesAtom, fetchEventTypes, selectedEventTypeAtom } from '@entities/event-type';
 import { Layout } from '@shared/ui';
 
