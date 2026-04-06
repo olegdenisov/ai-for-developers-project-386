@@ -7,8 +7,7 @@ using TypeSpec.Rest;
 using TypeSpec.OpenAPI;
 
 // Service metadata will be added manually to generated OpenAPI
-@server("https://api.calendar-booking.example.com", "Production server")
-@server("http://localhost:3000", "Development server")
+@service
 @server("https://api.calendar-booking.example.com", "Production server")
 @server("http://localhost:3000", "Development server")
 namespace CalendarBooking;

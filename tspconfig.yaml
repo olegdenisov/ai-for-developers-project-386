@@ -1,0 +1,9 @@
+emit:
+  - "@typespec/openapi3"
+
+options:
+  "@typespec/openapi3":
+    # Выходной файл в формате JSON
+    output-file: openapi.json
+    # Директория для выходного файла относительно корня проекта
+    emitter-output-dir: "{project-root}/tsp-output"

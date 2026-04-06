@@ -74,6 +74,34 @@ pnpm docker:down      # Stop all services
 pnpm docker:logs      # Follow logs
 ```
 
+### Mock Development Commands (Prism)
+
+Разработка фронтенда с изолированными моками (без запуска API и БД):
+
+```bash
+# Запуск Prism mock-сервера и фронтенда
+pnpm dev:mock         # Запускает Prism (3100) + Web dev server (5173)
+
+# Управление mock-сервером отдельно
+pnpm mock:up          # Запуск Prism mock-сервера
+pnpm mock:down        # Остановка Prism mock-сервера
+pnpm mock:logs        # Логи Prism mock-сервера
+```
+
+**Принцип работы:**
+- Prism запускается на порту 3100 и генерирует моки на основе OpenAPI спецификации
+- Vite в режиме `mock` загружает переменные из `apps/web/.env.mock`
+- Фронтенд обращается к `http://localhost:3100` вместо реального API
+- При изменении `main.tsp` → `pnpm generate:all` → Prism автоматически подхватывает новую спецификацию
+
+**Режимы разработки:**
+
+| Режим | Команда | Запущенные сервисы |
+|-------|---------|-------------------|
+| Моки | `pnpm dev:mock` | Prism (3100) + Web (5173) |
+| Полный | `pnpm docker:up` | Postgres + API + Web |
+| Turbo | `pnpm dev` | API + Web (через turbo) |
+
 ## Code Style Guidelines
 
 ### Module System
