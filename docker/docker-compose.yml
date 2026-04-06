@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: calendar-postgres
+    environment:
+      POSTGRES_USER: calendar
+      POSTGRES_PASSWORD: calendar
+      POSTGRES_DB: calendar_booking
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calendar"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-network
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+      target: development
+    container_name: calendar-api
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://calendar:calendar@postgres:5432/calendar_booking
+      PORT: 3000
+      WEB_URL: http://localhost:5173
+    volumes:
+      - ../apps/api:/app
+      - /app/node_modules
+      - /app/prisma/generated
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate dev && npm run dev"
+    networks:
+      - calendar-network
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+      target: development
+    container_name: calendar-web
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+    volumes:
+      - ../apps/web:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - calendar-network
+
+volumes:
+  postgres_data:
+
+networks:
+  calendar-network:
+    driver: bridge

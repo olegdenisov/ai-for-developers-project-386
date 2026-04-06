@@ -1,37 +1,39 @@
 {
-  "name": "calendar-booking-api",
+  "name": "calendar-booking",
   "version": "1.0.0",
-  "description": "Calendar Call Booking API - TypeSpec specification for Hexlet educational project",
-  "type": "module",
+  "private": true,
+  "description": "Calendar Booking System - Turborepo monorepo with Fastify, React, and TypeSpec",
   "scripts": {
-    "build": "tsp compile main.tsp --emit @typespec/openapi3",
-    "compile": "tsp compile main.tsp",
-    "format": "tsp format \"**/*.tsp\"",
-    "format:check": "tsp format \"**/*.tsp\" --check",
-    "validate": "tsp compile main.tsp --no-emit",
-    "clean": "rm -rf tsp-output/"
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "generate:openapi": "tsp compile main.tsp --emit @typespec/openapi3",
+    "generate:types": "openapi-typescript tsp-output/openapi.json -o packages/shared-types/src/index.ts --makePathsEnum",
+    "generate:client": "openapi-generator-cli generate -g typescript-fetch -i tsp-output/openapi.json -o packages/api-client/src --additional-properties=supportsES6=true,npmName=@calendar-booking/api-client,withInterfaces=true",
+    "generate:all": "npm run generate:openapi && npm run generate:types && npm run generate:client",
+    "db:migrate": "turbo run db:migrate",
+    "db:generate": "turbo run db:generate",
+    "db:seed": "turbo run db:seed",
+    "db:studio": "turbo run db:studio",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down",
+    "docker:logs": "docker-compose -f docker/docker-compose.yml logs -f",
+    "type-check": "turbo run type-check"
   },
-  "dependencies": {
+  "devDependencies": {
     "@typespec/compiler": "^0.63.0",
     "@typespec/http": "^0.63.0",
     "@typespec/rest": "^0.63.0",
-    "@typespec/openapi3": "^0.63.0"
-  },
-  "devDependencies": {
-    "@typespec/prettier-plugin-typespec": "^0.63.0"
+    "@typespec/openapi3": "^0.63.0",
+    "@openapitools/openapi-generator-cli": "^2.15.0",
+    "openapi-typescript": "^7.4.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24.0.0",
+    "pnpm": ">=9.0.0"
   },
-  "private": true,
-  "keywords": [
-    "typespec",
-    "openapi",
-    "api",
-    "calendar",
-    "booking",
-    "hexlet"
-  ],
-  "author": "",
-  "license": "ISC"
+  "packageManager": "pnpm@9.0.0"
 }
