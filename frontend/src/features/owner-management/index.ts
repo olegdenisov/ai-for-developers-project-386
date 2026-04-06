@@ -1,0 +1,1 @@
+export { OwnerManagement } from './ui/OwnerManagement';

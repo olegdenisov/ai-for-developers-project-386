@@ -1,6 +1,6 @@
 import { Container, Title, Text, Button } from '@mantine/core';
 
-function App() {
+export function HomePage() {
   return (
     <Container size="lg" py="xl">
       <Title order={1} ta="center" mb="md">
@@ -20,5 +20,3 @@ function App() {
     </Container>
   );
 }
-
-export default App;
