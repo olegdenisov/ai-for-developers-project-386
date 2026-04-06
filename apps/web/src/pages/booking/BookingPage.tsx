@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAtom } from '@reatom/jsx';
+import { wrap, reatomComponent } from '@reatom/core';
 import {
   Container,
   Title,
@@ -25,14 +26,14 @@ import { navigate } from '@app/router/routes';
 import { Layout, ErrorMessage, LoadingSpinner } from '@shared/ui';
 import { formatDateTime } from '@shared/lib';
 
-export function BookingPage() {
+export const BookingPage = reatomComponent(() => {
   const [isSuccess, setIsSuccess] = useState(false);
   
   const eventType = useAtom(selectedEventTypeAtom);
   const slot = useAtom(selectedSlotAtom);
   const booking = useAtom(currentBookingAtom);
   const error = useAtom(bookingErrorAtom);
-  const isSubmitting = useAtom(createBooking.pendingAtom);
+  const isSubmitting = createBooking.pending();
 
   const form = useForm<BookingFormData>({
     initialValues: {
@@ -43,23 +44,20 @@ export function BookingPage() {
     validate: zodResolver(bookingFormSchema),
   });
 
-  const handleSubmit = async (values: BookingFormData) => {
+  const handleSubmit = wrap(async (values: BookingFormData) => {
     if (!eventType || !slot) return;
 
     try {
-      await createBooking(
-        {},
-        {
+      await createBooking({
           eventTypeId: eventType.id,
           slotId: slot.id,
           ...values,
-        }
-      );
+        });
       setIsSuccess(true);
     } catch (err) {
       // Error is handled by the atom
     }
-  };
+  });
 
   const handleBackHome = () => {
     navigate.home();
@@ -159,4 +157,4 @@ export function BookingPage() {
       </form>
     </Layout>
   );
-}
+}, 'BookingPage');

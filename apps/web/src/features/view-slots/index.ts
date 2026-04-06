@@ -2,7 +2,7 @@
 export {
   calendarViewDateAtom,
   selectedDateAtom,
-  calendarLoadingAtom,
   selectDate,
   changeCalendarView,
+  calendarLoadingAtom,
 } from './model/slotCalendar.atom';

@@ -5,4 +5,6 @@ export {
   selectedEventTypeAtom,
   fetchEventTypes,
   fetchEventTypeById,
+  isFetchingEventTypes,
+  isFetchingEventType,
 } from './model/event-type.atom';

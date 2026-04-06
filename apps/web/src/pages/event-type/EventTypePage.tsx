@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useAtom } from '@reatom/jsx';
+import { wrap, reatomComponent } from '@reatom/core';
 import { Container, Title, Text, Button, Stack, Group, Card, Radio, Badge } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { IconArrowLeft, IconClock } from '@mantine/icons';
@@ -23,39 +24,39 @@ function formatDuration(minutes: number): string {
   return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
 }
 
-export function EventTypePage({ params }: EventTypePageProps) {
+export const EventTypePage = reatomComponent(({ params }: EventTypePageProps) => {
   const { id } = params;
   const eventType = useAtom(selectedEventTypeAtom);
   const slots = useAtom(availableSlotsAtom);
   const selectedSlot = useAtom(selectedSlotAtom);
   const selectedDate = useAtom(selectedDateAtom);
   const isLoading = useAtom(calendarLoadingAtom);
-  const isFetching = useAtom(fetchEventTypeById.pendingAtom);
+  const isFetching = fetchEventTypeById.pending();
 
   useEffect(() => {
     if (id) {
-      fetchEventTypeById({}, id);
+      fetchEventTypeById(id);
     }
   }, [id]);
 
   useEffect(() => {
     if (id && selectedDate) {
-      selectDate({}, selectedDate, id);
+      selectDate(selectedDate, id);
     }
   }, [id, selectedDate]);
 
-  const handleDateSelect = (date: Date | null) => {
+  const handleDateSelect = wrap((date: Date | null) => {
     if (date && id) {
-      selectDate({}, date, id);
+      selectDate(date, id);
     }
-  };
+  });
 
-  const handleSlotSelect = (slotId: string) => {
+  const handleSlotSelect = wrap((slotId: string) => {
     const slot = slots.find((s) => s.id === slotId);
     if (slot) {
-      selectSlot({}, slot);
+      selectSlot(slot);
     }
-  };
+  });
 
   const handleContinue = () => {
     if (selectedSlot && id) {
@@ -162,4 +163,4 @@ export function EventTypePage({ params }: EventTypePageProps) {
       </Stack>
     </Layout>
   );
-}
+}, 'EventTypePage');

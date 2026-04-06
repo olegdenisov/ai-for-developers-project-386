@@ -1,5 +1,4 @@
-import { atom } from '@reatom/core';
-import { reatomAsync } from '@reatom/async';
+import { atom, action, wrap, withAsync, computed } from '@reatom/core';
 import { PublicApi } from '@calendar-booking/api-client';
 import { Booking, CreateBookingRequest } from './booking.types';
 
@@ -12,56 +11,60 @@ export const currentBookingAtom = atom<Booking | null>(null, 'currentBooking');
 export const bookingErrorAtom = atom<string | null>(null, 'bookingError');
 
 // Async action to fetch a booking by ID
-export const fetchBooking = reatomAsync(
-  async (ctx, id: string) => {
-    const response = await api.getBooking(id);
-    if (!response.ok) {
-      throw new Error('Failed to fetch booking');
-    }
-    const booking = await response.json();
-    currentBookingAtom(ctx, booking);
-    return booking;
-  },
-  'fetchBooking'
-);
+export const fetchBooking = action(async (id: string) => {
+  const response = await wrap(api.getBooking(id));
+  if (!response.ok) {
+    throw new Error('Failed to fetch booking');
+  }
+  const booking = await wrap(response.json());
+  currentBookingAtom.set(booking);
+  return booking;
+}, 'fetchBooking').extend(withAsync());
 
 // Async action to create a booking
-export const createBooking = reatomAsync(
-  async (ctx, data: CreateBookingRequest) => {
-    bookingErrorAtom(ctx, null);
-    
-    const response = await api.createBooking(data);
-    
-    if (!response.ok) {
-      const error = await response.json();
-      const errorMessage = error.message || 'Failed to create booking';
-      bookingErrorAtom(ctx, errorMessage);
-      throw new Error(errorMessage);
-    }
-    
-    const booking = await response.json();
-    currentBookingAtom(ctx, booking);
-    return booking;
-  },
-  'createBooking'
-);
+export const createBooking = action(async (data: CreateBookingRequest) => {
+  bookingErrorAtom.set(null);
+  
+  const response = await wrap(api.createBooking(data));
+  
+  if (!response.ok) {
+    const error = await wrap(response.json());
+    const errorMessage = error.message || 'Failed to create booking';
+    bookingErrorAtom.set(errorMessage);
+    throw new Error(errorMessage);
+  }
+  
+  const booking = await wrap(response.json());
+  currentBookingAtom.set(booking);
+  return booking;
+}, 'createBooking').extend(withAsync());
 
 // Async action to cancel a booking
-export const cancelBooking = reatomAsync(
-  async (ctx, id: string, reason?: string) => {
-    const response = await api.cancelBooking(id, reason);
-    if (!response.ok) {
-      throw new Error('Failed to cancel booking');
-    }
-    const booking = await response.json();
-    currentBookingAtom(ctx, booking);
-    return booking;
-  },
-  'cancelBooking'
-);
+export const cancelBooking = action(async (id: string, reason?: string) => {
+  const response = await wrap(api.cancelBooking(id, reason));
+  if (!response.ok) {
+    throw new Error('Failed to cancel booking');
+  }
+  const booking = await wrap(response.json());
+  currentBookingAtom.set(booking);
+  return booking;
+}, 'cancelBooking').extend(withAsync());
 
 // Action to clear current booking
-export const clearCurrentBooking = (ctx: any) => {
-  currentBookingAtom(ctx, null);
-  bookingErrorAtom(ctx, null);
-};
+export const clearCurrentBooking = action(() => {
+  currentBookingAtom.set(null);
+  bookingErrorAtom.set(null);
+}, 'clearCurrentBooking');
+
+// Computed: check if operations are pending
+export const isFetchingBooking = computed(() => {
+  return fetchBooking.pending();
+}, 'isFetchingBooking');
+
+export const isCreatingBooking = computed(() => {
+  return createBooking.pending();
+}, 'isCreatingBooking');
+
+export const isCancellingBooking = computed(() => {
+  return cancelBooking.pending();
+}, 'isCancellingBooking');

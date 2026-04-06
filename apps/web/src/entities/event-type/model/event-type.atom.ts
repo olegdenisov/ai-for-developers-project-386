@@ -1,5 +1,4 @@
-import { atom } from '@reatom/core';
-import { reatomAsync } from '@reatom/async';
+import { atom, action, wrap, withAsync, computed } from '@reatom/core';
 import { PublicApi } from '@calendar-booking/api-client';
 import { EventType } from './event-type.types';
 
@@ -12,35 +11,33 @@ export const eventTypesAtom = atom<EventType[]>([], 'eventTypes');
 export const selectedEventTypeAtom = atom<EventType | null>(null, 'selectedEventType');
 
 // Async action to fetch all public event types
-export const fetchEventTypes = reatomAsync(
-  async (ctx) => {
-    const response = await api.listPublicEventTypes();
-    if (!response.ok) {
-      throw new Error('Failed to fetch event types');
-    }
-    const data = await response.json();
-    const eventTypes = data.eventTypes || [];
-    eventTypesAtom(ctx, eventTypes);
-    return eventTypes;
-  },
-  'fetchEventTypes'
-);
-
-// Auto-fetch on connect
-fetchEventTypes.onConnect((ctx) => {
-  fetchEventTypes(ctx);
-});
+export const fetchEventTypes = action(async () => {
+  const response = await wrap(api.listPublicEventTypes());
+  if (!response.ok) {
+    throw new Error('Failed to fetch event types');
+  }
+  const data = await wrap(response.json());
+  const eventTypes = data.eventTypes || [];
+  eventTypesAtom.set(eventTypes);
+  return eventTypes;
+}, 'fetchEventTypes').extend(withAsync());
 
 // Async action to fetch a single event type by ID
-export const fetchEventTypeById = reatomAsync(
-  async (ctx, id: string) => {
-    const response = await api.getPublicEventType(id);
-    if (!response.ok) {
-      throw new Error('Failed to fetch event type');
-    }
-    const eventType = await response.json();
-    selectedEventTypeAtom(ctx, eventType);
-    return eventType;
-  },
-  'fetchEventTypeById'
-);
+export const fetchEventTypeById = action(async (id: string) => {
+  const response = await wrap(api.getPublicEventType(id));
+  if (!response.ok) {
+    throw new Error('Failed to fetch event type');
+  }
+  const eventType = await wrap(response.json());
+  selectedEventTypeAtom.set(eventType);
+  return eventType;
+}, 'fetchEventTypeById').extend(withAsync());
+
+// Computed: check if currently fetching
+export const isFetchingEventTypes = computed(() => {
+  return fetchEventTypes.pending();
+}, 'isFetchingEventTypes');
+
+export const isFetchingEventType = computed(() => {
+  return fetchEventTypeById.pending();
+}, 'isFetchingEventType');

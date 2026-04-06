@@ -1,7 +1,6 @@
-import { atom } from '@reatom/core';
-import { reatomAsync } from '@reatom/async';
+import { atom, action, wrap, withAsync, computed } from '@reatom/core';
 import { PublicApi } from '@calendar-booking/api-client';
-import { Slot, SlotWithBooking } from './slot.types';
+import { Slot } from './slot.types';
 
 const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
@@ -18,48 +17,39 @@ export const slotsDateRangeAtom = atom<{ startDate: string; endDate: string } | 
 );
 
 // Async action to fetch available slots for an event type
-export const fetchAvailableSlots = reatomAsync(
-  async (ctx, params: { eventTypeId: string; startDate: string; endDate: string }) => {
-    slotsDateRangeAtom(ctx, { startDate: params.startDate, endDate: params.endDate });
-    
-    const response = await api.getAvailableSlotsForEventType(
-      params.eventTypeId,
-      params.startDate,
-      params.endDate
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch available slots');
-    }
-    
-    const slots = await response.json();
-    availableSlotsAtom(ctx, slots);
-    return slots;
-  },
-  'fetchAvailableSlots'
-);
-
-// Async action to fetch a single slot by ID
-export const fetchSlotById = reatomAsync(
-  async (ctx, id: string) => {
-    // Note: This endpoint doesn't exist in the public API, 
-    // we'll need to find the slot from available slots
-    const slots = availableSlotsAtom(ctx);
-    const slot = slots.find((s) => s.id === id);
-    if (slot) {
-      selectedSlotAtom(ctx, slot);
-    }
-    return slot;
-  },
-  'fetchSlotById'
-);
+export const fetchAvailableSlots = action(async (params: { 
+  eventTypeId: string; 
+  startDate: string; 
+  endDate: string;
+}) => {
+  slotsDateRangeAtom.set({ startDate: params.startDate, endDate: params.endDate });
+  
+  const response = await wrap(api.getAvailableSlotsForEventType(
+    params.eventTypeId,
+    params.startDate,
+    params.endDate
+  ));
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch available slots');
+  }
+  
+  const slots = await wrap(response.json());
+  availableSlotsAtom.set(slots);
+  return slots;
+}, 'fetchAvailableSlots').extend(withAsync());
 
 // Action to select a slot
-export const selectSlot = (ctx: any, slot: Slot) => {
-  selectedSlotAtom(ctx, slot);
-};
+export const selectSlot = action((slot: Slot) => {
+  selectedSlotAtom.set(slot);
+}, 'selectSlot');
 
 // Action to clear selected slot
-export const clearSelectedSlot = (ctx: any) => {
-  selectedSlotAtom(ctx, null);
-};
+export const clearSelectedSlot = action(() => {
+  selectedSlotAtom.set(null);
+}, 'clearSelectedSlot');
+
+// Computed: check if fetching slots
+export const isFetchingSlots = computed(() => {
+  return fetchAvailableSlots.pending();
+}, 'isFetchingSlots');

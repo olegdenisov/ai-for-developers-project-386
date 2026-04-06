@@ -1,9 +1,9 @@
 import { useAtom } from '@reatom/jsx';
+import { reatomComponent } from '@reatom/core';
 import { Container, Title, Text, SimpleGrid, Card, Badge, Stack, Button } from '@mantine/core';
 import { IconClock } from '@mantine/icons';
 import { eventTypesAtom, fetchEventTypes, selectedEventTypeAtom } from '@entities/event-type';
 import { Layout } from '@shared/ui';
-import { formatDuration } from '@shared/lib';
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) {
@@ -14,9 +14,9 @@ function formatDuration(minutes: number): string {
   return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
 }
 
-export function HomePage() {
+export const HomePage = reatomComponent(() => {
   const eventTypes = useAtom(eventTypesAtom);
-  const isLoading = useAtom(fetchEventTypes.pendingAtom);
+  const isLoading = fetchEventTypes.pending();
 
   const handleSelectEventType = (id: string) => {
     // Navigation will be implemented with router
@@ -47,7 +47,7 @@ export function HomePage() {
                 <Title order={3} size="h4">
                   {eventType.name}
                 </Title>
-                
+
                 {eventType.description && (
                   <Text size="sm" c="dimmed" lineClamp={2}>
                     {eventType.description}
@@ -64,4 +64,4 @@ export function HomePage() {
       )}
     </Layout>
   );
-}
+}, 'HomePage');

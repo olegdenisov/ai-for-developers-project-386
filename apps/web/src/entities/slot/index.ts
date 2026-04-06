@@ -5,7 +5,7 @@ export {
   selectedSlotAtom,
   slotsDateRangeAtom,
   fetchAvailableSlots,
-  fetchSlotById,
   selectSlot,
   clearSelectedSlot,
+  isFetchingSlots,
 } from './model/slot.atom';

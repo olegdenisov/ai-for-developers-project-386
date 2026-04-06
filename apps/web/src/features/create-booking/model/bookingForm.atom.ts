@@ -1,4 +1,4 @@
-import { atom } from '@reatom/core';
+import { atom, action, computed } from '@reatom/core';
 import { BookingFormData } from './validation';
 
 // Form state atom
@@ -13,37 +13,25 @@ export const formErrorsAtom = atom<Partial<Record<keyof BookingFormData, string>
   'formErrors'
 );
 
-// Form submission state
-export const isSubmittingAtom = atom(false, 'isSubmitting');
-
-// Actions to update form fields
-export const updateFormField = (
-  ctx: any,
-  field: keyof BookingFormData,
-  value: string
-) => {
-  const current = bookingFormAtom(ctx);
-  bookingFormAtom(ctx, { ...current, [field]: value });
+// Action to update form field
+export const updateFormField = action((field: keyof BookingFormData, value: string) => {
+  const current = bookingFormAtom();
+  bookingFormAtom.set({ ...current, [field]: value });
   
   // Clear error for this field when user types
-  const currentErrors = formErrorsAtom(ctx);
+  const currentErrors = formErrorsAtom();
   if (currentErrors[field]) {
-    formErrorsAtom(ctx, { ...currentErrors, [field]: undefined });
+    formErrorsAtom.set({ ...currentErrors, [field]: undefined });
   }
-};
+}, 'updateFormField');
 
-export const setFormErrors = (
-  ctx: any,
-  errors: Partial<Record<keyof BookingFormData, string>>
-) => {
-  formErrorsAtom(ctx, errors);
-};
+// Action to set form errors
+export const setFormErrors = action((errors: Partial<Record<keyof BookingFormData, string>>) => {
+  formErrorsAtom.set(errors);
+}, 'setFormErrors');
 
-export const clearForm = (ctx: any) => {
-  bookingFormAtom(ctx, { guestName: '', guestEmail: '', guestNotes: '' });
-  formErrorsAtom(ctx, {});
-};
-
-export const setSubmitting = (ctx: any, value: boolean) => {
-  isSubmittingAtom(ctx, value);
-};
+// Action to clear form
+export const clearForm = action(() => {
+  bookingFormAtom.set({ guestName: '', guestEmail: '', guestNotes: '' });
+  formErrorsAtom.set({});
+}, 'clearForm');

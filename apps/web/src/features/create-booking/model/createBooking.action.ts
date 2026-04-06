@@ -1,52 +1,48 @@
-import { reatomAsync } from '@reatom/async';
+import { action, wrap, withAsync } from '@reatom/core';
 import { createBooking as createBookingEntity } from '@entities/booking';
 import { selectedSlotAtom } from '@entities/slot';
 import { selectedEventTypeAtom } from '@entities/event-type';
-import { bookingFormAtom, formErrorsAtom, setSubmitting, clearForm } from './bookingForm.atom';
+import { bookingFormAtom, setFormErrors, clearForm } from './bookingForm.atom';
 import { validateBookingForm } from './validation';
 
 // Combined action to create booking with form validation
-export const submitBookingForm = reatomAsync(
-  async (ctx) => {
-    const formData = bookingFormAtom(ctx);
-    const slot = selectedSlotAtom(ctx);
-    const eventType = selectedEventTypeAtom(ctx);
+export const submitBookingForm = action(async () => {
+  const formData = bookingFormAtom();
+  const slot = selectedSlotAtom();
+  const eventType = selectedEventTypeAtom();
 
-    // Validate form
-    const validation = validateBookingForm(formData);
-    if (!validation.success) {
-      const errors: Record<string, string> = {};
-      validation.error.errors.forEach((err) => {
-        const field = err.path[0] as string;
-        errors[field] = err.message;
-      });
-      formErrorsAtom(ctx, errors);
-      throw new Error('Validation failed');
-    }
+  // Validate form
+  const validation = validateBookingForm(formData);
+  if (!validation.success) {
+    const errors: Record<string, string> = {};
+    validation.error.errors.forEach((err) => {
+      const field = err.path[0] as string;
+      errors[field] = err.message;
+    });
+    setFormErrors(errors);
+    throw new Error('Validation failed');
+  }
 
-    // Check prerequisites
-    if (!slot || !eventType) {
-      throw new Error('Please select an event type and time slot');
-    }
+  // Check prerequisites
+  if (!slot || !eventType) {
+    throw new Error('Please select an event type and time slot');
+  }
 
-    setSubmitting(ctx, true);
+  try {
+    const booking = await wrap(createBookingEntity({
+      eventTypeId: eventType.id,
+      slotId: slot.id,
+      guestName: formData.guestName!,
+      guestEmail: formData.guestEmail!,
+      guestNotes: formData.guestNotes,
+    }));
 
-    try {
-      const booking = await createBookingEntity(ctx, {
-        eventTypeId: eventType.id,
-        slotId: slot.id,
-        guestName: formData.guestName!,
-        guestEmail: formData.guestEmail!,
-        guestNotes: formData.guestNotes,
-      });
+    // Clear form after successful submission
+    clearForm();
 
-      // Clear form after successful submission
-      clearForm(ctx);
-
-      return booking;
-    } finally {
-      setSubmitting(ctx, false);
-    }
-  },
-  'submitBookingForm'
-);
+    return booking;
+  } catch (error) {
+    // Error is already handled in createBooking entity
+    throw error;
+  }
+}, 'submitBookingForm').extend(withAsync());
