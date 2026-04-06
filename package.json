@@ -1,37 +1,32 @@
 {
-  "name": "calendar-booking-api",
+  "name": "calendar-booking-monorepo",
   "version": "1.0.0",
-  "description": "Calendar Call Booking API - TypeSpec specification for Hexlet educational project",
-  "type": "module",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "build": "tsp compile main.tsp --emit @typespec/openapi3",
-    "compile": "tsp compile main.tsp",
-    "format": "tsp format \"**/*.tsp\"",
-    "format:check": "tsp format \"**/*.tsp\" --check",
-    "validate": "tsp compile main.tsp --no-emit",
-    "clean": "rm -rf tsp-output/"
-  },
-  "dependencies": {
-    "@typespec/compiler": "^0.63.0",
-    "@typespec/http": "^0.63.0",
-    "@typespec/rest": "^0.63.0",
-    "@typespec/openapi3": "^0.63.0"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "npm run format:backend && npm run format:frontend",
+    "format:backend": "cd backend && npm run format",
+    "format:frontend": "cd frontend && npm run format",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm run test",
+    "test:frontend": "cd frontend && npm run test"
   },
   "devDependencies": {
-    "@typespec/prettier-plugin-typespec": "^0.63.0"
+    "concurrently": "^8.2.2"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "private": true,
-  "keywords": [
-    "typespec",
-    "openapi",
-    "api",
-    "calendar",
-    "booking",
-    "hexlet"
-  ],
-  "author": "",
-  "license": "ISC"
+  }
 }
