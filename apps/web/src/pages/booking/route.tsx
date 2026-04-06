@@ -1,8 +1,8 @@
-import { reatomRoute, wrap, action, atom } from '@reatom/core';
+import { wrap, action, atom } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { PublicApi } from '@calendar-booking/api-client';
 import { BookingPage } from './BookingPage';
-import { bookingFormSchema, type BookingFormData } from '@features/create-booking';
+import type { BookingFormData } from '@features/create-booking';
 import type { Booking } from '@entities/booking';
 import type { EventType } from '@entities/event-type';
 import type { Slot } from '@entities/slot';
@@ -10,40 +10,47 @@ import type { Slot } from '@entities/slot';
 const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 // ============================================
-// BOOKING CONTEXT ATOMS (for passing data between routes)
+// BOOKING CONTEXT ATOMS
 // ============================================
 
 /**
- * Atom to store selected event type for booking
- * Set by EventTypePage when user selects a slot and continues
+ * Atom для хранения выбранного типа события при бронировании
+ * Устанавливается EventTypePage когда пользователь выбирает слот
  */
 export const bookingEventTypeAtom = atom<EventType | null>(null, 'bookingEventType');
 
 /**
- * Atom to store selected slot for booking
+ * Atom для хранения выбранного слота при бронировании
  */
 export const bookingSlotAtom = atom<Slot | null>(null, 'bookingSlot');
 
 // ============================================
-// BOOKING ROUTE
+// BOOKING ROUTE DEFINITION
 // ============================================
 
 /**
- * Booking route - displays booking form and handles submission
- * Path: /bookings/new
+ * Тип для self параметра в render функции
  */
-export const bookingRoute = reatomRoute({
-  path: '/bookings/new',
+interface RouteSelf {
+  (): { eventType: EventType; slot: Slot } | null;
+  status: () => { isPending: boolean; error: Error | null };
+}
+
+/**
+ * Определение booking route для использования с layoutRoute.reatomRoute()
+ * Путь: 'bookings/new'
+ */
+export const bookingRouteDefinition = {
+  path: 'bookings/new',
   
   /**
-   * Params function checks if required data is available
-   * Redirects back to home if no event type or slot selected
+   * Params function проверяет наличие необходимых данных
+   * Возвращает null если не выбран event type или slot
    */
   params() {
     const eventType = bookingEventTypeAtom();
     const slot = bookingSlotAtom();
     
-    // Block route if required data is missing
     if (!eventType || !slot) {
       return null;
     }
@@ -52,9 +59,9 @@ export const bookingRoute = reatomRoute({
   },
   
   /**
-   * Render function returns React component
+   * Render function возвращает React компонент
    */
-  render(self): RouteChild {
+  render(self: RouteSelf): RouteChild {
     const params = self();
     
     if (!params) {
@@ -74,15 +81,15 @@ export const bookingRoute = reatomRoute({
       />
     );
   },
-});
+};
 
 // ============================================
 // BOOKING SUBMISSION ACTION
 // ============================================
 
 /**
- * Action to submit booking form
- * Called from BookingPage component
+ * Action для отправки формы бронирования
+ * Вызывается из компонента BookingPage
  */
 export const submitBooking = action(async (formData: BookingFormData) => {
   const eventType = bookingEventTypeAtom();
@@ -107,7 +114,7 @@ export const submitBooking = action(async (formData: BookingFormData) => {
   
   const booking: Booking = await wrap(response.json());
   
-  // Clear booking context after successful creation
+  // Очищаем контекст бронирования после успешного создания
   bookingEventTypeAtom.set(null);
   bookingSlotAtom.set(null);
   
@@ -118,4 +125,4 @@ export const submitBooking = action(async (formData: BookingFormData) => {
 // EXPORTS
 // ============================================
 
-export type BookingRoute = typeof bookingRoute;
+export type BookingRouteDefinition = typeof bookingRouteDefinition;

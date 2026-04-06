@@ -1,26 +1,37 @@
-import { reatomRoute, wrap } from '@reatom/core';
+import { wrap } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { PublicApi } from '@calendar-booking/api-client';
 import { HomePage } from './HomePage';
+import type { EventType } from '@entities/event-type';
 
 const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 // ============================================
-// HOME ROUTE
+// HOME ROUTE DEFINITION
 // ============================================
 
 /**
- * Home route - displays list of available event types
- * Path: /
+ * Тип для self параметра в render функции
  */
-export const homeRoute = reatomRoute({
-  path: '/',
+interface RouteSelf {
+  loader: {
+    pending: () => boolean;
+    data: () => EventType[] | null;
+    error: () => Error | null;
+  };
+}
+
+/**
+ * Определение home route для использования с layoutRoute.reatomRoute()
+ * Путь: '' (корневой путь относительно layout)
+ */
+export const homeRouteDefinition = {
+  path: '',
   
   /**
-   * Loader fetches event types when route is matched
-   * Returns array of event types
+   * Loader загружает список доступных типов событий
    */
-  async loader() {
+  async loader(): Promise<EventType[]> {
     const response = await wrap(api.listPublicEventTypes());
     if (!response.ok) {
       throw new Error('Failed to fetch event types');
@@ -30,11 +41,12 @@ export const homeRoute = reatomRoute({
   },
   
   /**
-   * Render function returns React component
-   * Receives route self with access to loader data
+   * Render function возвращает React компонент
    */
-  render(self): RouteChild {
-    const { isPending, data: eventTypes, error } = self.status();
+  render(self: RouteSelf): RouteChild {
+    const isPending = self.loader.pending();
+    const eventTypes = self.loader.data();
+    const error = self.loader.error();
     
     return (
       <HomePage 
@@ -44,10 +56,10 @@ export const homeRoute = reatomRoute({
       />
     );
   },
-});
+};
 
 // ============================================
 // EXPORTS
 // ============================================
 
-export type HomeRoute = typeof homeRoute;
+export type HomeRouteDefinition = typeof homeRouteDefinition;

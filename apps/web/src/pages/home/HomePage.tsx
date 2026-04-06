@@ -1,7 +1,7 @@
 import { reatomComponent } from '@reatom/react';
 import { Container, Title, Text, SimpleGrid, Card, Badge, Stack } from '@mantine/core';
 import { IconClock } from '@tabler/icons-react';
-import { eventTypeRoute } from '@pages/event-type/route';
+import { navigate } from '@app/router';
 import { Layout } from '@shared/ui';
 import type { EventType } from '@entities/event-type';
 
@@ -34,8 +34,8 @@ function formatDuration(minutes: number): string {
 
 export const HomePage = reatomComponent(({ eventTypes, isLoading, error }: HomePageProps) => {
   const handleSelectEventType = (id: string) => {
-    // Navigate to event type page using route
-    eventTypeRoute.go({ id });
+    // Переходим на страницу типа события
+    navigate.eventType(id);
   };
 
   if (error) {

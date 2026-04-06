@@ -1,7 +1,7 @@
 export { EventTypePage } from './EventTypePage';
 export { 
-  eventTypeRoute, 
+  eventTypeRouteDefinition, 
   selectedDateForRoute, 
   slotsForDate,
-  type EventTypeRoute 
+  type EventTypeRouteDefinition 
 } from './route';

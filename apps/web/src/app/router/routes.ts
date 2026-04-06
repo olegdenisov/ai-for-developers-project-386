@@ -1,17 +1,52 @@
-import { computed } from '@reatom/core';
-import { homeRoute } from '@pages/home';
-import { eventTypeRoute } from '@pages/event-type';
-import { bookingRoute } from '@pages/booking';
+import { computed, reatomRoute } from '@reatom/core';
+import type { RouteChild } from '@reatom/core';
+import { homeRouteDefinition } from '@pages/home/route';
+import { eventTypeRouteDefinition } from '@pages/event-type/route';
+import { bookingRouteDefinition } from '@pages/booking/route';
 
 // ============================================
-// ROUTE REGISTRY
+// LAYOUT ROUTE
 // ============================================
 
 /**
- * All routes are automatically registered in urlAtom.routes
- * We just re-export them here for convenience
+ * Тип для outlet функции
  */
-export { homeRoute, eventTypeRoute, bookingRoute };
+interface LayoutOutlet {
+  outlet: () => RouteChild;
+}
+
+/**
+ * Корневой layout-маршрут без пути
+ * Все остальные маршруты являются вложенными (nested)
+ * Рендерит outlet для отображения активных дочерних маршрутов
+ */
+export const layoutRoute = reatomRoute({
+  render({ outlet }: LayoutOutlet): RouteChild {
+    return outlet();
+  },
+});
+
+// ============================================
+// NESTED ROUTES
+// ============================================
+
+/**
+ * Home route - главная страница со списком типов событий
+ * Путь: /
+ */
+export const homeRoute = layoutRoute.reatomRoute(homeRouteDefinition);
+
+/**
+ * Event type route - страница типа события с доступными слотами
+ * Путь: /event-types/:id
+ */
+export const eventTypeRoute = layoutRoute.reatomRoute(eventTypeRouteDefinition);
+
+/**
+ * Booking route - страница бронирования
+ * Путь: /bookings/new
+ */
+export const bookingRoute = layoutRoute.reatomRoute(bookingRouteDefinition);
 
 // ============================================
 // NAVIGATION HELPERS
@@ -34,13 +69,13 @@ export const navigate = {
 
 /**
  * Main app render computed
- * Returns the rendered content from the root route
+ * Returns the rendered content from the layout route
  * Usage: <div>{appRender()}</div>
  */
 export const appRender = computed(() => {
-  // Render from homeRoute which serves as the root layout
-  // It will render its children (eventTypeRoute, bookingRoute) when matched
-  return homeRoute.render();
+  // Render from layoutRoute which serves as the root layout
+  // It will render its children (homeRoute, eventTypeRoute, bookingRoute) when matched
+  return layoutRoute.render();
 }, 'appRender');
 
 // ============================================

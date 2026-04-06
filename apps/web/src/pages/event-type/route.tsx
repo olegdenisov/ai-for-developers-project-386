@@ -1,37 +1,52 @@
-import { reatomRoute, wrap, atom, computed } from '@reatom/core';
+import { wrap, atom, computed } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { z } from 'zod';
 import { PublicApi } from '@calendar-booking/api-client';
 import { EventTypePage } from './EventTypePage';
 import type { EventType } from '@entities/event-type';
-import type { Slot } from '@entities/slot';
 
 const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 // ============================================
-// EVENT TYPE ROUTE
+// EVENT TYPE ROUTE DEFINITION
 // ============================================
 
 /**
- * Event type route - displays event type details and available time slots
- * Path: /event-types/:id
+ * Тип для params в loader
  */
-export const eventTypeRoute = reatomRoute({
-  path: '/event-types/:id',
+interface RouteParams {
+  id: string;
+}
+
+/**
+ * Тип для self параметра в render функции
+ */
+interface RouteSelf {
+  loader: {
+    pending: () => boolean;
+    data: () => { eventType: EventType } | null;
+    error: () => Error | null;
+  };
+}
+
+/**
+ * Определение event type route для использования с layoutRoute.reatomRoute()
+ * Путь: 'event-types/:id'
+ */
+export const eventTypeRouteDefinition = {
+  path: 'event-types/:id',
   
   /**
-   * Params validation with Zod
-   * Validates that id is a valid UUID string
+   * Валидация параметров с помощью Zod
    */
   params: z.object({
     id: z.string().uuid(),
   }),
   
   /**
-   * Loader fetches event type details and available slots
+   * Loader загружает детали типа события
    */
-  async loader(params) {
-    // Fetch event type by ID
+  async loader(params: RouteParams): Promise<{ eventType: EventType }> {
     const eventTypeResponse = await wrap(api.getPublicEventType(params.id));
     if (!eventTypeResponse.ok) {
       throw new Error('Failed to fetch event type');
@@ -42,10 +57,12 @@ export const eventTypeRoute = reatomRoute({
   },
   
   /**
-   * Render function returns React component
+   * Render function возвращает React компонент
    */
-  render(self): RouteChild {
-    const { isPending, data, error } = self.status();
+  render(self: RouteSelf): RouteChild {
+    const isPending = self.loader.pending();
+    const data = self.loader.data();
+    const error = self.loader.error();
     
     if (isPending) {
       return <EventTypePage isLoading={true} />;
@@ -66,25 +83,34 @@ export const eventTypeRoute = reatomRoute({
       />
     );
   },
-});
+};
 
 // ============================================
-// SLOTS LOADER (separate computed for slots fetching)
+// SLOTS COMPUTED
 // ============================================
 
 /**
- * Computed that fetches available slots for selected date
- * This is separate from route loader to avoid refetching event type on date change
+ * Atom для хранения выбранной даты в маршруте
+ * Используется slotsForDate computed
+ */
+export const selectedDateForRoute = atom<Date | null>(null, 'selectedDateForRoute');
+
+/**
+ * Computed для загрузки доступных слотов на выбранную дату
+ * Отдельно от loader маршрута, чтобы не перезагружать event type при смене даты
  */
 export const slotsForDate = computed(async () => {
-  const params = eventTypeRoute();
-  if (!params) return [];
+  // Получаем текущий URL и извлекаем id из него
+  const pathname = window.location.pathname;
+  const match = pathname.match(/\/event-types\/([^/]+)/);
+  const eventTypeId = match ? match[1] : null;
   
-  // Get selected date from the component state (passed via atom)
+  if (!eventTypeId) return [];
+  
   const selectedDate = selectedDateForRoute();
   if (!selectedDate) return [];
   
-  // Calculate date range (start of week to end of week)
+  // Вычисляем диапазон дат (начало недели до конца недели)
   const startOfWeek = new Date(selectedDate);
   startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
@@ -97,7 +123,7 @@ export const slotsForDate = computed(async () => {
   const endDate = endOfWeek.toISOString().split('T')[0];
   
   const response = await wrap(api.getAvailableSlotsForEventType(
-    params.id,
+    eventTypeId,
     startDate,
     endDate
   ));
@@ -107,21 +133,14 @@ export const slotsForDate = computed(async () => {
   }
   
   return await wrap(response.json());
-}, 'slotsForDate').extend((target) => ({
-  // Add retry action
+}, 'slotsForDate').extend((target: { retry: () => void }) => ({
   retry() {
     target.retry();
   },
 }));
 
-/**
- * Atom to store selected date for the route
- * Used by slotsForDate computed
- */
-export const selectedDateForRoute = atom<Date | null>(null, 'selectedDateForRoute');
-
 // ============================================
 // EXPORTS
 // ============================================
 
-export type EventTypeRoute = typeof eventTypeRoute;
+export type EventTypeRouteDefinition = typeof eventTypeRouteDefinition;

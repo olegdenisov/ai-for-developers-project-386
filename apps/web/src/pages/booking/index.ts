@@ -1,8 +1,8 @@
 export { BookingPage } from './BookingPage';
 export { 
-  bookingRoute, 
+  bookingRouteDefinition, 
   bookingEventTypeAtom, 
   bookingSlotAtom, 
   submitBooking,
-  type BookingRoute 
+  type BookingRouteDefinition 
 } from './route';

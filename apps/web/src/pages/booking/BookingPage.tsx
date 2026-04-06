@@ -11,7 +11,7 @@ import {
   Group,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { homeRoute } from '@pages/home/route';
+import { navigate } from '@app/router';
 import { submitBooking } from './route';
 import { Layout, ErrorMessage } from '@shared/ui';
 import { formatDateTime } from '@shared/lib';
@@ -73,7 +73,7 @@ export const BookingPage = reatomComponent(({ eventType, slot, isLoading, error 
   });
 
   const handleBackHome = wrap(() => {
-    homeRoute.go();
+    navigate.home();
   });
 
   // Error state - no event type or slot

@@ -1,16 +1,15 @@
 import { reatomComponent } from '@reatom/react';
-import { wrap } from '@reatom/core';
+import { atom, wrap } from '@reatom/core';
 import { Title, Text, Button, Stack, Group, Card, Radio, Badge } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { IconArrowLeft, IconClock } from '@tabler/icons-react';
 import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatTime } from '@shared/lib';
-import { homeRoute } from '@pages/home/route';
-import { bookingRoute, bookingEventTypeAtom, bookingSlotAtom } from '@pages/booking/route';
-import { eventTypeRoute, selectedDateForRoute, slotsForDate } from './route';
+import { navigate } from '@app/router';
+import { bookingEventTypeAtom, bookingSlotAtom } from '@pages/booking/route';
+import { selectedDateForRoute, slotsForDate } from './route';
 import type { EventType } from '@entities/event-type';
 import type { Slot } from '@entities/slot';
-import { atom } from '@reatom/core';
 
 // ============================================
 // PROPS INTERFACE
@@ -80,16 +79,16 @@ export const EventTypePage = reatomComponent(({ eventType, isLoading, error }: E
 
   const handleContinue = wrap(() => {
     if (selectedSlot && eventType) {
-      // Store data in route context atoms
+      // Сохраняем данные в atoms контекста бронирования
       bookingEventTypeAtom.set(eventType);
       bookingSlotAtom.set(selectedSlot);
-      // Navigate to booking page
-      bookingRoute.go();
+      // Переходим на страницу бронирования
+      navigate.booking();
     }
   });
 
   const handleBack = wrap(() => {
-    homeRoute.go();
+    navigate.home();
   });
 
   if (isLoading) {
