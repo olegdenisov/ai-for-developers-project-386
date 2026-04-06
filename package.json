@@ -22,14 +22,14 @@
     "type-check": "turbo run type-check"
   },
   "devDependencies": {
-    "@typespec/compiler": "^0.63.0",
-    "@typespec/http": "^0.63.0",
-    "@typespec/rest": "^0.63.0",
-    "@typespec/openapi3": "^0.63.0",
-    "@openapitools/openapi-generator-cli": "^2.15.0",
-    "openapi-typescript": "^7.4.0",
-    "turbo": "^2.3.0",
-    "typescript": "^5.6.0"
+    "@typespec/compiler": "1.10.0",
+    "@typespec/http": "1.10.0",
+    "@typespec/rest": "1.10.0",
+    "@typespec/openapi3": "1.10.0",
+    "@openapitools/openapi-generator-cli": "2.31.0",
+    "openapi-typescript": "8.0.2",
+    "turbo": "2.5.0",
+    "typescript": "6.0.2"
   },
   "engines": {
     "node": ">=24.0.0",

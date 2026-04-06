@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useAtom } from '@reatom/jsx';
 import {
   Container,
@@ -22,11 +21,11 @@ import {
   bookingErrorAtom,
 } from '@entities/booking';
 import { bookingFormSchema, BookingFormData } from '@features/create-booking';
+import { navigate } from '@app/router/routes';
 import { Layout, ErrorMessage, LoadingSpinner } from '@shared/ui';
 import { formatDateTime } from '@shared/lib';
 
 export function BookingPage() {
-  const [searchParams] = useSearchParams();
   const [isSuccess, setIsSuccess] = useState(false);
   
   const eventType = useAtom(selectedEventTypeAtom);
@@ -62,11 +61,15 @@ export function BookingPage() {
     }
   };
 
+  const handleBackHome = () => {
+    navigate.home();
+  };
+
   if (!eventType || !slot) {
     return (
       <Layout>
         <ErrorMessage message="Информация о бронировании не найдена. Пожалуйста, начните сначала." />
-        <Button onClick={() => (window.location.href = '/')}>На главную</Button>
+        <Button onClick={handleBackHome}>На главную</Button>
       </Layout>
     );
   }
@@ -94,7 +97,11 @@ export function BookingPage() {
             </Text>
           </Stack>
 
-          <Text c="dimmed" size="sm">
+          <Button onClick={handleBackHome} variant="outline">
+            На главную
+          </Button>
+
+          <Text c="dimmed" size="sm" mt="md">
             ID бронирования: {booking.id}
           </Text>
         </Card>

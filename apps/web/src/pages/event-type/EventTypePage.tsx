@@ -1,17 +1,30 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { useAtom } from '@reatom/jsx';
-import { Container, Title, Text, Button, Stack, Group, Card, Radio } from '@mantine/core';
+import { Container, Title, Text, Button, Stack, Group, Card, Radio, Badge } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { IconArrowLeft, IconClock } from '@mantine/icons';
 import { selectedEventTypeAtom, fetchEventTypeById } from '@entities/event-type';
 import { availableSlotsAtom, selectedSlotAtom, selectSlot } from '@entities/slot';
 import { selectDate, selectedDateAtom, calendarLoadingAtom } from '@features/view-slots';
+import { navigate } from '@app/router/routes';
 import { Layout, LoadingSpinner } from '@shared/ui';
-import { formatDuration, formatTime } from '@shared/lib';
+import { formatTime } from '@shared/lib';
 
-export function EventTypePage() {
-  const { id } = useParams<{ id: string }>();
+interface EventTypePageProps {
+  params: { id: string };
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes} мин`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
+}
+
+export function EventTypePage({ params }: EventTypePageProps) {
+  const { id } = params;
   const eventType = useAtom(selectedEventTypeAtom);
   const slots = useAtom(availableSlotsAtom);
   const selectedSlot = useAtom(selectedSlotAtom);
@@ -46,8 +59,12 @@ export function EventTypePage() {
 
   const handleContinue = () => {
     if (selectedSlot && id) {
-      window.location.href = `/bookings/new?eventTypeId=${id}&slotId=${selectedSlot.id}`;
+      navigate.booking();
     }
+  };
+
+  const handleBack = () => {
+    navigate.home();
   };
 
   if (isFetching || !eventType) {
@@ -76,7 +93,7 @@ export function EventTypePage() {
         variant="subtle"
         leftSection={<IconArrowLeft size={16} />}
         mb="md"
-        onClick={() => (window.location.href = '/')}
+        onClick={handleBack}
       >
         Назад
       </Button>
