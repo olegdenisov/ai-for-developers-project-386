@@ -35,7 +35,7 @@ interface BookingPageProps {
 // COMPONENT
 // ============================================
 
-export const BookingPage = reatomComponent(({ eventType, slot, isLoading, error }: BookingPageProps) => {
+export const BookingPage = reatomComponent(({ eventType, slot, isLoading: _isLoading, error }: BookingPageProps) => {
   // Form state using Mantine form
   const form = useForm<BookingFormData>({
     initialValues: {

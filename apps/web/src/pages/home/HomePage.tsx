@@ -1,6 +1,18 @@
 import { reatomComponent } from '@reatom/react';
-import { Container, Title, Text, SimpleGrid, Card, Badge, Stack } from '@mantine/core';
-import { IconClock } from '@tabler/icons-react';
+import {
+  Container,
+  Title,
+  Text,
+  Button,
+  Badge,
+  Card,
+  Stack,
+  Box,
+  SimpleGrid,
+  List,
+  Flex,
+} from '@mantine/core';
+import { IconArrowRight } from '@tabler/icons-react';
 import { navigate } from '@app/router';
 import { Layout } from '@shared/ui';
 import type { EventType } from '@entities/event-type';
@@ -16,26 +28,13 @@ interface HomePageProps {
 }
 
 // ============================================
-// UTILITIES
-// ============================================
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} мин`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
-}
-
-// ============================================
 // COMPONENT
 // ============================================
 
-export const HomePage = reatomComponent(({ eventTypes, isLoading, error }: HomePageProps) => {
-  const handleSelectEventType = (id: string) => {
-    // Переходим на страницу типа события
-    navigate.eventType(id);
+export const HomePage = reatomComponent(({ error }: HomePageProps) => {
+  const handleBookClick = () => {
+    // Переходим к выбору типа события
+    navigate.booking();
   };
 
   if (error) {
@@ -47,44 +46,119 @@ export const HomePage = reatomComponent(({ eventTypes, isLoading, error }: HomeP
   }
 
   return (
-    <Layout title="Забронируйте встречу">
-      <Text c="dimmed" mb="xl">
-        Выберите тип встречи, чтобы посмотреть доступное время
-      </Text>
+    <Layout>
+      {/* Контейнер с градиентным фоном */}
+      <Box
+        style={{
+          background: 'linear-gradient(135deg, #dbeafe 0%, #dbeafe 40%, #fef3e2 60%, #fff7ed 100%)',
+          minHeight: 'calc(100vh - 60px)',
+        }}
+      >
+        <Container size="xl" py={80}>
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing={60}>
+            {/* Левая часть - Hero секция */}
+            <Stack gap="xl" align="flex-start">
+              {/* Badge - белая пилюля с текстом */}
+              <Badge
+                size="lg"
+                variant="filled"
+                color="gray"
+                radius="xl"
+                tt="uppercase"
+                px="lg"
+                py="xs"
+                styles={{
+                  root: {
+                    backgroundColor: '#ffffff',
+                    color: '#6b7280',
+                    fontWeight: 500,
+                    letterSpacing: '0.5px',
+                    border: 'none',
+                    height: 'auto',
+                    lineHeight: 1.5,
+                  },
+                }}
+              >
+                Быстрая запись на звонок
+              </Badge>
 
-      {isLoading ? (
-        <Text>Загрузка...</Text>
-      ) : (
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-          {eventTypes.map((eventType) => (
-            <Card
-              key={eventType.id}
-              shadow="sm"
-              padding="lg"
-              radius="md"
-              withBorder
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleSelectEventType(eventType.id)}
-            >
-              <Stack gap="sm">
-                <Title order={3} size="h4">
-                  {eventType.name}
-                </Title>
+              <Title
+                order={1}
+                style={{
+                  fontSize: '3.5rem',
+                  fontWeight: 700,
+                  color: '#111827',
+                  lineHeight: 1.1,
+                }}
+              >
+                Calendar
+              </Title>
 
-                {eventType.description && (
-                  <Text size="sm" c="dimmed" lineClamp={2}>
-                    {eventType.description}
-                  </Text>
-                )}
+              <Text size="lg" c="#6b7280" maw={480} style={{ lineHeight: 1.6 }}>
+                Забронируйте встречу за минуту: выберите тип события и удобное время.
+              </Text>
 
-                <Badge leftSection={<IconClock size={12} />} variant="light">
-                  {formatDuration(eventType.durationMinutes)}
-                </Badge>
-              </Stack>
-            </Card>
-          ))}
-        </SimpleGrid>
-      )}
+              <Button
+                size="lg"
+                color="orange"
+                radius="md"
+                rightSection={<IconArrowRight size={20} />}
+                onClick={handleBookClick}
+                styles={{
+                  root: {
+                    backgroundColor: '#f97316',
+                    borderColor: '#f97316',
+                    padding: '0 28px',
+                    height: 48,
+                    fontWeight: 500,
+                  },
+                }}
+              >
+                Записаться
+              </Button>
+            </Stack>
+
+            {/* Правая часть - Карточка с возможностями */}
+            <Flex justify="flex-end" align="flex-start">
+              <Card
+                shadow="sm"
+                padding="xl"
+                radius="md"
+                withBorder
+                style={{
+                  backgroundColor: '#ffffff',
+                  maxWidth: 420,
+                  width: '100%',
+                  border: '1px solid #e5e7eb',
+                }}
+              >
+                <Stack gap="lg">
+                  <Title order={3} size="h4" c="#111827" fw={600}>
+                    Возможности
+                  </Title>
+
+                  <List 
+                    spacing="md" 
+                    size="sm" 
+                    c="#6b7280"
+                    icon={<Text component="span" c="#f97316" fz="sm">●</Text>}
+                  >
+                    <List.Item style={{ lineHeight: 1.5 }}>
+                      Выбор типа события и удобного времени для встречи.
+                    </List.Item>
+                    <List.Item style={{ lineHeight: 1.5 }}>
+                      Быстрое бронирование с подтверждением и дополнительными заметками.
+                    </List.Item>
+                    <List.Item style={{ lineHeight: 1.5 }}>
+                      Управление типами встреч и просмотр предстоящих записей в админке.
+                    </List.Item>
+                  </List>
+                </Stack>
+              </Card>
+            </Flex>
+          </SimpleGrid>
+        </Container>
+      </Box>
     </Layout>
   );
 }, 'HomePage');
