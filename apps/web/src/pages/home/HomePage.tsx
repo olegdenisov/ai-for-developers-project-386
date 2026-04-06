@@ -1,9 +1,23 @@
-import { useAtom } from '@reatom/jsx';
-import { reatomComponent } from '@reatom/core';
-import { Container, Title, Text, SimpleGrid, Card, Badge, Stack, Button } from '@mantine/core';
+import { reatomComponent } from '@reatom/react';
+import { Container, Title, Text, SimpleGrid, Card, Badge, Stack } from '@mantine/core';
 import { IconClock } from '@tabler/icons-react';
-import { eventTypesAtom, fetchEventTypes, selectedEventTypeAtom } from '@entities/event-type';
+import { eventTypeRoute } from '@pages/event-type/route';
 import { Layout } from '@shared/ui';
+import type { EventType } from '@entities/event-type';
+
+// ============================================
+// PROPS INTERFACE
+// ============================================
+
+interface HomePageProps {
+  eventTypes: EventType[];
+  isLoading: boolean;
+  error?: string | null;
+}
+
+// ============================================
+// UTILITIES
+// ============================================
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) {
@@ -14,14 +28,23 @@ function formatDuration(minutes: number): string {
   return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
 }
 
-export const HomePage = reatomComponent(() => {
-  const eventTypes = useAtom(eventTypesAtom);
-  const isLoading = fetchEventTypes.pending();
+// ============================================
+// COMPONENT
+// ============================================
 
+export const HomePage = reatomComponent(({ eventTypes, isLoading, error }: HomePageProps) => {
   const handleSelectEventType = (id: string) => {
-    // Navigation will be implemented with router
-    window.location.href = `/event-types/${id}`;
+    // Navigate to event type page using route
+    eventTypeRoute.go({ id });
   };
+
+  if (error) {
+    return (
+      <Layout title="Ошибка">
+        <Text c="red">{error}</Text>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Забронируйте встречу">

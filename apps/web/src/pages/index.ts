@@ -1,3 +1,3 @@
-export { HomePage } from './home';
-export { EventTypePage } from './event-type';
-export { BookingPage } from './booking';
+export { HomePage, homeRoute, type HomeRoute } from './home';
+export { EventTypePage, eventTypeRoute, type EventTypeRoute } from './event-type';
+export { BookingPage, bookingRoute, type BookingRoute } from './booking';

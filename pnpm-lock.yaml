@@ -96,15 +96,9 @@ importers:
       '@reatom/core':
         specifier: 1000.15.2
         version: 1000.15.2
-      '@reatom/jsx':
-        specifier: 1000.1.0
-        version: 1000.1.0(@reatom/core@1000.15.2)
       '@reatom/react':
         specifier: 1000.2.2
         version: 1000.2.2(@reatom/core@1000.15.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@reatom/url':
-        specifier: 3.9.0
-        version: 3.9.0
       '@tabler/icons-react':
         specifier: 3.41.1
         version: 3.41.1(react@19.2.4)
@@ -855,32 +849,12 @@ packages:
   '@reatom/core@1000.15.2':
     resolution: {integrity: sha512-ychH11wZaVHHYsfPuPQvgGr8YyonURggwQwiaTxy+164nRfDnXXgbvuaWePjim7K3FR3LfI6ydYNoqJnDh88Bg==}
 
-  '@reatom/core@3.10.3':
-    resolution: {integrity: sha512-uctBfmL/ZNvHWRX92Y+VQZON37fXNja4FM1fzevX7RYOWy6R7evx42VM6K4kuOaIci7bVWPhPZzHWeAu0J2lHQ==}
-
-  '@reatom/effects@3.11.3':
-    resolution: {integrity: sha512-0qxr7m6e+GrOvt0pESONl4aRZxGjsU1HWXIsDR2Ghw0mNGjuStnEDUZnO+MVbKOArMIAvZ8ZoMrQWqXEBfOrVg==}
-
-  '@reatom/hooks@3.6.1':
-    resolution: {integrity: sha512-1q8qXAOkQlDKc/Y94alPHWqMnXvJhCG4Rr9hQxPMPG1Qf3WpeKm7Zdxs4v3DC2Kcw6oG6djVk3i5duIjPygGWA==}
-
-  '@reatom/jsx@1000.1.0':
-    resolution: {integrity: sha512-WgQoJJQyw30GltqicaJUH33Xr0bfpSl3DGU7EQdBDiHEh6GiXqlhTq7ea0g4vAWRDogm9/akGTKHGs6CebKJbQ==}
-    peerDependencies:
-      '@reatom/core': ^1000.1.0
-
   '@reatom/react@1000.2.2':
     resolution: {integrity: sha512-QxNFwtmbsIK/DUtmjebfW9gmW+d+4UPZVq1f+Nb2wkiNOZ8yUh7o0i4xAs83nneZOFqcqwNiYKfDrEpBozMCvA==}
     peerDependencies:
       '@reatom/core': ^1000.14.1
       react: '>=18.2.0'
       react-dom: '>=18.2.0'
-
-  '@reatom/url@3.9.0':
-    resolution: {integrity: sha512-uQ2gilyIf9qxrta15AHFwZhkAE/MynDlV34JNlOfGJdVTAuPd6HmYjuTYGy15yBdTsV8xCK9ry67H8NP1/BrEw==}
-
-  '@reatom/utils@3.11.3':
-    resolution: {integrity: sha512-H2FQf9xra7Twf0PxS6L0DtuRRC79NfHRB3V/YhnhPHyUE/UFscXrin/I2eGj3FEKcgOfC2BWnzCOrkXjKWgECQ==}
 
   '@redocly/ajv@8.11.2':
     resolution: {integrity: sha512-io1JpnwtIcvojV7QKDUSIuMN/ikdOUd1ReEnUnMKGfDVridQZ31J0MmIuqwuRjWDZfmvr+Q0MqCcfHM2gTivOg==}
@@ -3078,38 +3052,11 @@ snapshots:
     optionalDependencies:
       idb-keyval: 6.2.2
 
-  '@reatom/core@3.10.3': {}
-
-  '@reatom/effects@3.11.3':
-    dependencies:
-      '@reatom/core': 3.10.3
-      '@reatom/utils': 3.11.3
-
-  '@reatom/hooks@3.6.1':
-    dependencies:
-      '@reatom/core': 3.10.3
-      '@reatom/effects': 3.11.3
-      '@reatom/utils': 3.11.3
-
-  '@reatom/jsx@1000.1.0(@reatom/core@1000.15.2)':
-    dependencies:
-      '@reatom/core': 1000.15.2
-      csstype: 3.2.3
-
   '@reatom/react@1000.2.2(@reatom/core@1000.15.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@reatom/core': 1000.15.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-
-  '@reatom/url@3.9.0':
-    dependencies:
-      '@reatom/core': 3.10.3
-      '@reatom/effects': 3.11.3
-      '@reatom/hooks': 3.6.1
-      '@reatom/utils': 3.11.3
-
-  '@reatom/utils@3.11.3': {}
 
   '@redocly/ajv@8.11.2':
     dependencies:

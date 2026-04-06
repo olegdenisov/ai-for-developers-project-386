@@ -1,32 +1,60 @@
-import { reatomRouter } from '@reatom/url';
+import { computed } from '@reatom/core';
+import { homeRoute } from '@pages/home';
+import { eventTypeRoute } from '@pages/event-type';
+import { bookingRoute } from '@pages/booking';
 
-// Route definitions
-export const router = reatomRouter({
-  routes: {
-    home: '/',
-    eventType: '/event-types/:id',
-    booking: '/bookings/new',
-    bookingSuccess: '/bookings/:id/success',
-    owner: '/owner',
-    ownerEventTypes: '/owner/event-types',
-  },
-});
+// ============================================
+// ROUTE REGISTRY
+// ============================================
 
-// Route helpers
-export const routeHelpers = {
-  home: () => '/',
-  eventType: (id: string) => `/event-types/${id}`,
-  booking: () => '/bookings/new',
-  bookingSuccess: (id: string) => `/bookings/${id}/success`,
-  owner: () => '/owner',
-  ownerEventTypes: () => '/owner/event-types',
-};
+/**
+ * All routes are automatically registered in urlAtom.routes
+ * We just re-export them here for convenience
+ */
+export { homeRoute, eventTypeRoute, bookingRoute };
 
-// Navigation helpers
+// ============================================
+// NAVIGATION HELPERS
+// ============================================
+
+/**
+ * Navigation helpers for programmatic navigation
+ * These are convenience wrappers around route.go() methods
+ */
 export const navigate = {
-  home: () => router.navigate('home'),
-  eventType: (id: string) => router.navigate('eventType', { id }),
-  booking: () => router.navigate('booking'),
-  bookingSuccess: (id: string) => router.navigate('bookingSuccess', { id }),
+  home: () => homeRoute.go(),
+  eventType: (id: string) => eventTypeRoute.go({ id }),
+  booking: () => bookingRoute.go(),
   back: () => window.history.back(),
 };
+
+// ============================================
+// APP RENDER
+// ============================================
+
+/**
+ * Main app render computed
+ * Returns the rendered content from the root route
+ * Usage: <div>{appRender()}</div>
+ */
+export const appRender = computed(() => {
+  // Render from homeRoute which serves as the root layout
+  // It will render its children (eventTypeRoute, bookingRoute) when matched
+  return homeRoute.render();
+}, 'appRender');
+
+// ============================================
+// GLOBAL LOADING STATE
+// ============================================
+
+/**
+ * Computed that tracks if any route loader is pending
+ * Useful for global loading indicators
+ */
+export const isAnyRouteLoading = computed(() => {
+  return (
+    homeRoute.loader.pending() ||
+    eventTypeRoute.loader.pending() ||
+    bookingRoute.loader.pending()
+  );
+}, 'isAnyRouteLoading');

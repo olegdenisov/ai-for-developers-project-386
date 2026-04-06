@@ -1,4 +1,4 @@
-import { atom, action, computed } from '@reatom/core';
+import { atom, action } from '@reatom/core';
 import { BookingFormData } from './validation';
 
 // Form state atom

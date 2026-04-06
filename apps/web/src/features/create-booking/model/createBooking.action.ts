@@ -15,8 +15,8 @@ export const submitBookingForm = action(async () => {
   const validation = validateBookingForm(formData);
   if (!validation.success) {
     const errors: Record<string, string> = {};
-    validation.error.errors.forEach((err) => {
-      const field = err.path[0] as string;
+    validation.error.issues.forEach((err) => {
+      const field = err.path[0]?.toString() ?? 'unknown';
       errors[field] = err.message;
     });
     setFormErrors(errors);

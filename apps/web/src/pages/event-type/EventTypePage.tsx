@@ -1,19 +1,30 @@
-import { useEffect } from 'react';
-import { useAtom } from '@reatom/jsx';
-import { wrap, reatomComponent } from '@reatom/core';
-import { Container, Title, Text, Button, Stack, Group, Card, Radio, Badge } from '@mantine/core';
+import { reatomComponent } from '@reatom/react';
+import { wrap } from '@reatom/core';
+import { Title, Text, Button, Stack, Group, Card, Radio, Badge } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { IconArrowLeft, IconClock } from '@tabler/icons-react';
-import { selectedEventTypeAtom, fetchEventTypeById } from '@entities/event-type';
-import { availableSlotsAtom, selectedSlotAtom, selectSlot } from '@entities/slot';
-import { selectDate, selectedDateAtom, calendarLoadingAtom } from '@features/view-slots';
-import { navigate } from '@app/router/routes';
-import { Layout, LoadingSpinner } from '@shared/ui';
+import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatTime } from '@shared/lib';
+import { homeRoute } from '@pages/home/route';
+import { bookingRoute, bookingEventTypeAtom, bookingSlotAtom } from '@pages/booking/route';
+import { eventTypeRoute, selectedDateForRoute, slotsForDate } from './route';
+import type { EventType } from '@entities/event-type';
+import type { Slot } from '@entities/slot';
+import { atom } from '@reatom/core';
+
+// ============================================
+// PROPS INTERFACE
+// ============================================
 
 interface EventTypePageProps {
-  params: { id: string };
+  eventType?: EventType;
+  isLoading: boolean;
+  error?: string | null;
 }
+
+// ============================================
+// UTILITIES
+// ============================================
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) {
@@ -24,51 +35,64 @@ function formatDuration(minutes: number): string {
   return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
 }
 
-export const EventTypePage = reatomComponent(({ params }: EventTypePageProps) => {
-  const { id } = params;
-  const eventType = useAtom(selectedEventTypeAtom);
-  const slots = useAtom(availableSlotsAtom);
-  const selectedSlot = useAtom(selectedSlotAtom);
-  const selectedDate = useAtom(selectedDateAtom);
-  const isLoading = useAtom(calendarLoadingAtom);
-  const isFetching = fetchEventTypeById.pending();
+function filterSlotsForDate(slots: Slot[], date: Date): Slot[] {
+  return slots.filter((slot) => {
+    const slotDate = new Date(slot.startTime);
+    return (
+      slotDate.getDate() === date.getDate() &&
+      slotDate.getMonth() === date.getMonth() &&
+      slotDate.getFullYear() === date.getFullYear()
+    );
+  });
+}
 
-  useEffect(() => {
-    if (id) {
-      wrap(fetchEventTypeById(id));
-    }
-  }, [id]);
+// ============================================
+// LOCAL STATE ATOM
+// ============================================
 
-  useEffect(() => {
-    if (id && selectedDate) {
-      selectDate(selectedDate, id);
-    }
-  }, [id, selectedDate]);
+const selectedSlotLocal = atom<Slot | null>(null, 'eventTypePage.selectedSlot');
+
+// ============================================
+// COMPONENT
+// ============================================
+
+export const EventTypePage = reatomComponent(({ eventType, isLoading, error }: EventTypePageProps) => {
+  // Get route state
+  const selectedDate = selectedDateForRoute();
+  const slotsLoading = slotsForDate.pending();
+  const slots = slotsForDate.data() || [];
+  
+  // Get selected slot from local atom
+  const selectedSlot = selectedSlotLocal();
 
   const handleDateSelect = wrap((date: Date | null) => {
-    if (date && id) {
-      selectDate(date, id);
+    if (date) {
+      selectedDateForRoute.set(date);
     }
   });
 
   const handleSlotSelect = wrap((slotId: string) => {
-    const slot = slots.find((s) => s.id === slotId);
+    const slot = slots.find((s: Slot) => s.id === slotId);
     if (slot) {
-      selectSlot(slot);
+      selectedSlotLocal.set(slot);
     }
   });
 
-  const handleContinue = () => {
-    if (selectedSlot && id) {
-      navigate.booking();
+  const handleContinue = wrap(() => {
+    if (selectedSlot && eventType) {
+      // Store data in route context atoms
+      bookingEventTypeAtom.set(eventType);
+      bookingSlotAtom.set(selectedSlot);
+      // Navigate to booking page
+      bookingRoute.go();
     }
-  };
+  });
 
-  const handleBack = () => {
-    navigate.home();
-  };
+  const handleBack = wrap(() => {
+    homeRoute.go();
+  });
 
-  if (isFetching || !eventType) {
+  if (isLoading) {
     return (
       <Layout>
         <LoadingSpinner />
@@ -76,16 +100,27 @@ export const EventTypePage = reatomComponent(({ params }: EventTypePageProps) =>
     );
   }
 
+  if (error) {
+    return (
+      <Layout>
+        <ErrorMessage message={error} />
+        <Button onClick={handleBack} mt="md">На главную</Button>
+      </Layout>
+    );
+  }
+
+  if (!eventType) {
+    return (
+      <Layout>
+        <ErrorMessage message="Тип события не найден" />
+        <Button onClick={handleBack} mt="md">На главную</Button>
+      </Layout>
+    );
+  }
+
   // Filter slots for selected date
   const slotsForSelectedDate = selectedDate
-    ? slots.filter((slot) => {
-        const slotDate = new Date(slot.startTime);
-        return (
-          slotDate.getDate() === selectedDate.getDate() &&
-          slotDate.getMonth() === selectedDate.getMonth() &&
-          slotDate.getFullYear() === selectedDate.getFullYear()
-        );
-      })
+    ? filterSlotsForDate(slots, selectedDate)
     : [];
 
   return (
@@ -129,7 +164,7 @@ export const EventTypePage = reatomComponent(({ params }: EventTypePageProps) =>
           />
         </Card>
 
-        {isLoading ? (
+        {slotsLoading ? (
           <LoadingSpinner />
         ) : selectedDate && slotsForSelectedDate.length > 0 ? (
           <Card withBorder>
@@ -141,7 +176,7 @@ export const EventTypePage = reatomComponent(({ params }: EventTypePageProps) =>
               onChange={handleSlotSelect}
             >
               <Group>
-                {slotsForSelectedDate.map((slot) => (
+                {slotsForSelectedDate.map((slot: Slot) => (
                   <Radio
                     key={slot.id}
                     value={slot.id}

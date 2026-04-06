@@ -1,5 +1,5 @@
 // Public API for slot entity
-export { Slot, SlotWithBooking } from './model/slot.types';
+export type { Slot, SlotWithBooking } from './model/slot.types';
 export {
   availableSlotsAtom,
   selectedSlotAtom,

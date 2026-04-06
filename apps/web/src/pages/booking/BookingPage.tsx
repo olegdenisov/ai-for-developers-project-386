@@ -1,7 +1,6 @@
-import { useAtom } from '@reatom/jsx';
-import { wrap, reatomComponent } from '@reatom/core';
+import { reatomComponent } from '@reatom/react';
+import { wrap } from '@reatom/core';
 import {
-  Container,
   Title,
   Text,
   Button,
@@ -11,64 +10,83 @@ import {
   Textarea,
   Group,
 } from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
-import { selectedEventTypeAtom } from '@entities/event-type';
-import { selectedSlotAtom } from '@entities/slot';
-import {
-  createBooking,
-  currentBookingAtom,
-  bookingErrorAtom,
-  isBookingSuccessAtom,
-} from '@entities/booking';
-import { bookingFormSchema, BookingFormData } from '@features/create-booking';
-import { navigate } from '@app/router/routes';
-import { Layout, ErrorMessage, LoadingSpinner } from '@shared/ui';
+import { useForm } from '@mantine/form';
+import { homeRoute } from '@pages/home/route';
+import { submitBooking } from './route';
+import { Layout, ErrorMessage } from '@shared/ui';
 import { formatDateTime } from '@shared/lib';
+import { bookingFormSchema, type BookingFormData } from '@features/create-booking';
+import type { EventType } from '@entities/event-type';
+import type { Slot } from '@entities/slot';
+import type { Booking } from '@entities/booking';
 
-export const BookingPage = reatomComponent(() => {
-  const eventType = useAtom(selectedEventTypeAtom);
-  const slot = useAtom(selectedSlotAtom);
-  const booking = useAtom(currentBookingAtom);
-  const error = useAtom(bookingErrorAtom);
-  const isSuccess = useAtom(isBookingSuccessAtom);
-  const isSubmitting = createBooking.pending();
+// ============================================
+// PROPS INTERFACE
+// ============================================
 
+interface BookingPageProps {
+  eventType?: EventType;
+  slot?: Slot;
+  isLoading: boolean;
+  error?: string | null;
+}
+
+// ============================================
+// COMPONENT
+// ============================================
+
+export const BookingPage = reatomComponent(({ eventType, slot, isLoading, error }: BookingPageProps) => {
+  // Form state using Mantine form
   const form = useForm<BookingFormData>({
     initialValues: {
       guestName: '',
       guestEmail: '',
       guestNotes: '',
     },
-    validate: zodResolver(bookingFormSchema),
+    validate: (values) => {
+      const result = bookingFormSchema.safeParse(values);
+      if (!result.success) {
+        const errors: Record<string, string> = {};
+        result.error.issues.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0].toString()] = err.message;
+          }
+        });
+        return errors;
+      }
+      return {};
+    },
   });
 
-  const handleSubmit = wrap(async (values: BookingFormData) => {
-    if (!eventType || !slot) return;
+  // Track submission state
+  const isSubmitting = submitBooking.pending();
+  const submitError = submitBooking.error();
+  const booking: Booking | null = submitBooking.data() || null;
+  const isSuccess = submitBooking.ready() && booking != null;
 
+  const handleSubmit = wrap(async (values: BookingFormData) => {
     try {
-      await createBooking({
-          eventTypeId: eventType.id,
-          slotId: slot.id,
-          ...values,
-        });
+      await submitBooking(values);
     } catch (err) {
-      // Error is handled by the atom
+      // Error is handled by the action
     }
   });
 
-  const handleBackHome = () => {
-    navigate.home();
-  };
+  const handleBackHome = wrap(() => {
+    homeRoute.go();
+  });
 
-  if (!eventType || !slot) {
+  // Error state - no event type or slot
+  if (error || !eventType || !slot) {
     return (
       <Layout>
-        <ErrorMessage message="Информация о бронировании не найдена. Пожалуйста, начните сначала." />
-        <Button onClick={handleBackHome}>На главную</Button>
+        <ErrorMessage message={error || "Информация о бронировании не найдена. Пожалуйста, начните сначала."} />
+        <Button onClick={handleBackHome} mt="md">На главную</Button>
       </Layout>
     );
   }
 
+  // Success state - booking created
   if (isSuccess && booking) {
     return (
       <Layout>
@@ -104,6 +122,7 @@ export const BookingPage = reatomComponent(() => {
     );
   }
 
+  // Form state - ready to submit
   return (
     <Layout title="Подтверждение бронирования">
       <Card withBorder mb="lg">
@@ -115,7 +134,7 @@ export const BookingPage = reatomComponent(() => {
         </Text>
       </Card>
 
-      {error && <ErrorMessage message={error} />}
+      {submitError && <ErrorMessage message={submitError.message} />}
 
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
