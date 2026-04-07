@@ -1,7 +1,7 @@
-export { 
-  homeRoute, 
-  eventTypeRoute, 
-  bookingRoute,
+export {
+  homeRoute,
+  eventTypeRoute,
+  bookCatalogRoute,
   navigate,
   appRender,
   isAnyRouteLoading,

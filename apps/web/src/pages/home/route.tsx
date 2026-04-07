@@ -1,13 +1,12 @@
 import { wrap } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
-import { PublicApi } from '@calendar-booking/api-client';
+import { apiClient } from '@shared/api';
+import { layoutRoute } from '@shared/router';
 import { HomePage } from './HomePage';
 import type { EventType } from '@entities/event-type';
 
-const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
-
 // ============================================
-// HOME ROUTE DEFINITION
+// HOME ROUTE
 // ============================================
 
 /**
@@ -22,24 +21,25 @@ interface RouteSelf {
 }
 
 /**
- * Определение home route для использования с layoutRoute.reatomRoute()
- * Путь: '' (корневой путь относительно layout)
+ * Home route - главная страница
+ * Путь: '/' (корневой путь)
+ * Page route - рендерится только при exact match
  */
-export const homeRouteDefinition = {
+export const homeRoute = layoutRoute.reatomRoute({
   path: '',
-  
+
   /**
    * Loader загружает список доступных типов событий
    */
   async loader(): Promise<EventType[]> {
-    const response = await wrap(api.listPublicEventTypes());
+    const response = await wrap(apiClient.listPublicEventTypes());
     if (!response.ok) {
       throw new Error('Failed to fetch event types');
     }
     const data = await wrap(response.json());
     return data.eventTypes || [];
   },
-  
+
   /**
    * Render function возвращает React компонент
    */
@@ -47,19 +47,19 @@ export const homeRouteDefinition = {
     const isPending = self.loader.pending();
     const eventTypes = self.loader.data();
     const error = self.loader.error();
-    
+
     return (
-      <HomePage 
-        eventTypes={eventTypes || []} 
+      <HomePage
+        eventTypes={eventTypes || []}
         isLoading={isPending}
         error={error?.message}
       />
     );
   },
-};
+});
 
 // ============================================
 // EXPORTS
 // ============================================
 
-export type HomeRouteDefinition = typeof homeRouteDefinition;
+export { HomePage } from './HomePage';

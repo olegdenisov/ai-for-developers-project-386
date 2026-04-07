@@ -1,13 +1,12 @@
 import { wrap, action, atom } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
-import { PublicApi } from '@calendar-booking/api-client';
-import { BookingPage } from './BookingPage';
+import { apiClient } from '@shared/api';
+import { layoutRoute } from '@shared/router';
+import { BookCatalogPage } from './BookCatalogPage';
 import type { BookingFormData } from '@features/create-booking';
 import type { Booking } from '@entities/booking';
 import type { EventType } from '@entities/event-type';
 import type { Slot } from '@entities/slot';
-
-const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 // ============================================
 // BOOKING CONTEXT ATOMS
@@ -15,7 +14,7 @@ const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000
 
 /**
  * Atom для хранения выбранного типа события при бронировании
- * Устанавливается EventTypePage когда пользователь выбирает слот
+ * Устанавливается когда пользователь выбирает тип события на странице каталога
  */
 export const bookingEventTypeAtom = atom<EventType | null>(null, 'bookingEventType');
 
@@ -25,63 +24,56 @@ export const bookingEventTypeAtom = atom<EventType | null>(null, 'bookingEventTy
 export const bookingSlotAtom = atom<Slot | null>(null, 'bookingSlot');
 
 // ============================================
-// BOOKING ROUTE DEFINITION
+// BOOK CATALOG ROUTE
 // ============================================
 
 /**
  * Тип для self параметра в render функции
  */
 interface RouteSelf {
-  (): { eventType: EventType; slot: Slot } | null;
-  status: () => { isPending: boolean; error: Error | null };
+  loader: {
+    pending: () => boolean;
+    data: () => EventType[] | null;
+    error: () => Error | null;
+  };
 }
 
 /**
- * Определение booking route для использования с layoutRoute.reatomRoute()
- * Путь: 'bookings/new'
+ * Book catalog route - страница каталога типов событий
+ * Путь: '/bookings/new'
+ * Page route - рендерится только при exact match
  */
-export const bookingRouteDefinition = {
+export const bookCatalogRoute = layoutRoute.reatomRoute({
   path: 'bookings/new',
-  
+
   /**
-   * Params function проверяет наличие необходимых данных
-   * Возвращает null если не выбран event type или slot
+   * Loader загружает список доступных типов событий
    */
-  params() {
-    const eventType = bookingEventTypeAtom();
-    const slot = bookingSlotAtom();
-    
-    if (!eventType || !slot) {
-      return null;
-    }
-    
-    return { eventType, slot };
+  async loader(): Promise<EventType[]> {
+    const data = await wrap(apiClient.listPublicEventTypes().then(r => r.json()));
+
+    console.log({ data });
+
+    return data.eventTypes || [];
   },
-  
+
   /**
    * Render function возвращает React компонент
    */
   render(self: RouteSelf): RouteChild {
-    const params = self();
-    
-    if (!params) {
-      return (
-        <BookingPage 
-          isLoading={false}
-          error="Информация о бронировании не найдена. Пожалуйста, начните сначала."
-        />
-      );
-    }
-    
+    const isPending = self.loader.pending();
+    const eventTypes = self.loader.data();
+    const error = self.loader.error();
+
     return (
-      <BookingPage 
-        eventType={params.eventType}
-        slot={params.slot}
-        isLoading={false}
+      <BookCatalogPage
+        eventTypes={eventTypes || []}
+        isLoading={isPending}
+        error={error?.message}
       />
     );
   },
-};
+});
 
 // ============================================
 // BOOKING SUBMISSION ACTION
@@ -89,35 +81,35 @@ export const bookingRouteDefinition = {
 
 /**
  * Action для отправки формы бронирования
- * Вызывается из компонента BookingPage
+ * Используется на странице подтверждения бронирования
  */
 export const submitBooking = action(async (formData: BookingFormData) => {
   const eventType = bookingEventTypeAtom();
   const slot = bookingSlotAtom();
-  
+
   if (!eventType || !slot) {
     throw new Error('Event type or slot not selected');
   }
-  
-  const response = await wrap(api.createBooking({
+
+  const response = await wrap(apiClient.createBooking({
     eventTypeId: eventType.id,
     slotId: slot.id,
     guestName: formData.guestName,
     guestEmail: formData.guestEmail,
     guestNotes: formData.guestNotes,
   }));
-  
+
   if (!response.ok) {
     const error = await wrap(response.json());
     throw new Error(error.message || 'Failed to create booking');
   }
-  
+
   const booking: Booking = await wrap(response.json());
-  
+
   // Очищаем контекст бронирования после успешного создания
   bookingEventTypeAtom.set(null);
   bookingSlotAtom.set(null);
-  
+
   return booking;
 }, 'submitBooking');
 
@@ -125,4 +117,4 @@ export const submitBooking = action(async (formData: BookingFormData) => {
 // EXPORTS
 // ============================================
 
-export type BookingRouteDefinition = typeof bookingRouteDefinition;
+export { BookCatalogPage } from './BookCatalogPage';

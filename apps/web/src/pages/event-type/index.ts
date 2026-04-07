@@ -1,7 +1,5 @@
-export { EventTypePage } from './EventTypePage';
-export { 
-  eventTypeRouteDefinition, 
-  selectedDateForRoute, 
-  slotsForDate,
-  type EventTypeRouteDefinition 
+export { EventTypePage, eventTypeRoute } from './route';
+export {
+  selectedDateForRoute,
+  slotsForDate
 } from './route';

@@ -1,14 +1,13 @@
 import { wrap, atom, computed } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { z } from 'zod';
-import { PublicApi } from '@calendar-booking/api-client';
+import { apiClient } from '@shared/api';
+import { layoutRoute } from '@shared/router';
 import { EventTypePage } from './EventTypePage';
 import type { EventType } from '@entities/event-type';
 
-const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
-
 // ============================================
-// EVENT TYPE ROUTE DEFINITION
+// EVENT TYPE ROUTE
 // ============================================
 
 /**
@@ -30,32 +29,33 @@ interface RouteSelf {
 }
 
 /**
- * Определение event type route для использования с layoutRoute.reatomRoute()
- * Путь: 'event-types/:id'
+ * Event type route - страница выбора слотов для типа события
+ * Путь: '/event-types/:id'
+ * Page route - рендерится только при exact match
  */
-export const eventTypeRouteDefinition = {
+export const eventTypeRoute = layoutRoute.reatomRoute({
   path: 'event-types/:id',
-  
+
   /**
    * Валидация параметров с помощью Zod
    */
   params: z.object({
     id: z.string().uuid(),
   }),
-  
+
   /**
    * Loader загружает детали типа события
    */
   async loader(params: RouteParams): Promise<{ eventType: EventType }> {
-    const eventTypeResponse = await wrap(api.getPublicEventType(params.id));
+    const eventTypeResponse = await wrap(apiClient.getPublicEventType(params.id));
     if (!eventTypeResponse.ok) {
       throw new Error('Failed to fetch event type');
     }
     const eventType: EventType = await wrap(eventTypeResponse.json());
-    
+
     return { eventType };
   },
-  
+
   /**
    * Render function возвращает React компонент
    */
@@ -63,27 +63,27 @@ export const eventTypeRouteDefinition = {
     const isPending = self.loader.pending();
     const data = self.loader.data();
     const error = self.loader.error();
-    
+
     if (isPending) {
       return <EventTypePage isLoading={true} />;
     }
-    
+
     if (error) {
       return <EventTypePage isLoading={false} error={error.message} />;
     }
-    
+
     if (!data) {
       return <EventTypePage isLoading={false} error="Event type not found" />;
     }
-    
+
     return (
-      <EventTypePage 
+      <EventTypePage
         eventType={data.eventType}
         isLoading={false}
       />
     );
   },
-};
+});
 
 // ============================================
 // SLOTS COMPUTED
@@ -104,12 +104,12 @@ export const slotsForDate = computed(async () => {
   const pathname = window.location.pathname;
   const match = pathname.match(/\/event-types\/([^/]+)/);
   const eventTypeId = match ? match[1] : null;
-  
+
   if (!eventTypeId) return [];
-  
+
   const selectedDate = selectedDateForRoute();
   if (!selectedDate) return [];
-  
+
   // Вычисляем диапазон дат (начало недели до конца недели)
   const startOfWeek = new Date(selectedDate);
   startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
@@ -121,17 +121,17 @@ export const slotsForDate = computed(async () => {
 
   const startDate = startOfWeek.toISOString().split('T')[0];
   const endDate = endOfWeek.toISOString().split('T')[0];
-  
-  const response = await wrap(api.getAvailableSlotsForEventType(
+
+  const response = await wrap(apiClient.getAvailableSlotsForEventType(
     eventTypeId,
     startDate,
     endDate
   ));
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch available slots');
   }
-  
+
   return await wrap(response.json());
 }, 'slotsForDate').extend((target: { retry: () => void }) => ({
   retry() {
@@ -143,4 +143,4 @@ export const slotsForDate = computed(async () => {
 // EXPORTS
 // ============================================
 
-export type EventTypeRouteDefinition = typeof eventTypeRouteDefinition;
+export { EventTypePage } from './EventTypePage';

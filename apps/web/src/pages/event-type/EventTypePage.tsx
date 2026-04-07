@@ -6,7 +6,7 @@ import { IconArrowLeft, IconClock } from '@tabler/icons-react';
 import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatTime } from '@shared/lib';
 import { navigate } from '@app/router';
-import { bookingEventTypeAtom, bookingSlotAtom } from '@pages/booking/route';
+import { bookingEventTypeAtom, bookingSlotAtom } from '@pages/book-catalog/route';
 import { selectedDateForRoute, slotsForDate } from './route';
 import type { EventType } from '@entities/event-type';
 import type { Slot } from '@entities/slot';

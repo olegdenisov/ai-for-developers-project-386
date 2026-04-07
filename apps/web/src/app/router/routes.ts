@@ -1,52 +1,17 @@
-import { computed, reatomRoute } from '@reatom/core';
-import type { RouteChild } from '@reatom/core';
-import { homeRouteDefinition } from '@pages/home/route';
-import { eventTypeRouteDefinition } from '@pages/event-type/route';
-import { bookingRouteDefinition } from '@pages/booking/route';
+import { computed, wrap } from '@reatom/core';
+import { layoutRoute } from '@shared/router';
+import { homeRoute } from '@pages/home';
+import { eventTypeRoute } from '@pages/event-type';
+import { bookCatalogRoute } from '@pages/book-catalog';
 
 // ============================================
-// LAYOUT ROUTE
+// EXPORTS
 // ============================================
 
-/**
- * Тип для outlet функции
- */
-interface LayoutOutlet {
-  outlet: () => RouteChild;
-}
-
-/**
- * Корневой layout-маршрут без пути
- * Все остальные маршруты являются вложенными (nested)
- * Рендерит outlet для отображения активных дочерних маршрутов
- */
-export const layoutRoute = reatomRoute({
-  render({ outlet }: LayoutOutlet): RouteChild {
-    return outlet();
-  },
-});
-
-// ============================================
-// NESTED ROUTES
-// ============================================
-
-/**
- * Home route - главная страница со списком типов событий
- * Путь: /
- */
-export const homeRoute = layoutRoute.reatomRoute(homeRouteDefinition);
-
-/**
- * Event type route - страница типа события с доступными слотами
- * Путь: /event-types/:id
- */
-export const eventTypeRoute = layoutRoute.reatomRoute(eventTypeRouteDefinition);
-
-/**
- * Booking route - страница бронирования
- * Путь: /bookings/new
- */
-export const bookingRoute = layoutRoute.reatomRoute(bookingRouteDefinition);
+export { layoutRoute } from '@shared/router';
+export { homeRoute } from '@pages/home';
+export { eventTypeRoute } from '@pages/event-type';
+export { bookCatalogRoute } from '@pages/book-catalog';
 
 // ============================================
 // NAVIGATION HELPERS
@@ -55,11 +20,12 @@ export const bookingRoute = layoutRoute.reatomRoute(bookingRouteDefinition);
 /**
  * Navigation helpers for programmatic navigation
  * These are convenience wrappers around route.go() methods
+ * Используют wrap() для правильной интеграции с системой эффектов Reatom
  */
 export const navigate = {
-  home: () => homeRoute.go(),
-  eventType: (id: string) => eventTypeRoute.go({ id }),
-  booking: () => bookingRoute.go(),
+  home: () => wrap(homeRoute.go()),
+  eventType: (id: string) => wrap(eventTypeRoute.go({ id })),
+  booking: () => wrap(bookCatalogRoute.go()),
   back: () => window.history.back(),
 };
 
@@ -74,7 +40,7 @@ export const navigate = {
  */
 export const appRender = computed(() => {
   // Render from layoutRoute which serves as the root layout
-  // It will render its children (homeRoute, eventTypeRoute, bookingRoute) when matched
+  // It will render its children (homeRoute, eventTypeRoute, bookCatalogRoute) when matched
   return layoutRoute.render();
 }, 'appRender');
 
@@ -90,6 +56,6 @@ export const isAnyRouteLoading = computed(() => {
   return (
     homeRoute.loader.pending() ||
     eventTypeRoute.loader.pending() ||
-    bookingRoute.loader.pending()
+    bookCatalogRoute.loader.pending()
   );
 }, 'isAnyRouteLoading');
