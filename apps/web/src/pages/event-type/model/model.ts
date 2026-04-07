@@ -88,8 +88,8 @@ export const proceedToBooking = action((eventType: EventType | undefined) => {
     // Сохраняем данные в atoms контекста бронирования
     bookingEventTypeAtom.set(eventType);
     bookingSlotAtom.set(selectedSlot);
-    // Переходим на страницу бронирования
-    navigate.booking();
+    // Переходим на страницу подтверждения бронирования
+    navigate.bookingConfirmation();
   }
 }, 'proceedToBooking');
 

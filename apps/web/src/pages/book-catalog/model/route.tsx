@@ -23,10 +23,11 @@ interface RouteSelf {
 /**
  * Book catalog route - страница каталога типов событий
  * Путь: '/bookings/new'
- * Page route - рендерится только при exact match
+ * Layout route - рендерится при любом match, поддерживает вложенные роуты
  */
 export const bookCatalogRoute = layoutRoute.reatomRoute({
   path: 'bookings/new',
+  layout: true,
 
   /**
    * Loader загружает список доступных типов событий

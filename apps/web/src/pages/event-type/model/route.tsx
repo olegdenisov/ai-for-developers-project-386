@@ -64,20 +64,15 @@ export const eventTypeRoute = layoutRoute.reatomRoute({
     
     const eventType: EventType = eventTypeResponse.data;
 
-    // Загружаем информацию о владельце (необязательно)
-    let owner: Owner;
-    try {
-      const ownerResponse = await wrap(apiClient.getOwnerProfile());
-      if (ownerResponse.status < 400) {
-        owner = ownerResponse.data;
-      } else {
-        // Fallback значение при неуспешном ответе
-        owner = { id: 'default', name: 'Host', email: '', isPredefined: true, createdAt: '' };
-      }
-    } catch {
-      // Fallback значение при ошибке
-      owner = { id: 'default', name: 'Host', email: '', isPredefined: true, createdAt: '' };
-    }
+    // Используем fallback значение для владельца
+    // (в текущей версии API нет метода getOwnerProfile)
+    const owner: Owner = {
+      id: 'default',
+      name: 'Host',
+      email: '',
+      isPredefined: true,
+      createdAt: '',
+    };
 
     return { eventType, owner };
   },

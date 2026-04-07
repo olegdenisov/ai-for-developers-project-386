@@ -3,6 +3,8 @@ import { layoutRoute } from '@shared/router';
 import { homeRoute } from '@pages/home';
 import { eventTypeRoute } from '@pages/event-type';
 import { bookCatalogRoute } from '@pages/book-catalog';
+import { bookingConfirmationRoute } from '@pages/booking-confirmation';
+import { bookingDetailRoute } from '@pages/booking-detail';
 
 // ============================================
 // EXPORTS
@@ -12,6 +14,8 @@ export { layoutRoute } from '@shared/router';
 export { homeRoute } from '@pages/home';
 export { eventTypeRoute } from '@pages/event-type';
 export { bookCatalogRoute } from '@pages/book-catalog';
+export { bookingConfirmationRoute } from '@pages/booking-confirmation';
+export { bookingDetailRoute } from '@pages/booking-detail';
 
 // ============================================
 // NAVIGATION HELPERS
@@ -26,6 +30,8 @@ export const navigate = {
   home: () => wrap(homeRoute.go()),
   eventType: (id: string) => wrap(eventTypeRoute.go({ id })),
   booking: () => wrap(bookCatalogRoute.go()),
+  bookingConfirmation: () => wrap(bookingConfirmationRoute.go()),
+  bookingDetail: (id: string) => wrap(bookingDetailRoute.go({ id })),
   back: () => window.history.back(),
 };
 
@@ -56,6 +62,8 @@ export const isAnyRouteLoading = computed(() => {
   return (
     homeRoute.loader.pending() ||
     eventTypeRoute.loader.pending() ||
-    bookCatalogRoute.loader.pending()
+    bookCatalogRoute.loader.pending() ||
+    bookingConfirmationRoute.loader.pending() ||
+    bookingDetailRoute.loader.pending()
   );
 }, 'isAnyRouteLoading');
