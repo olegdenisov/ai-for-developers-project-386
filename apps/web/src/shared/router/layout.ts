@@ -8,8 +8,12 @@ import type { RouteChild } from '@reatom/core';
  */
 export const layoutRoute = reatomRoute({
   layout: true,
-  render({ outlet }: { outlet: () => RouteChild }) {
-    return outlet();
+  render({ outlet }: { outlet: () => RouteChild[] }) {
+    const children = outlet();
+    // Берем последний элемент массива - текущий активный роут
+    // outlet() возвращает массив всех совпавших дочерних роутов
+    const currentRoute = children.at(-1);
+    return currentRoute ?? null;
   },
 });
 
