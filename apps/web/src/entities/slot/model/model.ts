@@ -28,11 +28,11 @@ export const fetchAvailableSlots = action(async (params: {
     params.endDate
   ));
 
-  if (!response.ok) {
+  if (response.status >= 400) {
     throw new Error('Failed to fetch available slots');
   }
 
-  const slots = await wrap(response.json());
+  const slots = response.data;
   availableSlotsAtom.set(slots);
   return slots;
 }, 'fetchAvailableSlots').extend(withAsync());

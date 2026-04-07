@@ -48,7 +48,7 @@ export const eventTypeRoute = layoutRoute.reatomRoute({
    * Валидация параметров с помощью Zod
    */
   params: z.object({
-    id: z.string().uuid(),
+    id: z.string(),
   }),
 
   /**
@@ -57,17 +57,19 @@ export const eventTypeRoute = layoutRoute.reatomRoute({
   async loader(params: RouteParams): Promise<{ eventType: EventType; owner: Owner }> {
     // Загружаем тип события
     const eventTypeResponse = await wrap(apiClient.getPublicEventType(params.id));
-    if (!eventTypeResponse.ok) {
+    
+    if (eventTypeResponse.status >= 400) {
       throw new Error('Failed to fetch event type');
     }
-    const eventType: EventType = await wrap(eventTypeResponse.json());
+    
+    const eventType: EventType = eventTypeResponse.data;
 
     // Загружаем информацию о владельце (необязательно)
     let owner: Owner;
     try {
       const ownerResponse = await wrap(apiClient.getOwnerProfile());
-      if (ownerResponse.ok) {
-        owner = await wrap(ownerResponse.json());
+      if (ownerResponse.status < 400) {
+        owner = ownerResponse.data;
       } else {
         // Fallback значение при неуспешном ответе
         owner = { id: 'default', name: 'Host', email: '', isPredefined: true, createdAt: '' };
@@ -164,11 +166,11 @@ export const fetchSlotsForDate = action(async () => {
     endDate
   ));
 
-  if (!response.ok) {
+  if (response.status >= 400) {
     throw new Error('Failed to fetch available slots');
   }
 
-  const slots = await wrap(response.json());
+  const slots = response.data;
   slotsAtom.set(slots);
   return slots;
 }, 'fetchSlotsForDate').extend(withAsync());

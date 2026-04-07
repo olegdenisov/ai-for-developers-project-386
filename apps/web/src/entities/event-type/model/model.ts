@@ -11,12 +11,12 @@ export const selectedEventTypeAtom = atom<EventType | null>(null, 'selectedEvent
 // Async action to fetch all public event types
 export const fetchEventTypes = action(async () => {
   const response = await wrap(apiClient.listPublicEventTypes());
-  if (!response.ok) {
+  if (response.status >= 400) {
     throw new Error('Failed to fetch event types');
   }
-  const data = await wrap(response.json());
-  // API возвращает { eventTypes: [...] }, но моки могут вернуть массив напрямую
-  const eventTypes = Array.isArray(data) ? data : (data.eventTypes || []);
+  // API возвращает { eventTypes: [...] }
+  const data = response.data;
+  const eventTypes = data.eventTypes || [];
   eventTypesAtom.set(eventTypes);
   return eventTypes;
 }, 'fetchEventTypes').extend(withAsync());
@@ -24,10 +24,10 @@ export const fetchEventTypes = action(async () => {
 // Async action to fetch a single event type by ID
 export const fetchEventTypeById = action(async (id: string) => {
   const response = await wrap(apiClient.getPublicEventType(id));
-  if (!response.ok) {
+  if (response.status >= 400) {
     throw new Error('Failed to fetch event type');
   }
-  const eventType = await wrap(response.json());
+  const eventType = response.data;
   selectedEventTypeAtom.set(eventType);
   return eventType;
 }, 'fetchEventTypeById').extend(withAsync());

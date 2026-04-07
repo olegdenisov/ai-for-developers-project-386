@@ -122,12 +122,12 @@ export const submitBooking = action(async (formData: BookingFormData) => {
     guestNotes: formData.guestNotes,
   }));
 
-  if (!response.ok) {
-    const error = await wrap(response.json());
+  if (response.status >= 400) {
+    const error = response.data;
     throw new Error(error.message || 'Failed to create booking');
   }
 
-  const booking: Booking = await wrap(response.json());
+  const booking: Booking = response.data;
 
   // Очищаем контекст бронирования после успешного создания
   bookingEventTypeAtom.set(null);

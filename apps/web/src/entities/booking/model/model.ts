@@ -14,10 +14,10 @@ export const isBookingSuccessAtom = atom<boolean>(false, 'isBookingSuccess');
 // Async action to fetch a booking by ID
 export const fetchBooking = action(async (id: string) => {
   const response = await wrap(apiClient.getBooking(id));
-  if (!response.ok) {
+  if (response.status >= 400) {
     throw new Error('Failed to fetch booking');
   }
-  const booking = await wrap(response.json());
+  const booking = response.data;
   currentBookingAtom.set(booking);
   return booking;
 }, 'fetchBooking').extend(withAsync());
@@ -29,14 +29,14 @@ export const createBooking = action(async (data: CreateBookingRequest) => {
 
   const response = await wrap(apiClient.createBooking(data));
 
-  if (!response.ok) {
-    const error = await wrap(response.json());
+  if (response.status >= 400) {
+    const error = response.data;
     const errorMessage = error.message || 'Failed to create booking';
     bookingErrorAtom.set(errorMessage);
     throw new Error(errorMessage);
   }
 
-  const booking = await wrap(response.json());
+  const booking = response.data;
   currentBookingAtom.set(booking);
   isBookingSuccessAtom.set(true);
   return booking;
@@ -45,10 +45,10 @@ export const createBooking = action(async (data: CreateBookingRequest) => {
 // Async action to cancel a booking
 export const cancelBooking = action(async (id: string, reason?: string) => {
   const response = await wrap(apiClient.cancelBooking(id, reason));
-  if (!response.ok) {
+  if (response.status >= 400) {
     throw new Error('Failed to cancel booking');
   }
-  const booking = await wrap(response.json());
+  const booking = response.data;
   currentBookingAtom.set(booking);
   return booking;
 }, 'cancelBooking').extend(withAsync());

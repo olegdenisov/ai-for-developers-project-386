@@ -33,12 +33,14 @@ export const homeRoute = layoutRoute.reatomRoute({
    */
   async loader(): Promise<EventType[]> {
     const response = await wrap(apiClient.listPublicEventTypes());
-    if (!response.ok) {
+    
+    if (response.status >= 400) {
       throw new Error('Failed to fetch event types');
     }
-    const data = await wrap(response.json());
-    // API возвращает { eventTypes: [...] }, но моки могут вернуть массив напрямую
-    const eventTypes = Array.isArray(data) ? data : (data.eventTypes || []);
+    
+    // API возвращает { eventTypes: [...] }
+    const data = response.data;
+    const eventTypes = data.eventTypes || [];
     return eventTypes;
   },
 

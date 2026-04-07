@@ -8,16 +8,16 @@ const eventTypeSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   durationMinutes: z.number(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
+  updatedAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
 });
 
 const slotSchema = z.object({
   id: z.string(),
-  startTime: z.string().datetime(),
-  endTime: z.string().datetime(),
+  startTime: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
+  endTime: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
   isAvailable: z.boolean(),
-  createdAt: z.string().datetime(),
+  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
 });
 
 const bookingSchema = z.object({
@@ -28,8 +28,8 @@ const bookingSchema = z.object({
   guestEmail: z.string(),
   guestNotes: z.string().nullable(),
   status: z.enum(['CONFIRMED', 'CANCELLED', 'COMPLETED']),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
+  updatedAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
   eventType: eventTypeSchema,
   slot: slotSchema,
 });
