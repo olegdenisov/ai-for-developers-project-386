@@ -1,8 +1,6 @@
 import { atom, action, wrap, withAsync, computed } from '@reatom/core';
-import { PublicApi } from '@calendar-booking/api-client';
+import { apiClient } from '@shared/api';
 import { Booking, CreateBookingRequest } from './types';
-
-const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 // Atom to store the current booking
 export const currentBookingAtom = atom<Booking | null>(null, 'currentBooking');
@@ -15,7 +13,7 @@ export const isBookingSuccessAtom = atom<boolean>(false, 'isBookingSuccess');
 
 // Async action to fetch a booking by ID
 export const fetchBooking = action(async (id: string) => {
-  const response = await wrap(api.getBooking(id));
+  const response = await wrap(apiClient.getBooking(id));
   if (!response.ok) {
     throw new Error('Failed to fetch booking');
   }
@@ -29,7 +27,7 @@ export const createBooking = action(async (data: CreateBookingRequest) => {
   bookingErrorAtom.set(null);
   isBookingSuccessAtom.set(false);
 
-  const response = await wrap(api.createBooking(data));
+  const response = await wrap(apiClient.createBooking(data));
 
   if (!response.ok) {
     const error = await wrap(response.json());
@@ -46,7 +44,7 @@ export const createBooking = action(async (data: CreateBookingRequest) => {
 
 // Async action to cancel a booking
 export const cancelBooking = action(async (id: string, reason?: string) => {
-  const response = await wrap(api.cancelBooking(id, reason));
+  const response = await wrap(apiClient.cancelBooking(id, reason));
   if (!response.ok) {
     throw new Error('Failed to cancel booking');
   }

@@ -52,9 +52,10 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
   async loader(): Promise<EventType[]> {
     const data = await wrap(apiClient.listPublicEventTypes().then(r => r.json()));
 
-    console.log({ data });
+    // API возвращает { eventTypes: [...] }, но моки могут вернуть массив напрямую
+    const eventTypes = Array.isArray(data) ? data : (data.eventTypes || []);
 
-    return data.eventTypes || [];
+    return eventTypes;
   },
 
   /**

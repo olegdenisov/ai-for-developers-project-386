@@ -1,1 +1,2 @@
-export { apiClient, PublicApi } from './client';
+// Экспортируем API клиент и его типы
+export { apiClient } from './client';

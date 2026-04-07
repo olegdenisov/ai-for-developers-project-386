@@ -1,8 +1,6 @@
 import { atom, action, wrap, withAsync, computed } from '@reatom/core';
-import { PublicApi } from '@calendar-booking/api-client';
+import { apiClient } from '@shared/api';
 import { Slot } from './types';
-
-const api = new PublicApi(import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 // Atom to store available slots for a date range
 export const availableSlotsAtom = atom<Slot[]>([], 'availableSlots');
@@ -24,7 +22,7 @@ export const fetchAvailableSlots = action(async (params: {
 }) => {
   slotsDateRangeAtom.set({ startDate: params.startDate, endDate: params.endDate });
 
-  const response = await wrap(api.getAvailableSlotsForEventType(
+  const response = await wrap(apiClient.getAvailableSlotsForEventType(
     params.eventTypeId,
     params.startDate,
     params.endDate
