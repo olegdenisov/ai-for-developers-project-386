@@ -123,6 +123,33 @@ packages/api-client/src/ (fetch client)
 - Prism mock server (`pnpm mock:up`) serves from `tsp-output/openapi.json`
 - Vite in `mock` mode uses `apps/web/.env.mock` (API at :3100)
 
+## Known Issues / Известные проблемы
+
+### PostgreSQL Access (P1010)
+При использовании Prisma с PostgreSQL в Docker может возникнуть ошибка:
+```
+P1010: User X was denied access on the database `database.public`
+```
+
+**Решение:**
+1. Создать таблицы вручную через SQL (скрипты в папке prisma/)
+2. Использовать postgres пользователя для миграций:
+   ```bash
+   # Запуск PostgreSQL с правами суперпользователя
+   docker run -d --name calendar-postgres \
+     -e POSTGRES_USER=postgres \
+     -e POSTGRES_PASSWORD=postgres \
+     -p 5432:5432 \
+     postgres:16-alpine
+   ```
+3. Изменить owner схемы public:
+   ```sql
+   ALTER SCHEMA public OWNER TO calendar;
+   ```
+
+### openapi-generator-cli requires Java
+API клиент генерируется вручную на основе типов из shared-types.
+
 ## Environment
 
 - Node.js 24+, pnpm 9+
