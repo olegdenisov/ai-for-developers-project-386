@@ -1,11 +1,12 @@
 // Импорты
 import { atom, action, computed } from '@reatom/core';
 import { navigate } from '@app/router';
-import { selectedDateForRoute, slotsAtom, currentCalendarMonthAtom } from '../route';
+import { selectedDateForRoute, slotsAtom, currentCalendarMonthAtom } from './route';
 import { bookingEventTypeAtom, bookingSlotAtom } from '@pages/book-catalog/route';
 import type { Slot } from '@entities/slot';
 import type { EventType } from '@entities/event-type';
 import dayjs from 'dayjs';
+import { getSlotsForDate } from '../helpers';
 
 // ============================================
 // ATOMS
@@ -13,45 +14,6 @@ import dayjs from 'dayjs';
 
 // Атом для хранения выбранного слота
 export const selectedSlotAtom = atom<Slot | null>(null, 'eventTypePage.selectedSlot');
-
-// ============================================
-// UTILITIES
-// ============================================
-
-// Форматирование длительности (например: "15 мин" или "1 ч 30 мин")
-export function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} мин`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
-}
-
-// Подсчет количества доступных слотов на конкретную дату
-export function countAvailableSlotsForDate(slots: Slot[], date: Date): number {
-  return slots.filter((slot) => {
-    const slotDate = new Date(slot.startTime);
-    return (
-      slotDate.getDate() === date.getDate() &&
-      slotDate.getMonth() === date.getMonth() &&
-      slotDate.getFullYear() === date.getFullYear() &&
-      slot.isAvailable
-    );
-  }).length;
-}
-
-// Получение слотов на конкретную дату
-export function getSlotsForDate(slots: Slot[], date: Date): Slot[] {
-  return slots.filter((slot) => {
-    const slotDate = new Date(slot.startTime);
-    return (
-      slotDate.getDate() === date.getDate() &&
-      slotDate.getMonth() === date.getMonth() &&
-      slotDate.getFullYear() === date.getFullYear()
-    );
-  });
-}
 
 // ============================================
 // COMPUTED

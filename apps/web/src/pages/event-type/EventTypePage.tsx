@@ -24,10 +24,15 @@ import {
 } from '@tabler/icons-react';
 import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatTime, formatDate } from '@shared/lib';
-import { fetchSlotsForDate, isSlotsLoading, currentCalendarMonthAtom, selectedDateForRoute, slotsAtom } from './route';
+import {
+  fetchSlotsForDate,
+  isSlotsLoading,
+  currentCalendarMonthAtom,
+  selectedDateForRoute,
+  slotsAtom,
+} from './model/route';
 import {
   selectedSlotAtom,
-  formatDuration,
   calendarDaysAtom,
   slotsForSelectedDateAtom,
   goToPrevMonth,
@@ -36,8 +41,8 @@ import {
   selectSlot,
   proceedToBooking,
   goBack,
-  countAvailableSlotsForDate,
 } from './model/model';
+import { formatDuration, countAvailableSlotsForDate } from './helpers';
 import type { EventType } from '@entities/event-type';
 import type { Owner } from '@entities/owner';
 import type { Slot } from '@entities/slot';

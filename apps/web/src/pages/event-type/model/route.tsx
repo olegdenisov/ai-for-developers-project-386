@@ -3,7 +3,7 @@ import type { RouteChild } from '@reatom/core';
 import { z } from 'zod';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
-import { EventTypePage } from './EventTypePage';
+import { EventTypePage } from '../EventTypePage';
 import type { EventType } from '@entities/event-type';
 import type { Owner } from '@entities/owner';
 import type { Slot } from '@entities/slot';
@@ -184,4 +184,4 @@ export const isSlotsLoading = computed(() => {
 // EXPORTS
 // ============================================
 
-export { EventTypePage } from './EventTypePage';
+export { EventTypePage } from '../EventTypePage';
