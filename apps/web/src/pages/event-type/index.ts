@@ -1,5 +1,7 @@
 export { EventTypePage, eventTypeRoute } from './route';
 export {
   selectedDateForRoute,
-  slotsForDate
+  slotsAtom,
+  fetchSlotsForDate,
+  isSlotsLoading
 } from './route';

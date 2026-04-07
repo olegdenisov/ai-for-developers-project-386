@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { reatomContext, reatomComponent } from '@reatom/react';
 import { appRender } from './app/router';

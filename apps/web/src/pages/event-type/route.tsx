@@ -1,10 +1,12 @@
-import { wrap, atom, computed } from '@reatom/core';
+import { wrap, atom, computed, withAsync, action } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { z } from 'zod';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import { EventTypePage } from './EventTypePage';
 import type { EventType } from '@entities/event-type';
+import type { Owner } from '@entities/owner';
+import type { Slot } from '@entities/slot';
 
 // ============================================
 // EVENT TYPE ROUTE
@@ -23,10 +25,16 @@ interface RouteParams {
 interface RouteSelf {
   loader: {
     pending: () => boolean;
-    data: () => { eventType: EventType } | null;
+    data: () => { eventType: EventType; owner: Owner } | null;
     error: () => Error | null;
   };
 }
+
+/**
+ * Atom для хранения текущего месяца календаря
+ * Используется для навигации по месяцам в календаре
+ */
+export const currentCalendarMonthAtom = atom<Date>(new Date(), 'currentCalendarMonth');
 
 /**
  * Event type route - страница выбора слотов для типа события
@@ -44,16 +52,32 @@ export const eventTypeRoute = layoutRoute.reatomRoute({
   }),
 
   /**
-   * Loader загружает детали типа события
+   * Loader загружает детали типа события и информацию о владельце
    */
-  async loader(params: RouteParams): Promise<{ eventType: EventType }> {
+  async loader(params: RouteParams): Promise<{ eventType: EventType; owner: Owner }> {
+    // Загружаем тип события
     const eventTypeResponse = await wrap(apiClient.getPublicEventType(params.id));
     if (!eventTypeResponse.ok) {
       throw new Error('Failed to fetch event type');
     }
     const eventType: EventType = await wrap(eventTypeResponse.json());
 
-    return { eventType };
+    // Загружаем информацию о владельце (необязательно)
+    let owner: Owner;
+    try {
+      const ownerResponse = await wrap(apiClient.getOwnerProfile());
+      if (ownerResponse.ok) {
+        owner = await wrap(ownerResponse.json());
+      } else {
+        // Fallback значение при неуспешном ответе
+        owner = { id: 'default', name: 'Host', email: '', isPredefined: true, createdAt: '' };
+      }
+    } catch {
+      // Fallback значение при ошибке
+      owner = { id: 'default', name: 'Host', email: '', isPredefined: true, createdAt: '' };
+    }
+
+    return { eventType, owner };
   },
 
   /**
@@ -79,6 +103,7 @@ export const eventTypeRoute = layoutRoute.reatomRoute({
     return (
       <EventTypePage
         eventType={data.eventType}
+        owner={data.owner}
         isLoading={false}
       />
     );
@@ -91,24 +116,35 @@ export const eventTypeRoute = layoutRoute.reatomRoute({
 
 /**
  * Atom для хранения выбранной даты в маршруте
- * Используется slotsForDate computed
+ * Используется fetchSlotsForDate action
  */
 export const selectedDateForRoute = atom<Date | null>(null, 'selectedDateForRoute');
 
 /**
- * Computed для загрузки доступных слотов на выбранную дату
+ * Atom для хранения загруженных слотов
+ */
+export const slotsAtom = atom<Slot[]>([], 'slotsAtom');
+
+/**
+ * Action для загрузки доступных слотов на выбранную дату
  * Отдельно от loader маршрута, чтобы не перезагружать event type при смене даты
  */
-export const slotsForDate = computed(async () => {
+export const fetchSlotsForDate = action(async () => {
   // Получаем текущий URL и извлекаем id из него
   const pathname = window.location.pathname;
   const match = pathname.match(/\/event-types\/([^/]+)/);
   const eventTypeId = match ? match[1] : null;
 
-  if (!eventTypeId) return [];
+  if (!eventTypeId) {
+    slotsAtom.set([]);
+    return [];
+  }
 
   const selectedDate = selectedDateForRoute();
-  if (!selectedDate) return [];
+  if (!selectedDate) {
+    slotsAtom.set([]);
+    return [];
+  }
 
   // Вычисляем диапазон дат (начало недели до конца недели)
   const startOfWeek = new Date(selectedDate);
@@ -132,12 +168,17 @@ export const slotsForDate = computed(async () => {
     throw new Error('Failed to fetch available slots');
   }
 
-  return await wrap(response.json());
-}, 'slotsForDate').extend((target: { retry: () => void }) => ({
-  retry() {
-    target.retry();
-  },
-}));
+  const slots = await wrap(response.json());
+  slotsAtom.set(slots);
+  return slots;
+}, 'fetchSlotsForDate').extend(withAsync());
+
+/**
+ * Computed для отслеживания состояния загрузки слотов
+ */
+export const isSlotsLoading = computed(() => {
+  return fetchSlotsForDate.pending();
+}, 'isSlotsLoading');
 
 // ============================================
 // EXPORTS
