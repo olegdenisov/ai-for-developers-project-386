@@ -23,16 +23,17 @@ echo "📦 Проверка PostgreSQL..."
 if docker ps --format "{{.Names}}" | grep -q "^calendar-postgres$"; then
     echo "${GREEN}✓${NC} PostgreSQL уже запущен"
 elif docker ps -a --format "{{.Names}}" | grep -q "^calendar-postgres$"; then
-    echo "${YELLOW}→${NC} Запуск существующего контейнера PostgreSQL..."
-    docker start calendar-postgres
-else
+    echo "${YELLOW}→${NC} Удаление старого контейнера и создание нового..."
+    docker rm -f calendar-postgres >/dev/null 2>&1 || true
     echo "${YELLOW}→${NC} Создание и запуск нового контейнера PostgreSQL..."
     docker run -d \
         --name calendar-postgres \
         -e POSTGRES_USER=postgres \
         -e POSTGRES_PASSWORD=postgres \
+        -e POSTGRES_DB=calendar_booking \
         -p 5432:5432 \
-        postgres:16-alpine
+        postgres:16-alpine \
+        postgres -c "log_statement=all" -c "listen_addresses=*"
 fi
 
 # 2. Ожидание готовности PostgreSQL
@@ -59,8 +60,16 @@ TABLES_EXIST=$(docker exec calendar-postgres psql -U postgres -d calendar_bookin
 if [[ "$TABLES_EXIST" == " f" ]] || [[ -z "$TABLES_EXIST" ]]; then
     echo "${YELLOW}→${NC} Создание таблиц..."
     docker exec -i calendar-postgres psql -U postgres -d calendar_booking << 'SQLEOF'
+-- Grant schema permissions
+GRANT ALL ON SCHEMA public TO postgres;
+ALTER SCHEMA public OWNER TO postgres;
+
 -- Create Enum Type
-CREATE TYPE IF NOT EXISTS "booking_status" AS ENUM ('CONFIRMED', 'CANCELLED', 'COMPLETED');
+DO $$ BEGIN
+    CREATE TYPE "booking_status" AS ENUM ('CONFIRMED', 'CANCELLED', 'COMPLETED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Create Owners Table
 CREATE TABLE IF NOT EXISTS "owners" (
@@ -107,6 +116,13 @@ CREATE TABLE IF NOT EXISTS "bookings" (
 -- Create Indexes
 CREATE INDEX IF NOT EXISTS "bookings_slotId_idx" ON "bookings"("slotId");
 CREATE INDEX IF NOT EXISTS "bookings_eventTypeId_idx" ON "bookings"("eventTypeId");
+
+-- Grant all privileges
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON TYPE "booking_status" TO postgres;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
 SQLEOF
     echo "${GREEN}✓${NC} Таблицы созданы"
 fi
@@ -117,6 +133,10 @@ OWNER_COUNT=$(docker exec calendar-postgres psql -U postgres -d calendar_booking
 if [ "$OWNER_COUNT" = "0" ]; then
     echo "${YELLOW}→${NC} Добавление тестовых данных..."
     docker exec -i calendar-postgres psql -U postgres -d calendar_booking << 'SQLEOF'
+-- Grant permissions first
+GRANT ALL ON SCHEMA public TO postgres;
+ALTER SCHEMA public OWNER TO postgres;
+
 -- Insert default owner
 INSERT INTO "owners" ("id", "name", "email", "isPredefined") 
 VALUES ('owner-001', 'Calendar Owner', 'owner@calendar.local', true)
@@ -141,6 +161,10 @@ CROSS JOIN generate_series(9, 16) as hour
 CROSS JOIN (VALUES (0), (30)) as minutes(minute)
 WHERE EXTRACT(DOW FROM CURRENT_DATE + (d.day || ' days')::interval) NOT IN (0, 6)
 ON CONFLICT DO NOTHING;
+
+-- Grant privileges on new data
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
 SQLEOF
     echo "${GREEN}✓${NC} Тестовые данные добавлены"
 fi
@@ -177,6 +201,9 @@ echo "  Web приложение:                  http://localhost:5173"
 echo ""
 echo "${YELLOW}Нажмите Ctrl+C для остановки всех сервисов${NC}"
 echo ""
+
+# Устанавливаем правильный DATABASE_URL для API
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/calendar_booking?schema=public"
 
 # Запуск через turbo
 pnpm dev
