@@ -22,7 +22,8 @@
     "mock:up": "docker-compose -f docker/docker-compose.mock.yml up -d",
     "mock:down": "docker-compose -f docker/docker-compose.mock.yml down",
     "mock:logs": "docker-compose -f docker/docker-compose.mock.yml logs -f",
-    "dev:mock": "pnpm mock:up && pnpm --filter web dev --mode mock",
+    "start:dev": "./start-dev.sh",
+    "start:mock": "pnpm mock:up && pnpm --filter web dev --mode mock",
     "type-check": "turbo run type-check"
   },
   "devDependencies": {

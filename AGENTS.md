@@ -11,9 +11,12 @@ Turborepo monorepo:
 ## Development Commands
 
 ```bash
-# Three development modes:
-pnpm dev:mock          # Prism mock (3100) + Web (5173) - for isolated frontend dev
-pnpm dev               # API + Web via turbo (need PostgreSQL running)
+# One-command development startup (RECOMMENDED):
+pnpm start:dev         # Full setup: PostgreSQL + tables + data + API + Web
+
+# Alternative development modes:
+pnpm start:mock        # Prism mock (3100) + Web (5173) - for isolated frontend dev
+pnpm dev               # API + Web via turbo (PostgreSQL must be running)
 pnpm docker:up         # Full stack in Docker (Postgres + API + Web)
 
 # Code generation workflow (runs automatically when main.tsp changes)
