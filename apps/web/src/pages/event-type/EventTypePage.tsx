@@ -1,5 +1,4 @@
 import { reatomComponent } from '@reatom/react';
-import { atom, wrap } from '@reatom/core';
 import { useEffect } from 'react';
 import {
   Title,
@@ -25,12 +24,23 @@ import {
 } from '@tabler/icons-react';
 import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatTime, formatDate } from '@shared/lib';
-import { navigate } from '@app/router';
-import { bookingEventTypeAtom, bookingSlotAtom } from '@pages/book-catalog/route';
-import { selectedDateForRoute, slotsAtom, isSlotsLoading, currentCalendarMonthAtom, fetchSlotsForDate } from './route';
+import { fetchSlotsForDate, isSlotsLoading, currentCalendarMonthAtom, selectedDateForRoute, slotsAtom } from './route';
+import {
+  selectedSlotAtom,
+  formatDuration,
+  calendarDaysAtom,
+  slotsForSelectedDateAtom,
+  goToPrevMonth,
+  goToNextMonth,
+  selectDate,
+  selectSlot,
+  proceedToBooking,
+  goBack,
+  countAvailableSlotsForDate,
+} from './model/model';
 import type { EventType } from '@entities/event-type';
-import type { Slot } from '@entities/slot';
 import type { Owner } from '@entities/owner';
+import type { Slot } from '@entities/slot';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 
@@ -46,64 +56,18 @@ interface EventTypePageProps {
 }
 
 // ============================================
-// UTILITIES
-// ============================================
-
-// Форматирование длительности (например: "15 мин" или "1 ч 30 мин")
-function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} мин`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
-}
-
-// Подсчет количества доступных слотов на конкретную дату
-function countAvailableSlotsForDate(slots: Slot[], date: Date): number {
-  return slots.filter((slot) => {
-    const slotDate = new Date(slot.startTime);
-    return (
-      slotDate.getDate() === date.getDate() &&
-      slotDate.getMonth() === date.getMonth() &&
-      slotDate.getFullYear() === date.getFullYear() &&
-      slot.isAvailable
-    );
-  }).length;
-}
-
-// Получение слотов на конкретную дату
-function getSlotsForDate(slots: Slot[], date: Date): Slot[] {
-  return slots.filter((slot) => {
-    const slotDate = new Date(slot.startTime);
-    return (
-      slotDate.getDate() === date.getDate() &&
-      slotDate.getMonth() === date.getMonth() &&
-      slotDate.getFullYear() === date.getFullYear()
-    );
-  });
-}
-
-// ============================================
-// LOCAL STATE ATOM
-// ============================================
-
-// Локальный атом для хранения выбранного слота
-const selectedSlotLocal = atom<Slot | null>(null, 'eventTypePage.selectedSlot');
-
-// ============================================
 // COMPONENT
 // ============================================
 
 export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, error }: EventTypePageProps) => {
-  // Получаем состояние из маршрута
+  // Получаем состояние из atoms
   const selectedDate = selectedDateForRoute();
   const currentMonth = currentCalendarMonthAtom();
   const slotsLoading = isSlotsLoading();
   const slots = slotsAtom();
-
-  // Получаем выбранный слот из локального атома
-  const selectedSlot = selectedSlotLocal();
+  const selectedSlot = selectedSlotAtom();
+  const calendarDays = calendarDaysAtom();
+  const slotsForSelectedDate = slotsForSelectedDateAtom();
 
   // Загружаем слоты при изменении выбранной даты
   useEffect(() => {
@@ -111,47 +75,6 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
       fetchSlotsForDate();
     }
   }, [selectedDate]);
-
-  // Обработчики навигации по месяцам
-  const handlePrevMonth = wrap(() => {
-    const newMonth = dayjs(currentMonth).subtract(1, 'month').toDate();
-    currentCalendarMonthAtom.set(newMonth);
-  });
-
-  const handleNextMonth = wrap(() => {
-    const newMonth = dayjs(currentMonth).add(1, 'month').toDate();
-    currentCalendarMonthAtom.set(newMonth);
-  });
-
-  // Обработчик выбора даты
-  const handleDateSelect = wrap((date: Date) => {
-    selectedDateForRoute.set(date);
-    // Сбрасываем выбранный слот при смене даты
-    selectedSlotLocal.set(null);
-  });
-
-  // Обработчик выбора слота
-  const handleSlotSelect = wrap((slot: Slot) => {
-    if (slot.isAvailable) {
-      selectedSlotLocal.set(slot);
-    }
-  });
-
-  // Обработчик продолжения бронирования
-  const handleContinue = wrap(() => {
-    if (selectedSlot && eventType) {
-      // Сохраняем данные в atoms контекста бронирования
-      bookingEventTypeAtom.set(eventType);
-      bookingSlotAtom.set(selectedSlot);
-      // Переходим на страницу бронирования
-      navigate.booking();
-    }
-  });
-
-  // Обработчик возврата на главную
-  const handleBack = wrap(() => {
-    navigate.home();
-  });
 
   // Отображение состояния загрузки
   if (isLoading) {
@@ -167,7 +90,7 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
     return (
       <Layout>
         <ErrorMessage message={error} />
-        <Button onClick={handleBack} mt="md">На главную</Button>
+        <Button onClick={goBack} mt="md">На главную</Button>
       </Layout>
     );
   }
@@ -177,26 +100,9 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
     return (
       <Layout>
         <ErrorMessage message="Тип события не найден" />
-        <Button onClick={handleBack} mt="md">На главную</Button>
+        <Button onClick={goBack} mt="md">На главную</Button>
       </Layout>
     );
-  }
-
-  // Получаем слоты для выбранной даты
-  const slotsForSelectedDate = selectedDate ? getSlotsForDate(slots, selectedDate) : [];
-
-  // Генерация календарной сетки
-  const startOfMonth = dayjs(currentMonth).startOf('month');
-  const endOfMonth = dayjs(currentMonth).endOf('month');
-  const startOfCalendar = startOfMonth.startOf('week');
-  const endOfCalendar = endOfMonth.endOf('week');
-
-  const calendarDays: Date[] = [];
-  let currentDay = startOfCalendar;
-
-  while (currentDay.isBefore(endOfCalendar) || currentDay.isSame(endOfCalendar, 'day')) {
-    calendarDays.push(currentDay.toDate());
-    currentDay = currentDay.add(1, 'day');
   }
 
   // Дни недели
@@ -208,7 +114,7 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
         variant="subtle"
         leftSection={<IconArrowLeft size={16} />}
         mb="md"
-        onClick={handleBack}
+        onClick={goBack}
       >
         Назад
       </Button>
@@ -273,10 +179,10 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
             <Group justify="space-between" mb="md">
               <Title order={5}>Календарь</Title>
               <Group gap="xs">
-                <Button variant="subtle" size="compact-sm" onClick={handlePrevMonth}>
+                <Button variant="subtle" size="compact-sm" onClick={goToPrevMonth}>
                   <IconChevronLeft size={16} />
                 </Button>
-                <Button variant="subtle" size="compact-sm" onClick={handleNextMonth}>
+                <Button variant="subtle" size="compact-sm" onClick={goToNextMonth}>
                   <IconChevronRight size={16} />
                 </Button>
               </Group>
@@ -311,7 +217,7 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
                 gap: '4px',
               }}
             >
-              {calendarDays.map((date, index) => {
+              {calendarDays.map((date: Date, index: number) => {
                 const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
                 const isSelected = selectedDate &&
                   date.getDate() === selectedDate.getDate() &&
@@ -324,7 +230,7 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
                 return (
                   <UnstyledButton
                     key={index}
-                    onClick={() => isCurrentMonth && handleDateSelect(date)}
+                    onClick={() => isCurrentMonth && selectDate(date)}
                     disabled={!isCurrentMonth}
                     style={{
                       width: '100%',
@@ -388,7 +294,7 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
                   return (
                     <UnstyledButton
                       key={slot.id}
-                      onClick={() => handleSlotSelect(slot)}
+                      onClick={() => selectSlot(slot)}
                       disabled={!isAvailable}
                       style={{
                         width: '100%',
@@ -425,13 +331,13 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
               <Button
                 variant="subtle"
                 leftSection={<IconArrowLeft size={16} />}
-                onClick={handleBack}
+                onClick={goBack}
               >
                 Назад
               </Button>
               <Button
                 rightSection={<IconArrowRight size={16} />}
-                onClick={handleContinue}
+                onClick={() => proceedToBooking(eventType)}
                 disabled={!selectedSlot}
               >
                 Продолжить
