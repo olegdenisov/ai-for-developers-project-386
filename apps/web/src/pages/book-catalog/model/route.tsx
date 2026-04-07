@@ -2,11 +2,11 @@ import { wrap } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
-import { HomePage } from './HomePage';
+import { BookCatalogPage } from '../BookCatalogPage';
 import type { EventType } from '@entities/event-type';
 
 // ============================================
-// HOME ROUTE
+// BOOK CATALOG ROUTE
 // ============================================
 
 /**
@@ -21,24 +21,22 @@ interface RouteSelf {
 }
 
 /**
- * Home route - главная страница
- * Путь: '/' (корневой путь)
+ * Book catalog route - страница каталога типов событий
+ * Путь: '/bookings/new'
  * Page route - рендерится только при exact match
  */
-export const homeRoute = layoutRoute.reatomRoute({
-  path: '',
+export const bookCatalogRoute = layoutRoute.reatomRoute({
+  path: 'bookings/new',
 
   /**
    * Loader загружает список доступных типов событий
    */
   async loader(): Promise<EventType[]> {
-    const response = await wrap(apiClient.listPublicEventTypes());
-    if (!response.ok) {
-      throw new Error('Failed to fetch event types');
-    }
-    const data = await wrap(response.json());
+    const data = await wrap(apiClient.listPublicEventTypes().then(r => r.json()));
+
     // API возвращает { eventTypes: [...] }, но моки могут вернуть массив напрямую
     const eventTypes = Array.isArray(data) ? data : (data.eventTypes || []);
+
     return eventTypes;
   },
 
@@ -51,7 +49,7 @@ export const homeRoute = layoutRoute.reatomRoute({
     const error = self.loader.error();
 
     return (
-      <HomePage
+      <BookCatalogPage
         eventTypes={eventTypes || []}
         isLoading={isPending}
         error={error?.message}
@@ -59,9 +57,3 @@ export const homeRoute = layoutRoute.reatomRoute({
     );
   },
 });
-
-// ============================================
-// EXPORTS
-// ============================================
-
-export { HomePage } from './HomePage';

@@ -3,6 +3,10 @@ import { createBooking as createBookingEntity } from '@entities/booking';
 import { selectedSlotAtom } from '@entities/slot';
 import { selectedEventTypeAtom } from '@entities/event-type';
 import { BookingFormData, validateBookingForm } from './validation';
+import type { EventType } from '@entities/event-type';
+import type { Slot } from '@entities/slot';
+import { apiClient } from '@shared/api';
+import type { Booking } from '@entities/booking';
 
 // Form state atom
 export const bookingFormAtom = atom<Partial<BookingFormData>>(
@@ -80,3 +84,54 @@ export const submitBookingForm = action(async () => {
     throw error;
   }
 }, 'submitBookingForm').extend(withAsync());
+
+// ============================================
+// SHARED BOOKING CONTEXT (used across pages)
+// ============================================
+
+/**
+ * Atom для хранения выбранного типа события при бронировании
+ * Устанавливается когда пользователь выбирает тип события на странице каталога
+ * Используется на странице выбора слотов (event-type)
+ */
+export const bookingEventTypeAtom = atom<EventType | null>(null, 'bookingEventType');
+
+/**
+ * Atom для хранения выбранного слота при бронировании
+ * Используется на странице выбора слотов (event-type)
+ */
+export const bookingSlotAtom = atom<Slot | null>(null, 'bookingSlot');
+
+/**
+ * Action для создания бронирования
+ * Используется на странице подтверждения бронирования
+ */
+export const submitBooking = action(async (formData: BookingFormData) => {
+  const eventType = bookingEventTypeAtom();
+  const slot = bookingSlotAtom();
+
+  if (!eventType || !slot) {
+    throw new Error('Event type or slot not selected');
+  }
+
+  const response = await wrap(apiClient.createBooking({
+    eventTypeId: eventType.id,
+    slotId: slot.id,
+    guestName: formData.guestName,
+    guestEmail: formData.guestEmail,
+    guestNotes: formData.guestNotes,
+  }));
+
+  if (!response.ok) {
+    const error = await wrap(response.json());
+    throw new Error(error.message || 'Failed to create booking');
+  }
+
+  const booking: Booking = await wrap(response.json());
+
+  // Очищаем контекст бронирования после успешного создания
+  bookingEventTypeAtom.set(null);
+  bookingSlotAtom.set(null);
+
+  return booking;
+}, 'submitBooking').extend(withAsync());

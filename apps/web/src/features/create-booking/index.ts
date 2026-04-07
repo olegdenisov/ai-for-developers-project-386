@@ -8,3 +8,10 @@ export {
   clearForm,
   submitBookingForm,
 } from './model/model';
+
+// Shared state for cross-page booking context
+export {
+  bookingEventTypeAtom,
+  bookingSlotAtom,
+  submitBooking,
+} from './model/model';

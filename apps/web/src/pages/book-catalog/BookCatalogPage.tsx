@@ -1,5 +1,4 @@
 import { reatomComponent } from '@reatom/react';
-import { wrap } from '@reatom/core';
 import {
   Title,
   Text,
@@ -13,9 +12,10 @@ import {
   SimpleGrid,
 } from '@mantine/core';
 import { IconUser } from '@tabler/icons-react';
-import { navigate } from '@app/router';
 import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import type { EventType } from '@entities/event-type';
+import { handleEventTypeClick } from './model/model';
+import { formatDuration } from './helpers';
 
 // ============================================
 // PROPS INTERFACE
@@ -32,10 +32,6 @@ interface BookCatalogPageProps {
 // ============================================
 
 export const BookCatalogPage = reatomComponent(({ eventTypes, isLoading, error }: BookCatalogPageProps) => {
-  const handleEventTypeClick = wrap((eventTypeId: string) => {
-    navigate.eventType(eventTypeId);
-  });
-
   if (isLoading) {
     return (
       <Layout>
@@ -145,7 +141,7 @@ export const BookCatalogPage = reatomComponent(({ eventTypes, isLoading, error }
                       },
                     }}
                   >
-                    {eventType.durationMinutes} мин
+                    {formatDuration(eventType.durationMinutes)}
                   </Badge>
                 </Group>
                 {eventType.description && (

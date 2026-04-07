@@ -2,7 +2,7 @@
 import { atom, action, computed } from '@reatom/core';
 import { navigate } from '@app/router';
 import { selectedDateForRoute, slotsAtom, currentCalendarMonthAtom } from './route';
-import { bookingEventTypeAtom, bookingSlotAtom } from '@pages/book-catalog/route';
+import { bookingEventTypeAtom, bookingSlotAtom } from '@features/create-booking';
 import type { Slot } from '@entities/slot';
 import type { EventType } from '@entities/event-type';
 import dayjs from 'dayjs';

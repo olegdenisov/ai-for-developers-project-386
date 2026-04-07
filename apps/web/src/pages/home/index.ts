@@ -1,1 +1,1 @@
-export { HomePage, homeRoute } from './route';
+export { HomePage, homeRoute } from './model/route';

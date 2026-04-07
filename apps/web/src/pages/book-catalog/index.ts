@@ -1,6 +1,2 @@
-export { BookCatalogPage, bookCatalogRoute } from './route';
-export {
-  bookingEventTypeAtom,
-  bookingSlotAtom,
-  submitBooking
-} from './route';
+export { BookCatalogPage } from './BookCatalogPage';
+export { bookCatalogRoute } from './model/route';
