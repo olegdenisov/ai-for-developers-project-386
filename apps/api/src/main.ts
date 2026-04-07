@@ -1,8 +1,11 @@
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { PrismaClient } from '../prisma/generated/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 import { ownerRoutes } from './modules/owner/owner.routes.js';
 import { eventTypeRoutes } from './modules/event-types/event-type.routes.js';
@@ -10,8 +13,10 @@ import { slotRoutes } from './modules/slots/slot.routes.js';
 import { bookingRoutes } from './modules/bookings/booking.routes.js';
 import { errorHandler } from './common/errors/errorHandler.js';
 
-// Initialize Prisma
-export const prisma = new PrismaClient();
+// Initialize Prisma with PostgreSQL adapter
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+export const prisma = new PrismaClient({ adapter });
 
 // Create Fastify instance
 const app = Fastify({

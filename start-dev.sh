@@ -34,6 +34,16 @@ elif docker ps -a --format "{{.Names}}" | grep -q "^calendar-postgres$"; then
         -p 5432:5432 \
         postgres:16-alpine \
         postgres -c "log_statement=all" -c "listen_addresses=*"
+else
+    echo "${YELLOW}→${NC} Создание нового контейнера PostgreSQL..."
+    docker run -d \
+        --name calendar-postgres \
+        -e POSTGRES_USER=postgres \
+        -e POSTGRES_PASSWORD=postgres \
+        -e POSTGRES_DB=calendar_booking \
+        -p 5432:5432 \
+        postgres:16-alpine \
+        postgres -c "log_statement=all" -c "listen_addresses=*"
 fi
 
 # 2. Ожидание готовности PostgreSQL
@@ -190,6 +200,30 @@ if [ ! -f "packages/shared-types/src/index.ts" ] || [ $(wc -l < "packages/shared
     pnpm generate:types
 fi
 echo "${GREEN}✓${NC} Типы готовы"
+echo ""
+
+# 7.5. Генерация Prisma клиента
+echo "🗄️ Проверка Prisma клиента..."
+if [ ! -f "apps/api/prisma/generated/client/package.json" ]; then
+    echo "${YELLOW}→${NC} Генерация Prisma клиента..."
+    pnpm --filter api db:generate
+    # Создаем package.json для корректного импорта ESM
+    cat > apps/api/prisma/generated/client/package.json << 'EOF'
+{
+  "name": "generated-prisma-client",
+  "type": "module",
+  "main": "./client.ts",
+  "types": "./client.ts",
+  "exports": {
+    ".": {
+      "import": "./client.ts",
+      "types": "./client.ts"
+    }
+  }
+}
+EOF
+fi
+echo "${GREEN}✓${NC} Prisma клиент готов"
 echo ""
 
 # 8. Запуск dev серверов
