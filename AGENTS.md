@@ -129,25 +129,34 @@ packages/api-client/src/ (fetch client)
 ## Known Issues / Известные проблемы
 
 ### PostgreSQL Access (P1010)
-При использовании Prisma с PostgreSQL в Docker может возникнуть ошибка:
+При использовании Prisma с PostgreSQL 15+ в Docker может возникнуть ошибка:
 ```
 P1010: User X was denied access on the database `database.public`
 ```
 
-**Решение:**
-1. Создать таблицы вручную через SQL (скрипты в папке prisma/)
-2. Использовать postgres пользователя для миграций:
+**Причина:** В PostgreSQL 15+ изменились права доступа к схеме public по умолчанию.
+
+**Обходное решение:**
+Используйте mock-режим для разработки фронтенда:
+```bash
+pnpm start:mock  # Prism mock + Web (API на :3100)
+```
+
+**Полное решение (для работы с реальной БД):**
+1. Запустить PostgreSQL с правами суперпользователя:
    ```bash
-   # Запуск PostgreSQL с правами суперпользователя
    docker run -d --name calendar-postgres \
      -e POSTGRES_USER=postgres \
      -e POSTGRES_PASSWORD=postgres \
+     -e POSTGRES_DB=calendar_booking \
      -p 5432:5432 \
      postgres:16-alpine
    ```
-3. Изменить owner схемы public:
+2. Создать таблицы вручную через SQL (скрипт в `start-dev.sh` делает это автоматически)
+3. Убедиться, что postgres является владельцем схемы public:
    ```sql
-   ALTER SCHEMA public OWNER TO calendar;
+   ALTER SCHEMA public OWNER TO postgres;
+   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
    ```
 
 ### openapi-generator-cli requires Java
