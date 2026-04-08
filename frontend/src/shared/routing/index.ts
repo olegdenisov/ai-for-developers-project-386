@@ -35,8 +35,27 @@ export const eventTypesRoute = guestRoute.reatomRoute('event-types', {
   },
   render(self) {
     const { data, isPending } = self.status();
-    if (isPending) return 'Loading event types...';
-    return `EventTypesList with ${data?.length} items`; // временно
+    if (isPending) return <div>Загрузка типов событий...</div>;
+    const eventTypes = data as EventType[] | undefined;
+    if (!eventTypes || eventTypes.length === 0) {
+      return <div>Нет доступных типов событий</div>;
+    }
+    const handleSelect = (eventTypeId: string) => {
+      eventTypesRoute.reatomRoute(':eventTypeId').go({ eventTypeId });
+    };
+    return (
+      <div>
+        <h2>Выберите тип встречи</h2>
+        <p>Выберите тип встречи, чтобы увидеть доступные слоты</p>
+        {eventTypes.map((eventType) => (
+          <div key={eventType.id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
+            <h3>{eventType.name}</h3>
+            <p>Длительность: {eventType.durationMinutes} минут</p>
+            <button onClick={() => handleSelect(eventType.id)}>Выбрать</button>
+          </div>
+        ))}
+      </div>
+    );
   },
 });
 
