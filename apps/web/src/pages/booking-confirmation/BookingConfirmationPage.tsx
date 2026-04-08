@@ -100,14 +100,18 @@ export const BookingConfirmationPage = reatomComponent(
     }
 
     // Получаем состояние формы
-    const { fields, submit, validation } = form;
+    const { fields, submit } = form;
     const isSubmitting = submit.pending();
-    const submitError = submit.error();
+    const isReady = submit.ready();
 
     // Обработчик отправки формы
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      submit();
+      // Отправляем форму и ловим ошибки валидации
+      submit().catch(() => {
+        // Ошибки валидации или сабмита обрабатываются через submit.error() и поля формы
+        // Не нужно ничего делать здесь, т.к. ошибки отображаются в UI
+      });
     };
 
     // Навигация назад
@@ -173,10 +177,6 @@ export const BookingConfirmationPage = reatomComponent(
                       {...bindField(fields.guestName)}
                       label="Ваше имя *"
                       placeholder="Введите ваше имя"
-                      error={
-                        validation().errors.find((e: { path: (string | number)[]; message?: string }) => e.path[0] === 'guestName')
-                          ?.message
-                      }
                     />
 
                     {/* Email гостя */}
@@ -185,10 +185,6 @@ export const BookingConfirmationPage = reatomComponent(
                       label="Адрес электронной почты *"
                       placeholder="email@example.com"
                       type="email"
-                      error={
-                        validation().errors.find((e: { path: (string | number)[]; message?: string }) => e.path[0] === 'guestEmail')
-                          ?.message
-                      }
                     />
 
                     {/* Дополнительная информация */}
@@ -208,19 +204,12 @@ export const BookingConfirmationPage = reatomComponent(
                       Добавить гостей
                     </Button>
 
-                    {/* Ошибка отправки */}
-                    {submitError && (
-                      <Text c="red" size="sm">
-                        {submitError.message}
-                      </Text>
-                    )}
-
                     {/* Кнопки */}
                     <Group justify="flex-end">
                       <Button variant="subtle" onClick={goBack}>
                         Назад
                       </Button>
-                      <Button type="submit" loading={isSubmitting} variant="filled" color="blue" styles={{ label: { color: 'white' } }}>
+                      <Button type="submit" loading={isSubmitting} disabled={!isReady} variant="filled" color="blue" styles={{ label: { color: 'white' } }}>
                         Подтвердить
                       </Button>
                     </Group>
