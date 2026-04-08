@@ -93,7 +93,7 @@ export const proceedToBooking = action((eventType: EventType | undefined) => {
   }
 }, 'proceedToBooking');
 
-// Возврат на главную
+// Возврат на страницу выбора типа события (каталог)
 export const goBack = action(() => {
-  navigate.home();
+  navigate.booking();
 }, 'goBack');

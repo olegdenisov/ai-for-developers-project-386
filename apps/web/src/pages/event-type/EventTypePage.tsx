@@ -26,6 +26,7 @@ import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatTime, formatDate } from '@shared/lib';
 import {
   fetchSlotsForDate,
+  fetchSlotsForCalendar,
   isSlotsLoading,
   currentCalendarMonthAtom,
   selectedDateForRoute,
@@ -80,6 +81,20 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
       fetchSlotsForDate();
     }
   }, [selectedDate]);
+
+  // Загружаем слоты для календаря при монтировании
+  useEffect(() => {
+    // Небольшая задержка для гарантии что компонент полностью смонтирован
+    const timeoutId = setTimeout(() => {
+      fetchSlotsForCalendar();
+    }, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Загружаем слоты при изменении месяца
+  useEffect(() => {
+    fetchSlotsForCalendar();
+  }, [currentMonth]);
 
   // Отображение состояния загрузки
   if (isLoading) {

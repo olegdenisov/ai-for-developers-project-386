@@ -123,20 +123,79 @@ export const selectedDateForRoute = atom<Date | null>(null, 'selectedDateForRout
 export const slotsAtom = atom<Slot[]>([], 'slotsAtom');
 
 /**
- * Action для загрузки доступных слотов на выбранную дату
- * Отдельно от loader маршрута, чтобы не перезагружать event type при смене даты
+ * Вспомогательная функция для получения eventTypeId из URL
  */
-export const fetchSlotsForDate = action(async () => {
-  // Получаем текущий URL и извлекаем id из него
+function getEventTypeIdFromUrl(): string | null {
   const pathname = window.location.pathname;
   const match = pathname.match(/\/event-types\/([^/]+)/);
-  const eventTypeId = match ? match[1] : null;
+  return match ? match[1] : null;
+}
+
+/**
+ * Action для загрузки слотов за период
+ * Используется для загрузки слотов для календаря и при выборе даты
+ */
+export const fetchSlotsForPeriod = action(async (startDate: Date, endDate: Date) => {
+  const eventTypeId = getEventTypeIdFromUrl();
 
   if (!eventTypeId) {
     slotsAtom.set([]);
     return [];
   }
 
+  const startDateStr = startDate.toISOString().split('T')[0];
+  const endDateStr = endDate.toISOString().split('T')[0];
+
+  const response = await wrap(apiClient.getAvailableSlotsForEventType(
+    eventTypeId,
+    startDateStr,
+    endDateStr
+  ));
+
+  if (response.status >= 400) {
+    throw new Error('Failed to fetch available slots');
+  }
+
+  const slots = response.data;
+  slotsAtom.set(slots);
+  return slots;
+}, 'fetchSlotsForPeriod').extend(withAsync());
+
+/**
+ * Action для загрузки слотов для текущего месяца календаря
+ * Загружает слоты для всего видимого диапазона (6 недель ~ 42 дня)
+ */
+export const fetchSlotsForCalendar = action(async () => {
+  const eventTypeId = getEventTypeIdFromUrl();
+
+  if (!eventTypeId) {
+    slotsAtom.set([]);
+    return [];
+  }
+
+  const currentMonth = currentCalendarMonthAtom();
+  
+  // Вычисляем диапазон: начало первой недели месяца до конца последней недели
+  const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+  
+  // Расширяем диапазон до полных недель (воскресенье до субботы)
+  const startOfCalendar = new Date(startOfMonth);
+  startOfCalendar.setDate(startOfMonth.getDate() - startOfMonth.getDay());
+  startOfCalendar.setHours(0, 0, 0, 0);
+  
+  const endOfCalendar = new Date(endOfMonth);
+  endOfCalendar.setDate(endOfMonth.getDate() + (6 - endOfMonth.getDay()));
+  endOfCalendar.setHours(23, 59, 59, 999);
+
+  return fetchSlotsForPeriod(startOfCalendar, endOfCalendar);
+}, 'fetchSlotsForCalendar').extend(withAsync());
+
+/**
+ * Action для загрузки доступных слотов на выбранную дату
+ * Отдельно от loader маршрута, чтобы не перезагружать event type при смене даты
+ */
+export const fetchSlotsForDate = action(async () => {
   const selectedDate = selectedDateForRoute();
   if (!selectedDate) {
     slotsAtom.set([]);
@@ -152,22 +211,7 @@ export const fetchSlotsForDate = action(async () => {
   endOfWeek.setDate(endOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
-  const startDate = startOfWeek.toISOString().split('T')[0];
-  const endDate = endOfWeek.toISOString().split('T')[0];
-
-  const response = await wrap(apiClient.getAvailableSlotsForEventType(
-    eventTypeId,
-    startDate,
-    endDate
-  ));
-
-  if (response.status >= 400) {
-    throw new Error('Failed to fetch available slots');
-  }
-
-  const slots = response.data;
-  slotsAtom.set(slots);
-  return slots;
+  return fetchSlotsForPeriod(startOfWeek, endOfWeek);
 }, 'fetchSlotsForDate').extend(withAsync());
 
 /**

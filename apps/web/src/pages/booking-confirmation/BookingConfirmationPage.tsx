@@ -209,7 +209,7 @@ export const BookingConfirmationPage = reatomComponent(
                       <Button variant="subtle" onClick={goBack}>
                         Назад
                       </Button>
-                      <Button type="submit" loading={isSubmitting} disabled={!isReady} variant="filled" color="blue" styles={{ label: { color: 'white' } }}>
+                      <Button type="submit" loading={isSubmitting} disabled={!isReady}>
                         Подтвердить
                       </Button>
                     </Group>
