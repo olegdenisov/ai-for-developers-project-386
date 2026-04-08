@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Owner - единый предопределённый профиль владельца календаря.
+model Owner {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @db.VarChar(100)
+  email        String    @db.VarChar(255)
+  isPredefined Boolean   @default(false)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  eventTypes   EventType[]
+  slots        Slot[]
+  bookings     Booking[]
+
+  @@map("owners")
+}
+
+// EventType - тип события, создаваемый владельцем календаря.
+model EventType {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String    @db.VarChar(100)
+  description     String?   @db.VarChar(500)
+  durationMinutes Int       @map("duration_minutes")
+  ownerId         String    @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  slots           Slot[]
+  bookings        Booking[]
+  owner           Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("event_types")
+}
+
+// Slot - временной слот в календаре для бронирования.
+model Slot {
+  id          String    @id @default(uuid()) @db.Uuid
+  startTime   DateTime  @map("start_time")
+  endTime     DateTime  @map("end_time")
+  isAvailable Boolean   @default(true) @map("is_available")
+  eventTypeId String?   @db.Uuid
+  ownerId     String    @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at")
+  booking     Booking?
+  eventType   EventType? @relation(fields: [eventTypeId], references: [id], onDelete: SetNull)
+  owner       Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([startTime, endTime, ownerId])
+  @@map("slots")
+}
+
+// Booking - бронирование, создаваемое гостём на выбранный слот.
+model Booking {
+  id           String         @id @default(uuid()) @db.Uuid
+  eventTypeId  String         @db.Uuid
+  slotId       String         @db.Uuid @unique
+  guestName    String         @db.VarChar(100)
+  guestEmail   String         @db.VarChar(255)
+  guestNotes   String?        @db.VarChar(1000)
+  status       BookingStatus
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @default(now()) @updatedAt @map("updated_at")
+  eventType    EventType      @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  slot         Slot           @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  owner        Owner          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId      String         @db.Uuid
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  confirmed
+  cancelled
+  completed
+}
