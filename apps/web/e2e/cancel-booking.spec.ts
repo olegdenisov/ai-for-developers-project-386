@@ -4,7 +4,7 @@ test.describe('Отмена бронирования', () => {
   test('пользователь может отменить бронирование', async ({ page }) => {
     // Создаем бронирование
     await page.goto('/');
-    await page.getByRole('button', { name: /Записаться/i }).click();
+    await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     // Выбираем тип события
     const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
@@ -43,7 +43,7 @@ test.describe('Отмена бронирования', () => {
   test('пользователь может закрыть модальное окно отмены без отмены', async ({ page }) => {
     // Создаем бронирование
     await page.goto('/');
-    await page.getByRole('button', { name: /Записаться/i }).click();
+    await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
     await eventTypeCards.click();

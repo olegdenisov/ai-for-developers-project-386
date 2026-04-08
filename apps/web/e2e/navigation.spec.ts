@@ -5,10 +5,10 @@ test.describe('Навигация', () => {
     await page.goto('/');
 
     // Проверяем что мы на главной
-    await expect(page.getByText('Calendar')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Calendar' })).toBeVisible();
 
-    // Кликаем "Записаться"
-    await page.getByRole('button', { name: /Записаться/i }).click();
+    // Кликаем "Записаться" (в main)
+    await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     // Проверяем переход
     await expect(page).toHaveURL(/.*bookings\/new/);
@@ -36,7 +36,7 @@ test.describe('Навигация', () => {
   test('пользователь может вернуться на главную со страницы деталей бронирования', async ({ page }) => {
     // Создаем бронирование
     await page.goto('/');
-    await page.getByRole('button', { name: /Записаться/i }).click();
+    await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
     await eventTypeCards.click();

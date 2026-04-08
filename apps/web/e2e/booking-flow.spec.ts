@@ -7,11 +7,11 @@ test.describe('Полный флоу бронирования', () => {
     await expect(page).toHaveTitle(/Calendar/i);
 
     // 2. Проверяем наличие основных элементов на главной
-    await expect(page.getByText('Calendar')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Calendar' })).toBeVisible();
     await expect(page.getByText(/Забронируйте встречу за минуту/i)).toBeVisible();
 
-    // 3. Кликаем "Записаться"
-    await page.getByRole('button', { name: /Записаться/i }).click();
+    // 3. Кликаем "Записаться" (в main, не в хедере)
+    await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     // 4. Проверяем переход на страницу каталога типов событий
     await expect(page).toHaveURL(/.*bookings\/new/);
@@ -62,7 +62,7 @@ test.describe('Полный флоу бронирования', () => {
 
   test('пользователь видит ошибку при попытке бронирования без выбора слота', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: /Записаться/i }).click();
+    await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     // Выбираем тип события
     const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
@@ -75,7 +75,7 @@ test.describe('Полный флоу бронирования', () => {
 
   test('валидация формы бронирования', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: /Записаться/i }).click();
+    await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     // Выбираем тип события
     const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
