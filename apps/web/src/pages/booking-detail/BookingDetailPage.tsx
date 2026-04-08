@@ -278,7 +278,7 @@ export const BookingDetailPage = reatomComponent(
                     {cancelForm.submit.error()?.message}
                   </Text>
                 )}
-                <Group justify="flex-end">
+                <Group justify="flex-end" wrap="nowrap">
                   <Button variant="subtle" onClick={handleCloseCancel}>
                     Закрыть
                   </Button>
@@ -287,6 +287,7 @@ export const BookingDetailPage = reatomComponent(
                     type="submit"
                     loading={isCancelling}
                     loaderProps={{ type: 'dots' }}
+                    miw={180}
                   >
                     Отменить бронирование
                   </Button>

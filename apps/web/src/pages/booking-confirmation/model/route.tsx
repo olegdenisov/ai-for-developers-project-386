@@ -41,6 +41,7 @@ export function createBookingForm(
     {
       name: 'bookingConfirmationForm',
       schema: bookingFormSchema,
+      validateOnBlur: true,
       onSubmit: async (values: BookingFormData): Promise<Booking> => {
         const response = await wrap(
           apiClient.createBooking({
