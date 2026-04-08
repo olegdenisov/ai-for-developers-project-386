@@ -91,7 +91,8 @@ export const BookingDetailPage = reatomComponent(
 
     const handleCancel = () => {
       if (cancelForm) {
-        cancelForm.fields.reason.set('');
+        // Открываем модальное окно, устанавливая reason в специальное значение
+        cancelForm.fields.reason.set('cancel_requested');
       }
     };
 
@@ -104,8 +105,9 @@ export const BookingDetailPage = reatomComponent(
 
     const handleCloseCancel = () => {
       if (cancelForm) {
-        cancelForm.fields.reason.reset();
-        // Сбрасываем ошибку отправки формы чтобы модальное окно закрывалось
+        // Сбрасываем reason чтобы закрыть модальное окно
+        cancelForm.fields.reason.set('');
+        // Сбрасываем ошибку отправки формы
         if (cancelForm.submit.errorAtom) {
           cancelForm.submit.errorAtom.set(null);
         }
@@ -255,7 +257,7 @@ export const BookingDetailPage = reatomComponent(
         {/* Модальное окно отмены бронирования */}
         {cancelForm && (
           <Modal
-            opened={cancelForm.fields.reason() !== '' || !!cancelForm.submit.error()}
+            opened={cancelForm.fields.reason() === 'cancel_requested' || !!cancelForm.submit.error()}
             onClose={handleCloseCancel}
             title="Отменить бронирование"
             centered

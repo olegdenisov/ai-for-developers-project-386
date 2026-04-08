@@ -175,8 +175,8 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     const cancelLink = screen.getByText('Отмена');
     fireEvent.click(cancelLink);
 
-    // Проверяем что устанавливается пустая строка в reason (инициализация модалки)
-    expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('');
+    // Проверяем что устанавливается флаг открытия модалки
+    expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('cancel_requested');
   });
 
   it('должен корректно закрывать модальное окно когда errorAtom существует', () => {
@@ -196,8 +196,8 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     const closeButton = screen.getByText('Закрыть');
     fireEvent.click(closeButton);
 
-    // Проверяем что errorAtom.set был вызван для сброса ошибки
-    expect(mockCancelForm.fields.reason.reset).toHaveBeenCalled();
+    // Проверяем что reason сброшен и errorAtom.set был вызван для сброса ошибки
+    expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('');
     expect(mockCancelForm.submit.errorAtom.set).toHaveBeenCalledWith(null);
   });
 
@@ -234,8 +234,8 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     const closeButton = screen.getByText('Закрыть');
     expect(() => fireEvent.click(closeButton)).not.toThrow();
 
-    // Проверяем что reset был вызван
-    expect(mockCancelFormWithoutErrorAtom.fields.reason.reset).toHaveBeenCalled();
+    // Проверяем что set('') был вызван для закрытия модалки
+    expect(mockCancelFormWithoutErrorAtom.fields.reason.set).toHaveBeenCalledWith('');
   });
 
   it('должен отображать ошибку когда отсутствует eventType в бронировании', () => {
