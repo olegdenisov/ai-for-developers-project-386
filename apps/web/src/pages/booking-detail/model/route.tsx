@@ -56,9 +56,12 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
 
   /**
    * Валидация параметров URL
+   * id не может быть "new" чтобы не конфликтовать с маршрутом /bookings/new
    */
   params: z.object({
-    id: z.string(),
+    id: z.string().refine((val) => val !== 'new', {
+      message: 'ID не может быть "new"',
+    }),
   }),
 
   /**

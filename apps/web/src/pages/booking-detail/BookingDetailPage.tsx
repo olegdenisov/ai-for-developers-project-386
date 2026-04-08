@@ -93,6 +93,8 @@ export const BookingDetailPage = reatomComponent(
     const handleCloseCancel = () => {
       if (cancelForm) {
         cancelForm.fields.reason.reset();
+        // Сбрасываем ошибку отправки формы чтобы модальное окно закрывалось
+        cancelForm.submit.errorAtom.set(null);
       }
     };
 

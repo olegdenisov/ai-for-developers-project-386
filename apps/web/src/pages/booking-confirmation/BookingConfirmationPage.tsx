@@ -11,9 +11,9 @@ import {
   TextInput,
   Textarea,
   Divider,
+  Card,
 } from '@mantine/core';
 import {
-  IconArrowLeft,
   IconCalendar,
   IconClock,
   IconVideo,
@@ -115,133 +115,121 @@ export const BookingConfirmationPage = reatomComponent(
 
     return (
       <Layout>
-        {/* Кнопка назад */}
-        <Button
-          variant="subtle"
-          leftSection={<IconArrowLeft size={16} />}
-          onClick={goBack}
-          mb="md"
-        >
-          Назад
-        </Button>
+        <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+          <Card withBorder shadow="sm" p="xl">
+            <Grid gap="xl">
+              {/* Левая колонка — сводка о встрече */}
+              <Grid.Col span={{ base: 12, md: 5 }}>
+                <Stack gap="lg">
+                  {/* Информация о владельце */}
+                  <Group gap="sm">
+                    <Avatar size="md" radius="xl" color="blue">
+                      {owner?.name?.charAt(0).toUpperCase() || 'H'}
+                    </Avatar>
+                    <Box>
+                      <Text fw={600}>{owner?.name || 'Host'}</Text>
+                      <Text size="xs" c="dimmed">Host</Text>
+                    </Box>
+                  </Group>
 
-        <Grid gap="xl">
-          {/* Левая колонка — сводка о встрече */}
-          <Grid.Col span={{ base: 12, md: 5 }}>
-            <Stack gap="lg">
-              {/* Информация о владельце */}
-              <Group gap="sm">
-                <Avatar size="md" radius="xl" color="blue">
-                  {owner?.name?.charAt(0).toUpperCase() || 'H'}
-                </Avatar>
-                <Box>
-                  <Text fw={600}>{owner?.name || 'Host'}</Text>
-                  <Text size="xs" c="dimmed">Host</Text>
-                </Box>
-              </Group>
+                  <Divider />
 
-              <Divider />
+                  {/* Название события */}
+                  <Title order={3}>{eventType.name}</Title>
 
-              {/* Название события */}
-              <Title order={3}>{eventType.name}</Title>
+                  {/* Дата */}
+                  <Group gap="xs">
+                    <IconCalendar size={20} />
+                    <Text>
+                      {formatDate(slot.startTime, 'dddd, D MMMM YYYY')}
+                    </Text>
+                  </Group>
 
-              {/* Дата */}
-              <Group gap="xs">
-                <IconCalendar size={20} />
-                <Text>
-                  {formatDate(slot.startTime, 'dddd, D MMMM YYYY')}
-                </Text>
-              </Group>
-
-              {/* Время */}
-              <Text pl={28}>
-                {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-              </Text>
-
-              {/* Длительность */}
-              <Group gap="xs">
-                <IconClock size={20} />
-                <Text>{formatDuration(eventType.durationMinutes)}</Text>
-              </Group>
-
-              {/* Тип встречи */}
-              <Group gap="xs">
-                <IconVideo size={20} />
-                <Text>Cal Video</Text>
-              </Group>
-            </Stack>
-          </Grid.Col>
-
-          {/* Правая колонка — форма */}
-          <Grid.Col span={{ base: 12, md: 7 }}>
-            <form onSubmit={handleSubmit}>
-              <Stack gap="md">
-                {/* Имя гостя */}
-                <TextInput
-                  {...bindField(fields.guestName)}
-                  label="Ваше имя *"
-                  placeholder="Введите ваше имя"
-                  error={
-                    validation().errors.find((e: { path: (string | number)[]; message?: string }) => e.path[0] === 'guestName')
-                      ?.message
-                  }
-                />
-
-                {/* Email гостя */}
-                <TextInput
-                  {...bindField(fields.guestEmail)}
-                  label="Адрес электронной почты *"
-                  placeholder="email@example.com"
-                  type="email"
-                  error={
-                    validation().errors.find((e: { path: (string | number)[]; message?: string }) => e.path[0] === 'guestEmail')
-                      ?.message
-                  }
-                />
-
-                {/* Дополнительная информация */}
-                <Textarea
-                  {...bindField(fields.guestNotes)}
-                  label="Дополнительная информация"
-                  placeholder="Дополнительная информация, которая может помочь подготовиться к нашей встрече."
-                  minRows={3}
-                />
-
-                {/* Добавить гостей */}
-                <Button
-                  variant="subtle"
-                  leftSection={<IconUserPlus size={16} />}
-                  style={{ justifyContent: 'flex-start' }}
-                >
-                  Добавить гостей
-                </Button>
-
-                {/* Условия использования */}
-                <Text size="sm" c="dimmed">
-                  Продолжая, вы соглашаетесь с условиями использования и
-                  политикой конфиденциальности Cal.com.
-                </Text>
-
-                {/* Ошибка отправки */}
-                {submitError && (
-                  <Text c="red" size="sm">
-                    {submitError.message}
+                  {/* Время */}
+                  <Text pl={28}>
+                    {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                   </Text>
-                )}
 
-                {/* Кнопки */}
-                <Group justify="flex-end">
-                  <Button variant="subtle" onClick={goBack}>
-                    Назад
-                  </Button>
-                  <Button type="submit" loading={isSubmitting}>
-                    Подтвердить
-                  </Button>
-                </Group>
-              </Stack>
-            </form>
-          </Grid.Col>
-        </Grid>
+                  {/* Длительность */}
+                  <Group gap="xs">
+                    <IconClock size={20} />
+                    <Text>{formatDuration(eventType.durationMinutes)}</Text>
+                  </Group>
+
+                  {/* Тип встречи */}
+                  <Group gap="xs">
+                    <IconVideo size={20} />
+                    <Text>Cal Video</Text>
+                  </Group>
+                </Stack>
+              </Grid.Col>
+
+              {/* Правая колонка — форма */}
+              <Grid.Col span={{ base: 12, md: 7 }}>
+                <form onSubmit={handleSubmit}>
+                  <Stack gap="md">
+                    {/* Имя гостя */}
+                    <TextInput
+                      {...bindField(fields.guestName)}
+                      label="Ваше имя *"
+                      placeholder="Введите ваше имя"
+                      error={
+                        validation().errors.find((e: { path: (string | number)[]; message?: string }) => e.path[0] === 'guestName')
+                          ?.message
+                      }
+                    />
+
+                    {/* Email гостя */}
+                    <TextInput
+                      {...bindField(fields.guestEmail)}
+                      label="Адрес электронной почты *"
+                      placeholder="email@example.com"
+                      type="email"
+                      error={
+                        validation().errors.find((e: { path: (string | number)[]; message?: string }) => e.path[0] === 'guestEmail')
+                          ?.message
+                      }
+                    />
+
+                    {/* Дополнительная информация */}
+                    <Textarea
+                      {...bindField(fields.guestNotes)}
+                      label="Дополнительная информация"
+                      placeholder="Дополнительная информация, которая может помочь подготовиться к нашей встрече."
+                      minRows={3}
+                    />
+
+                    {/* Добавить гостей */}
+                    <Button
+                      variant="subtle"
+                      leftSection={<IconUserPlus size={16} />}
+                      style={{ justifyContent: 'flex-start' }}
+                    >
+                      Добавить гостей
+                    </Button>
+
+                    {/* Ошибка отправки */}
+                    {submitError && (
+                      <Text c="red" size="sm">
+                        {submitError.message}
+                      </Text>
+                    )}
+
+                    {/* Кнопки */}
+                    <Group justify="flex-end">
+                      <Button variant="subtle" onClick={goBack}>
+                        Назад
+                      </Button>
+                      <Button type="submit" loading={isSubmitting} variant="filled" color="blue" styles={{ label: { color: 'white' } }}>
+                        Подтвердить
+                      </Button>
+                    </Group>
+                  </Stack>
+                </form>
+              </Grid.Col>
+            </Grid>
+          </Card>
+        </Box>
       </Layout>
     );
   },

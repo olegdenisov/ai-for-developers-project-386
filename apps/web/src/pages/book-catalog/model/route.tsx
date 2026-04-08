@@ -18,6 +18,7 @@ interface RouteSelf {
     data: () => EventType[] | null;
     error: () => Error | null;
   };
+  outlet: () => RouteChild[];
 }
 
 /**
@@ -47,12 +48,21 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
 
   /**
    * Render function возвращает React компонент
+   * Если есть вложенные маршруты (outlet), рендерит их
+   * Иначе рендерит страницу каталога
    */
   render(self: RouteSelf): RouteChild {
     const isPending = self.loader.pending();
     const eventTypes = self.loader.data();
     const error = self.loader.error();
+    const children = self.outlet();
 
+    // Если есть вложенные маршруты, рендерим их
+    if (children && children.length > 0) {
+      return children.at(-1) ?? null;
+    }
+
+    // Иначе рендерим страницу каталога
     return (
       <BookCatalogPage
         eventTypes={eventTypes || []}
