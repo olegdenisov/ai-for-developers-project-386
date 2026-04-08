@@ -286,6 +286,7 @@ export const BookingDetailPage = reatomComponent(
                     color="red"
                     type="submit"
                     loading={isCancelling}
+                    loaderProps={{ type: 'dots' }}
                   >
                     Отменить бронирование
                   </Button>
