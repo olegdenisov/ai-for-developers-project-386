@@ -278,6 +278,10 @@ export interface components {
              * @description Автоматически генерируемая метка времени обновления
              */
             updatedAt: string;
+            /** @description Вложенный тип события (включается при получении деталей бронирования) */
+            eventType?: components["schemas"]["EventType"];
+            /** @description Вложенный слот (включается при получении деталей бронирования) */
+            slot?: components["schemas"]["Slot"];
         };
         /**
          * @description Статусы бронирования

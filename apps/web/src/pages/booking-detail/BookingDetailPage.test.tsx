@@ -178,4 +178,97 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     // Проверяем что устанавливается пустая строка в reason (инициализация модалки)
     expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('');
   });
+
+  it('должен корректно закрывать модальное окно когда errorAtom существует', () => {
+    render(
+      <BookingDetailPage
+        booking={mockBooking}
+        cancelForm={mockCancelForm as any}
+        isLoading={false}
+      />
+    );
+
+    // Открываем модальное окно
+    const cancelLink = screen.getByText('Отмена');
+    fireEvent.click(cancelLink);
+
+    // Закрываем модальное окно через кнопку "Закрыть"
+    const closeButton = screen.getByText('Закрыть');
+    fireEvent.click(closeButton);
+
+    // Проверяем что errorAtom.set был вызван для сброса ошибки
+    expect(mockCancelForm.fields.reason.reset).toHaveBeenCalled();
+    expect(mockCancelForm.submit.errorAtom.set).toHaveBeenCalledWith(null);
+  });
+
+  it('должен корректно закрывать модальное окно когда errorAtom отсутствует', () => {
+    // Mock без errorAtom - проверка защиты от ошибки "Cannot read properties of undefined"
+    const mockCancelFormWithoutErrorAtom = {
+      fields: {
+        reason: {
+          value: () => '',
+          set: vi.fn(),
+          reset: vi.fn(),
+        },
+      },
+      submit: {
+        pending: () => false,
+        error: () => null,
+        // errorAtom отсутствует - имитируем старый баг
+      },
+    };
+
+    render(
+      <BookingDetailPage
+        booking={mockBooking}
+        cancelForm={mockCancelFormWithoutErrorAtom as any}
+        isLoading={false}
+      />
+    );
+
+    // Открываем модальное окно
+    const cancelLink = screen.getByText('Отмена');
+    fireEvent.click(cancelLink);
+
+    // Закрываем модальное окно - не должно выбрасывать ошибку
+    const closeButton = screen.getByText('Закрыть');
+    expect(() => fireEvent.click(closeButton)).not.toThrow();
+
+    // Проверяем что reset был вызван
+    expect(mockCancelFormWithoutErrorAtom.fields.reason.reset).toHaveBeenCalled();
+  });
+
+  it('должен отображать ошибку когда отсутствует eventType в бронировании', () => {
+    const bookingWithoutEventType = {
+      ...mockBooking,
+      eventType: undefined,
+    };
+
+    render(
+      <BookingDetailPage
+        booking={bookingWithoutEventType as any}
+        isLoading={false}
+      />
+    );
+
+    expect(screen.getByText('Детали бронирования недоступны. Не удалось загрузить информацию о типе события или слоте.')).toBeInTheDocument();
+    expect(screen.getByText('Назад')).toBeInTheDocument();
+  });
+
+  it('должен отображать ошибку когда отсутствует slot в бронировании', () => {
+    const bookingWithoutSlot = {
+      ...mockBooking,
+      slot: undefined,
+    };
+
+    render(
+      <BookingDetailPage
+        booking={bookingWithoutSlot as any}
+        isLoading={false}
+      />
+    );
+
+    expect(screen.getByText('Детали бронирования недоступны. Не удалось загрузить информацию о типе события или слоте.')).toBeInTheDocument();
+    expect(screen.getByText('Назад')).toBeInTheDocument();
+  });
 });

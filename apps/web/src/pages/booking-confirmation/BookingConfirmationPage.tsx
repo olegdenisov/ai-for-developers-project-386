@@ -177,6 +177,7 @@ export const BookingConfirmationPage = reatomComponent(
                       {...bindField(fields.guestName)}
                       label="Ваше имя *"
                       placeholder="Введите ваше имя"
+                      error={fields.guestName.error()?.[0]?.message}
                     />
 
                     {/* Email гостя */}
@@ -185,6 +186,7 @@ export const BookingConfirmationPage = reatomComponent(
                       label="Адрес электронной почты *"
                       placeholder="email@example.com"
                       type="email"
+                      error={fields.guestEmail.error()?.[0]?.message}
                     />
 
                     {/* Дополнительная информация */}
@@ -193,6 +195,7 @@ export const BookingConfirmationPage = reatomComponent(
                       label="Дополнительная информация"
                       placeholder="Дополнительная информация, которая может помочь подготовиться к нашей встрече."
                       minRows={3}
+                      error={fields.guestNotes.error()?.[0]?.message}
                     />
 
                     {/* Добавить гостей */}

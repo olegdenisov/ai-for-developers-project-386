@@ -69,6 +69,18 @@ export const BookingDetailPage = reatomComponent(
       );
     }
 
+    // Проверка наличия вложенных данных
+    if (!booking.eventType || !booking.slot) {
+      return (
+        <Layout>
+          <ErrorMessage message="Детали бронирования недоступны. Не удалось загрузить информацию о типе события или слоте." />
+          <Button onClick={() => window.history.back()} mt="md">
+            Назад
+          </Button>
+        </Layout>
+      );
+    }
+
     // Получаем состояние формы отмены (если есть)
     const isCancelling = cancelForm ? cancelForm.submit.pending() : false;
 
@@ -94,7 +106,9 @@ export const BookingDetailPage = reatomComponent(
       if (cancelForm) {
         cancelForm.fields.reason.reset();
         // Сбрасываем ошибку отправки формы чтобы модальное окно закрывалось
-        cancelForm.submit.errorAtom.set(null);
+        if (cancelForm.submit.errorAtom) {
+          cancelForm.submit.errorAtom.set(null);
+        }
       }
     };
 
@@ -241,7 +255,7 @@ export const BookingDetailPage = reatomComponent(
         {/* Модальное окно отмены бронирования */}
         {cancelForm && (
           <Modal
-            opened={cancelForm.fields.reason() !== '' || cancelForm.submit.error() !== null}
+            opened={cancelForm.fields.reason() !== '' || !!cancelForm.submit.error()}
             onClose={handleCloseCancel}
             title="Отменить бронирование"
             centered

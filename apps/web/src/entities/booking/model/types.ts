@@ -12,8 +12,10 @@ export interface Booking {
   status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
   createdAt: string;
   updatedAt: string;
-  eventType: EventType;
-  slot: Slot;
+  /** Вложенный тип события (включается при получении деталей бронирования) */
+  eventType?: EventType;
+  /** Вложенный слот (включается при получении деталей бронирования) */
+  slot?: Slot;
 }
 
 export interface CreateBookingRequest {
