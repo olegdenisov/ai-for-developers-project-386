@@ -1,0 +1,2242 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "(title)",
+    "version": "0.0.0"
+  },
+  "tags": [
+    {
+      "name": "Owner"
+    },
+    {
+      "name": "Event Types"
+    },
+    {
+      "name": "Slots"
+    },
+    {
+      "name": "Guest Public API"
+    }
+  ],
+  "paths": {
+    "/event-types": {
+      "get": {
+        "operationId": "EventTypesApi_listEventTypes",
+        "description": "Получить список всех типов событий.\nДоступно как владельцу, так и гостям (для выбора при бронировании).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventType"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ]
+      },
+      "post": {
+        "operationId": "EventTypesApi_createEventType",
+        "description": "Создать новый тип события (только владелец).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventTypeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/event-types/{id}": {
+      "get": {
+        "operationId": "EventTypesApi_getEventType",
+        "description": "Получить тип события по ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ]
+      },
+      "put": {
+        "operationId": "EventTypesApi_updateEventType",
+        "description": "Обновить тип события (только владелец).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEventTypeRequest"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "EventTypesApi_deleteEventType",
+        "description": "Удалить тип события (только владелец).\nНельзя удалить тип, если есть активные бронирования.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ]
+      }
+    },
+    "/owner/bookings": {
+      "get": {
+        "operationId": "OwnerApi_getUpcomingBookings",
+        "description": "Получить список всех предстоящих встреч (бронирований).\nПоказывает бронирования всех типов событий в одном списке.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по статусу",
+            "schema": {
+              "$ref": "#/components/schemas/BookingStatus"
+            },
+            "explode": false
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по дате начала (включительно)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по дате окончания (включительно)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Пагинация - номер страницы",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            },
+            "explode": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "Пагинация - размер страницы",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "headers": {
+              "total-count": {
+                "required": true,
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Booking"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Owner"
+        ]
+      }
+    },
+    "/owner/profile": {
+      "get": {
+        "operationId": "OwnerApi_getProfile",
+        "description": "Получить информацию о владельце календаря.\nВ системе только один предопределённый владелец.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Owner"
+                },
+                "examples": {
+                  "ownerProfile": {
+                    "summary": "Профиль владельца",
+                    "value": {
+                      "id": "9f8e7d6c-5b4a-3f2e-1d0c-9b8a7f6e5d4c",
+                      "name": "Tota",
+                      "email": "host@calendar-booking.example.com",
+                      "isPredefined": true,
+                      "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Owner"
+        ]
+      }
+    },
+    "/public/bookings": {
+      "post": {
+        "operationId": "GuestPublicApi_createBooking",
+        "description": "Создать бронирование на выбранный слот.\nГость выбирает тип события и свободный слот, указывает свои данные.\nБизнес-правило: нельзя создать две записи на одно и то же время.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with the current state of the server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotConflictError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/bookings/{id}": {
+      "get": {
+        "operationId": "GuestPublicApi_getBooking",
+        "description": "Получить информацию о бронировании по ID.\nГость может проверить детали своего бронирования.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/public/bookings/{id}/cancel": {
+      "post": {
+        "operationId": "GuestPublicApi_cancelBooking",
+        "description": "Отменить бронирование.\nГость может отменить своё бронирование.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelBookingRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/event-types": {
+      "get": {
+        "operationId": "GuestPublicApi_listPublicEventTypes",
+        "description": "Получить список доступных типов бронирования.\nГость видит название, описание и длительность каждого типа.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventType"
+                  }
+                },
+                "examples": {
+                  "eventTypesResponse": {
+                    "summary": "Список типов событий",
+                    "value": {
+                      "eventTypes": [
+                        {
+                          "id": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                          "name": "Встреча на 15 мин",
+                          "description": "Короткий тип события для быстрого слота. Идеально для коротких обсуждений и уточнений.",
+                          "durationMinutes": 15,
+                          "createdAt": "2024-01-15T10:00:00Z",
+                          "updatedAt": "2024-01-15T10:00:00Z"
+                        },
+                        {
+                          "id": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                          "name": "Встреча на 30 мин",
+                          "description": "Стандартный тип события для полноценной встречи. Достаточно времени для детального обсуждения.",
+                          "durationMinutes": 30,
+                          "createdAt": "2024-01-15T10:00:00Z",
+                          "updatedAt": "2024-01-15T10:00:00Z"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/public/event-types/{eventTypeId}/slots": {
+      "get": {
+        "operationId": "GuestPublicApi_getAvailableSlotsForEventType",
+        "description": "Получить доступные слоты для выбранного типа события.\nГость выбирает тип события и видит свободные слоты в календаре.",
+        "parameters": [
+          {
+            "name": "eventTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата начала периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата окончания периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Slot"
+                  }
+                },
+                "examples": {
+                  "slotsFor15Min": {
+                    "summary": "Слоты для встречи на 15 мин",
+                    "value": [
+                      {
+                        "id": "f79c8006-ada2-4af2-af12-9d0aaf6125d7",
+                        "startTime": "2026-04-07T09:00:00Z",
+                        "endTime": "2026-04-07T09:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "d4eb1480-02bd-4d5d-a885-f9ae6d6176a3",
+                        "startTime": "2026-04-07T10:00:00Z",
+                        "endTime": "2026-04-07T10:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ccf089ec-eda4-4b50-818a-d51dd718ec5b",
+                        "startTime": "2026-04-07T11:00:00Z",
+                        "endTime": "2026-04-07T11:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1232080a-5693-41b1-8564-42166d43eee1",
+                        "startTime": "2026-04-07T12:00:00Z",
+                        "endTime": "2026-04-07T12:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "56cc57ea-3249-4e63-b64b-2a4a8867f29e",
+                        "startTime": "2026-04-07T13:00:00Z",
+                        "endTime": "2026-04-07T13:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "7f4c8af0-40e5-42e0-8291-93a57fd53691",
+                        "startTime": "2026-04-07T14:00:00Z",
+                        "endTime": "2026-04-07T14:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "66f2779d-6f83-4ae6-a001-4a164497ad8b",
+                        "startTime": "2026-04-07T15:00:00Z",
+                        "endTime": "2026-04-07T15:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "a19f4af9-78bc-4b19-89ec-bc14cec951d0",
+                        "startTime": "2026-04-07T16:00:00Z",
+                        "endTime": "2026-04-07T16:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c12f54bb-58f7-40c0-96b3-050628177e52",
+                        "startTime": "2026-04-07T17:00:00Z",
+                        "endTime": "2026-04-07T17:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "e6ed0c25-87ba-4ac6-9c9e-2be1948756fe",
+                        "startTime": "2026-04-08T09:00:00Z",
+                        "endTime": "2026-04-08T09:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "32efe44c-b499-45ce-a934-fa3bf3970641",
+                        "startTime": "2026-04-08T10:00:00Z",
+                        "endTime": "2026-04-08T10:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "25c055ea-6a34-43b1-ac2a-5dc0165810e3",
+                        "startTime": "2026-04-08T11:00:00Z",
+                        "endTime": "2026-04-08T11:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "09e12198-52da-4db1-b5e8-52f91594e03a",
+                        "startTime": "2026-04-08T12:00:00Z",
+                        "endTime": "2026-04-08T12:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "6c63a1d2-ac6f-470a-9662-9f6c50aa08c1",
+                        "startTime": "2026-04-08T13:00:00Z",
+                        "endTime": "2026-04-08T13:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "d8c4cb94-507c-40c5-b0ab-92c8f783a110",
+                        "startTime": "2026-04-08T14:00:00Z",
+                        "endTime": "2026-04-08T14:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "300de6fd-72ac-4eef-95e8-839775e311ca",
+                        "startTime": "2026-04-08T15:00:00Z",
+                        "endTime": "2026-04-08T15:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "bf1ea9e1-7749-47af-8303-7218dfdfbda2",
+                        "startTime": "2026-04-08T16:00:00Z",
+                        "endTime": "2026-04-08T16:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "6ee5200b-3257-43ea-82da-882dded32c3a",
+                        "startTime": "2026-04-08T17:00:00Z",
+                        "endTime": "2026-04-08T17:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "f81c6544-a50d-4e44-b45d-1e6f96670843",
+                        "startTime": "2026-04-09T09:00:00Z",
+                        "endTime": "2026-04-09T09:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "98d70f0f-849f-4868-8435-20c4a0c554f1",
+                        "startTime": "2026-04-09T10:00:00Z",
+                        "endTime": "2026-04-09T10:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "662c3b9d-6e07-43b3-a8e4-8098a522d16a",
+                        "startTime": "2026-04-09T11:00:00Z",
+                        "endTime": "2026-04-09T11:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "90de3ad9-332d-4c4d-9d1f-5ae5079685f8",
+                        "startTime": "2026-04-09T12:00:00Z",
+                        "endTime": "2026-04-09T12:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "9202923f-9736-485f-ab77-44f2644068f3",
+                        "startTime": "2026-04-09T13:00:00Z",
+                        "endTime": "2026-04-09T13:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "87ce3c6c-e9b9-4db3-b23f-c317e8c51af3",
+                        "startTime": "2026-04-09T14:00:00Z",
+                        "endTime": "2026-04-09T14:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "7e13b610-a4ee-4e1f-bb82-a766d82597a0",
+                        "startTime": "2026-04-09T15:00:00Z",
+                        "endTime": "2026-04-09T15:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "27f4a384-5fe8-4986-9af1-0d73c3ce33b2",
+                        "startTime": "2026-04-09T16:00:00Z",
+                        "endTime": "2026-04-09T16:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "3c21da51-4bf8-424c-963a-5f8217a08ac5",
+                        "startTime": "2026-04-09T17:00:00Z",
+                        "endTime": "2026-04-09T17:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "0de68ab0-1de9-4700-b4be-418400e8dac5",
+                        "startTime": "2026-04-10T09:00:00Z",
+                        "endTime": "2026-04-10T09:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "75f49718-c070-4477-a709-4b8d66e8f4df",
+                        "startTime": "2026-04-10T10:00:00Z",
+                        "endTime": "2026-04-10T10:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "3c706fca-af38-4b3f-8a8a-78daa1599d80",
+                        "startTime": "2026-04-10T11:00:00Z",
+                        "endTime": "2026-04-10T11:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "af968bbd-03d9-4b98-8bea-70e24811d84e",
+                        "startTime": "2026-04-10T12:00:00Z",
+                        "endTime": "2026-04-10T12:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "16700e7f-b0e2-4561-85f9-da6b4e5b3c96",
+                        "startTime": "2026-04-10T13:00:00Z",
+                        "endTime": "2026-04-10T13:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "83baae11-e551-45d1-aad0-4d962d6f142e",
+                        "startTime": "2026-04-10T14:00:00Z",
+                        "endTime": "2026-04-10T14:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "33deb2a2-4892-43b5-a594-76715f38f350",
+                        "startTime": "2026-04-10T15:00:00Z",
+                        "endTime": "2026-04-10T15:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ac4acf36-3426-40ab-b35f-d9028604ac0c",
+                        "startTime": "2026-04-10T16:00:00Z",
+                        "endTime": "2026-04-10T16:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "32fcc68b-b0e8-4a11-8df5-e5d475bb59c2",
+                        "startTime": "2026-04-10T17:00:00Z",
+                        "endTime": "2026-04-10T17:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "8f95d26b-5b3d-415b-a996-c93831bb43ed",
+                        "startTime": "2026-04-11T09:00:00Z",
+                        "endTime": "2026-04-11T09:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c1a938a5-370b-4f05-8583-351744a02ccf",
+                        "startTime": "2026-04-11T10:00:00Z",
+                        "endTime": "2026-04-11T10:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ff76e5fa-8a7e-45f1-a2bd-83a5f6f75390",
+                        "startTime": "2026-04-11T11:00:00Z",
+                        "endTime": "2026-04-11T11:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "b8b1c28c-0daf-4df7-aaa3-6612e0652497",
+                        "startTime": "2026-04-11T12:00:00Z",
+                        "endTime": "2026-04-11T12:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "4a28236e-47cc-41aa-9a11-ec31b00f574f",
+                        "startTime": "2026-04-11T13:00:00Z",
+                        "endTime": "2026-04-11T13:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1202497f-8bac-486d-83d9-d0fe318fe328",
+                        "startTime": "2026-04-11T14:00:00Z",
+                        "endTime": "2026-04-11T14:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "354a5785-ae2c-4ef1-9b29-1669700cb0b4",
+                        "startTime": "2026-04-11T15:00:00Z",
+                        "endTime": "2026-04-11T15:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "7cdde754-99ae-4502-b1df-e38fd646da32",
+                        "startTime": "2026-04-11T16:00:00Z",
+                        "endTime": "2026-04-11T16:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "54fc5e5a-975c-4516-856d-be2d9041a0c9",
+                        "startTime": "2026-04-11T17:00:00Z",
+                        "endTime": "2026-04-11T17:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1a9152c3-486d-4528-bfcf-f8fcdf996a2e",
+                        "startTime": "2026-04-12T09:00:00Z",
+                        "endTime": "2026-04-12T09:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "4f6ea92e-f64e-466c-b58b-461c54e7103a",
+                        "startTime": "2026-04-12T10:00:00Z",
+                        "endTime": "2026-04-12T10:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1fe1b143-c6b8-424f-adbb-5988011f98dd",
+                        "startTime": "2026-04-12T11:00:00Z",
+                        "endTime": "2026-04-12T11:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "d8df1898-4499-49f7-971f-eebea6145110",
+                        "startTime": "2026-04-12T12:00:00Z",
+                        "endTime": "2026-04-12T12:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c2b85f31-2953-47db-8902-1aab379ec617",
+                        "startTime": "2026-04-12T13:00:00Z",
+                        "endTime": "2026-04-12T13:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "b50115ff-c726-4efe-9bd8-f34256d54216",
+                        "startTime": "2026-04-12T14:00:00Z",
+                        "endTime": "2026-04-12T14:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "565ab816-c62f-436b-85a1-abcfdb44c513",
+                        "startTime": "2026-04-12T15:00:00Z",
+                        "endTime": "2026-04-12T15:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "018aaa3d-daa9-4599-a0e1-bce818ef509e",
+                        "startTime": "2026-04-12T16:00:00Z",
+                        "endTime": "2026-04-12T16:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "92b63fe1-7956-4ff2-b7d5-23d9f5f02bd9",
+                        "startTime": "2026-04-12T17:00:00Z",
+                        "endTime": "2026-04-12T17:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "f767507c-a079-439b-8662-c6cce48f6114",
+                        "startTime": "2026-04-13T09:00:00Z",
+                        "endTime": "2026-04-13T09:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1ad87794-7f38-4068-a06c-cf87834ea789",
+                        "startTime": "2026-04-13T10:00:00Z",
+                        "endTime": "2026-04-13T10:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c8c38f5f-f36b-46b3-8de7-d687cd0d086a",
+                        "startTime": "2026-04-13T11:00:00Z",
+                        "endTime": "2026-04-13T11:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ea56aa1e-bba0-4719-b1f5-00494e3931e9",
+                        "startTime": "2026-04-13T12:00:00Z",
+                        "endTime": "2026-04-13T12:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "84978eaa-3034-49a1-85fe-54abc58672e9",
+                        "startTime": "2026-04-13T13:00:00Z",
+                        "endTime": "2026-04-13T13:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "cc6b15b5-e09b-4a34-a6c9-17425aaa7822",
+                        "startTime": "2026-04-13T14:00:00Z",
+                        "endTime": "2026-04-13T14:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "32dcd57f-42e1-4865-843b-09db127ec227",
+                        "startTime": "2026-04-13T15:00:00Z",
+                        "endTime": "2026-04-13T15:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "5b053f43-7730-400f-aa97-50102d066a17",
+                        "startTime": "2026-04-13T16:00:00Z",
+                        "endTime": "2026-04-13T16:15:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "42ba1b4a-e4e0-4e71-9379-ef39af8ef694",
+                        "startTime": "2026-04-13T17:00:00Z",
+                        "endTime": "2026-04-13T17:15:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      }
+                    ]
+                  },
+                  "slotsFor30Min": {
+                    "summary": "Слоты для встречи на 30 мин",
+                    "value": [
+                      {
+                        "id": "f79c8006-ada2-4af2-af12-9d0aaf6125d7",
+                        "startTime": "2026-04-07T09:00:00Z",
+                        "endTime": "2026-04-07T09:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "d4eb1480-02bd-4d5d-a885-f9ae6d6176a3",
+                        "startTime": "2026-04-07T10:00:00Z",
+                        "endTime": "2026-04-07T10:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ccf089ec-eda4-4b50-818a-d51dd718ec5b",
+                        "startTime": "2026-04-07T11:00:00Z",
+                        "endTime": "2026-04-07T11:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1232080a-5693-41b1-8564-42166d43eee1",
+                        "startTime": "2026-04-07T12:00:00Z",
+                        "endTime": "2026-04-07T12:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "56cc57ea-3249-4e63-b64b-2a4a8867f29e",
+                        "startTime": "2026-04-07T13:00:00Z",
+                        "endTime": "2026-04-07T13:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "7f4c8af0-40e5-42e0-8291-93a57fd53691",
+                        "startTime": "2026-04-07T14:00:00Z",
+                        "endTime": "2026-04-07T14:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "66f2779d-6f83-4ae6-a001-4a164497ad8b",
+                        "startTime": "2026-04-07T15:00:00Z",
+                        "endTime": "2026-04-07T15:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "a19f4af9-78bc-4b19-89ec-bc14cec951d0",
+                        "startTime": "2026-04-07T16:00:00Z",
+                        "endTime": "2026-04-07T16:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c12f54bb-58f7-40c0-96b3-050628177e52",
+                        "startTime": "2026-04-07T17:00:00Z",
+                        "endTime": "2026-04-07T17:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "e6ed0c25-87ba-4ac6-9c9e-2be1948756fe",
+                        "startTime": "2026-04-08T09:00:00Z",
+                        "endTime": "2026-04-08T09:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "32efe44c-b499-45ce-a934-fa3bf3970641",
+                        "startTime": "2026-04-08T10:00:00Z",
+                        "endTime": "2026-04-08T10:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "25c055ea-6a34-43b1-ac2a-5dc0165810e3",
+                        "startTime": "2026-04-08T11:00:00Z",
+                        "endTime": "2026-04-08T11:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "09e12198-52da-4db1-b5e8-52f91594e03a",
+                        "startTime": "2026-04-08T12:00:00Z",
+                        "endTime": "2026-04-08T12:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "6c63a1d2-ac6f-470a-9662-9f6c50aa08c1",
+                        "startTime": "2026-04-08T13:00:00Z",
+                        "endTime": "2026-04-08T13:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "d8c4cb94-507c-40c5-b0ab-92c8f783a110",
+                        "startTime": "2026-04-08T14:00:00Z",
+                        "endTime": "2026-04-08T14:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "300de6fd-72ac-4eef-95e8-839775e311ca",
+                        "startTime": "2026-04-08T15:00:00Z",
+                        "endTime": "2026-04-08T15:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "bf1ea9e1-7749-47af-8303-7218dfdfbda2",
+                        "startTime": "2026-04-08T16:00:00Z",
+                        "endTime": "2026-04-08T16:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "6ee5200b-3257-43ea-82da-882dded32c3a",
+                        "startTime": "2026-04-08T17:00:00Z",
+                        "endTime": "2026-04-08T17:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "f81c6544-a50d-4e44-b45d-1e6f96670843",
+                        "startTime": "2026-04-09T09:00:00Z",
+                        "endTime": "2026-04-09T09:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "98d70f0f-849f-4868-8435-20c4a0c554f1",
+                        "startTime": "2026-04-09T10:00:00Z",
+                        "endTime": "2026-04-09T10:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "662c3b9d-6e07-43b3-a8e4-8098a522d16a",
+                        "startTime": "2026-04-09T11:00:00Z",
+                        "endTime": "2026-04-09T11:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "90de3ad9-332d-4c4d-9d1f-5ae5079685f8",
+                        "startTime": "2026-04-09T12:00:00Z",
+                        "endTime": "2026-04-09T12:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "9202923f-9736-485f-ab77-44f2644068f3",
+                        "startTime": "2026-04-09T13:00:00Z",
+                        "endTime": "2026-04-09T13:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "87ce3c6c-e9b9-4db3-b23f-c317e8c51af3",
+                        "startTime": "2026-04-09T14:00:00Z",
+                        "endTime": "2026-04-09T14:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "7e13b610-a4ee-4e1f-bb82-a766d82597a0",
+                        "startTime": "2026-04-09T15:00:00Z",
+                        "endTime": "2026-04-09T15:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "27f4a384-5fe8-4986-9af1-0d73c3ce33b2",
+                        "startTime": "2026-04-09T16:00:00Z",
+                        "endTime": "2026-04-09T16:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "3c21da51-4bf8-424c-963a-5f8217a08ac5",
+                        "startTime": "2026-04-09T17:00:00Z",
+                        "endTime": "2026-04-09T17:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "0de68ab0-1de9-4700-b4be-418400e8dac5",
+                        "startTime": "2026-04-10T09:00:00Z",
+                        "endTime": "2026-04-10T09:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "75f49718-c070-4477-a709-4b8d66e8f4df",
+                        "startTime": "2026-04-10T10:00:00Z",
+                        "endTime": "2026-04-10T10:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "3c706fca-af38-4b3f-8a8a-78daa1599d80",
+                        "startTime": "2026-04-10T11:00:00Z",
+                        "endTime": "2026-04-10T11:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "af968bbd-03d9-4b98-8bea-70e24811d84e",
+                        "startTime": "2026-04-10T12:00:00Z",
+                        "endTime": "2026-04-10T12:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "16700e7f-b0e2-4561-85f9-da6b4e5b3c96",
+                        "startTime": "2026-04-10T13:00:00Z",
+                        "endTime": "2026-04-10T13:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "83baae11-e551-45d1-aad0-4d962d6f142e",
+                        "startTime": "2026-04-10T14:00:00Z",
+                        "endTime": "2026-04-10T14:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "33deb2a2-4892-43b5-a594-76715f38f350",
+                        "startTime": "2026-04-10T15:00:00Z",
+                        "endTime": "2026-04-10T15:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ac4acf36-3426-40ab-b35f-d9028604ac0c",
+                        "startTime": "2026-04-10T16:00:00Z",
+                        "endTime": "2026-04-10T16:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "32fcc68b-b0e8-4a11-8df5-e5d475bb59c2",
+                        "startTime": "2026-04-10T17:00:00Z",
+                        "endTime": "2026-04-10T17:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "8f95d26b-5b3d-415b-a996-c93831bb43ed",
+                        "startTime": "2026-04-11T09:00:00Z",
+                        "endTime": "2026-04-11T09:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c1a938a5-370b-4f05-8583-351744a02ccf",
+                        "startTime": "2026-04-11T10:00:00Z",
+                        "endTime": "2026-04-11T10:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ff76e5fa-8a7e-45f1-a2bd-83a5f6f75390",
+                        "startTime": "2026-04-11T11:00:00Z",
+                        "endTime": "2026-04-11T11:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "b8b1c28c-0daf-4df7-aaa3-6612e0652497",
+                        "startTime": "2026-04-11T12:00:00Z",
+                        "endTime": "2026-04-11T12:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "4a28236e-47cc-41aa-9a11-ec31b00f574f",
+                        "startTime": "2026-04-11T13:00:00Z",
+                        "endTime": "2026-04-11T13:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1202497f-8bac-486d-83d9-d0fe318fe328",
+                        "startTime": "2026-04-11T14:00:00Z",
+                        "endTime": "2026-04-11T14:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "354a5785-ae2c-4ef1-9b29-1669700cb0b4",
+                        "startTime": "2026-04-11T15:00:00Z",
+                        "endTime": "2026-04-11T15:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "7cdde754-99ae-4502-b1df-e38fd646da32",
+                        "startTime": "2026-04-11T16:00:00Z",
+                        "endTime": "2026-04-11T16:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "54fc5e5a-975c-4516-856d-be2d9041a0c9",
+                        "startTime": "2026-04-11T17:00:00Z",
+                        "endTime": "2026-04-11T17:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1a9152c3-486d-4528-bfcf-f8fcdf996a2e",
+                        "startTime": "2026-04-12T09:00:00Z",
+                        "endTime": "2026-04-12T09:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "4f6ea92e-f64e-466c-b58b-461c54e7103a",
+                        "startTime": "2026-04-12T10:00:00Z",
+                        "endTime": "2026-04-12T10:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1fe1b143-c6b8-424f-adbb-5988011f98dd",
+                        "startTime": "2026-04-12T11:00:00Z",
+                        "endTime": "2026-04-12T11:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "d8df1898-4499-49f7-971f-eebea6145110",
+                        "startTime": "2026-04-12T12:00:00Z",
+                        "endTime": "2026-04-12T12:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c2b85f31-2953-47db-8902-1aab379ec617",
+                        "startTime": "2026-04-12T13:00:00Z",
+                        "endTime": "2026-04-12T13:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "b50115ff-c726-4efe-9bd8-f34256d54216",
+                        "startTime": "2026-04-12T14:00:00Z",
+                        "endTime": "2026-04-12T14:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "565ab816-c62f-436b-85a1-abcfdb44c513",
+                        "startTime": "2026-04-12T15:00:00Z",
+                        "endTime": "2026-04-12T15:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "018aaa3d-daa9-4599-a0e1-bce818ef509e",
+                        "startTime": "2026-04-12T16:00:00Z",
+                        "endTime": "2026-04-12T16:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "92b63fe1-7956-4ff2-b7d5-23d9f5f02bd9",
+                        "startTime": "2026-04-12T17:00:00Z",
+                        "endTime": "2026-04-12T17:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "f767507c-a079-439b-8662-c6cce48f6114",
+                        "startTime": "2026-04-13T09:00:00Z",
+                        "endTime": "2026-04-13T09:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "1ad87794-7f38-4068-a06c-cf87834ea789",
+                        "startTime": "2026-04-13T10:00:00Z",
+                        "endTime": "2026-04-13T10:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "c8c38f5f-f36b-46b3-8de7-d687cd0d086a",
+                        "startTime": "2026-04-13T11:00:00Z",
+                        "endTime": "2026-04-13T11:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "ea56aa1e-bba0-4719-b1f5-00494e3931e9",
+                        "startTime": "2026-04-13T12:00:00Z",
+                        "endTime": "2026-04-13T12:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "84978eaa-3034-49a1-85fe-54abc58672e9",
+                        "startTime": "2026-04-13T13:00:00Z",
+                        "endTime": "2026-04-13T13:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "cc6b15b5-e09b-4a34-a6c9-17425aaa7822",
+                        "startTime": "2026-04-13T14:00:00Z",
+                        "endTime": "2026-04-13T14:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "32dcd57f-42e1-4865-843b-09db127ec227",
+                        "startTime": "2026-04-13T15:00:00Z",
+                        "endTime": "2026-04-13T15:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "5b053f43-7730-400f-aa97-50102d066a17",
+                        "startTime": "2026-04-13T16:00:00Z",
+                        "endTime": "2026-04-13T16:30:00Z",
+                        "isAvailable": false,
+                        "eventTypeId": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      },
+                      {
+                        "id": "42ba1b4a-e4e0-4e71-9379-ef39af8ef694",
+                        "startTime": "2026-04-13T17:00:00Z",
+                        "endTime": "2026-04-13T17:30:00Z",
+                        "isAvailable": true,
+                        "eventTypeId": null,
+                        "createdAt": "2024-01-15T10:00:00Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/public/event-types/{id}": {
+      "get": {
+        "operationId": "GuestPublicApi_getPublicEventType",
+        "description": "Получить подробную информацию о типе события.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                },
+                "examples": {
+                  "eventType15": {
+                    "summary": "Встреча на 15 мин",
+                    "value": {
+                      "id": "6c0c4dd0-b0d2-4e26-8c82-7d1b7e19b195",
+                      "name": "Встреча на 15 мин",
+                      "description": "Короткий тип события для быстрого слота. Идеально для коротких обсуждений и уточнений.",
+                      "durationMinutes": 15,
+                      "createdAt": "2024-01-15T10:00:00Z",
+                      "updatedAt": "2024-01-15T10:00:00Z"
+                    }
+                  },
+                  "eventType30": {
+                    "summary": "Встреча на 30 мин",
+                    "value": {
+                      "id": "7d1d5ee1-c1e3-5f37-9d93-8c2c8f2ac3a6",
+                      "name": "Встреча на 30 мин",
+                      "description": "Стандартный тип события для полноценной встречи. Достаточно времени для детального обсуждения.",
+                      "durationMinutes": 30,
+                      "createdAt": "2024-01-15T10:00:00Z",
+                      "updatedAt": "2024-01-15T10:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/slots": {
+      "get": {
+        "operationId": "SlotsApi_listAvailableSlots",
+        "description": "Получить доступные слоты для бронирования.\nГость использует этот endpoint для выбора свободного слота.",
+        "parameters": [
+          {
+            "name": "eventTypeId",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по типу события",
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата начала периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата окончания периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Slot"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Slots"
+        ]
+      }
+    },
+    "/slots/{id}": {
+      "get": {
+        "operationId": "SlotsApi_getSlot",
+        "description": "Получить информацию о конкретном слоте.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Slot"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Slots"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Booking": {
+        "type": "object",
+        "required": [
+          "id",
+          "eventTypeId",
+          "slotId",
+          "guestName",
+          "guestEmail",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventTypeId": {
+            "type": "string",
+            "description": "Ссылка на тип события"
+          },
+          "slotId": {
+            "type": "string",
+            "description": "Ссылка на забронированный слот"
+          },
+          "guestName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Имя гостя"
+          },
+          "guestEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Email гостя"
+          },
+          "guestNotes": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "Дополнительные заметки от гостя"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BookingStatus"
+              }
+            ],
+            "description": "Статус бронирования"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени создания"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени обновления"
+          }
+        },
+        "description": "Booking - бронирование, создаваемое гостём на выбранный слот.\nСодержит информацию о госте и выбранном типе события."
+      },
+      "BookingStatus": {
+        "type": "string",
+        "enum": [
+          "confirmed",
+          "cancelled",
+          "completed"
+        ],
+        "description": "Статусы бронирования"
+      },
+      "CancelBookingRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Причина отмены (опционально)"
+          }
+        },
+        "description": "DTO для отмены бронирования (гость)"
+      },
+      "CreateBookingRequest": {
+        "type": "object",
+        "required": [
+          "eventTypeId",
+          "slotId",
+          "guestName",
+          "guestEmail"
+        ],
+        "properties": {
+          "eventTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "guestName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "guestEmail": {
+            "type": "string",
+            "format": "email"
+          },
+          "guestNotes": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "description": "DTO для создания бронирования (гость)"
+      },
+      "CreateEventTypeRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "durationMinutes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 480
+          }
+        },
+        "description": "DTO для создания типа события (владелец)"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Код ошибки"
+          },
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Детали ошибки"
+          }
+        }
+      },
+      "EventType": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "durationMinutes",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 480,
+            "description": "Длительность события в минутах"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени создания"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени обновления"
+          }
+        },
+        "description": "EventType - тип события, создаваемый владельцем календаря.\nКаждый тип определяет характеристики встречи (название, описание, длительность)."
+      },
+      "FieldError": {
+        "type": "object",
+        "required": [
+          "field",
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "NotFoundError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "NOT_FOUND"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Owner": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "isPredefined",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "isPredefined": {
+            "type": "boolean",
+            "description": "Признак предопределённого системного профиля"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Owner - единый предопределённый профиль владельца календаря.\nВ системе нет регистрации и авторизации, владелец - один заранее заданный профиль."
+      },
+      "Slot": {
+        "type": "object",
+        "required": [
+          "id",
+          "startTime",
+          "endTime",
+          "isAvailable",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время начала слота"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время окончания слота"
+          },
+          "isAvailable": {
+            "type": "boolean",
+            "description": "Статус доступности слота"
+          },
+          "eventTypeId": {
+            "type": "string",
+            "description": "Опциональная ссылка на тип события, если слот привязан к конкретному типу"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени создания"
+          }
+        },
+        "description": "Slot - временной слот в календаре для бронирования.\nСлоты генерируются на основе доступности и привязаны ко времени.\nБизнес-правило: на одно и то же время нельзя создать две записи."
+      },
+      "SlotConflictError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "SLOT_ALREADY_BOOKED"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "enum": [
+              "Этот слот уже забронирован. На одно и то же время нельзя создать две записи."
+            ]
+          }
+        }
+      },
+      "UpdateEventTypeRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 480
+          }
+        },
+        "description": "DTO для обновления типа события (владелец)"
+      },
+      "ValidationError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "errors"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "enum": [
+              "Некорректные данные запроса"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server",
+      "variables": {}
+    },
+    {
+      "url": "https://api.calendar-booking.example.com",
+      "description": "Production server",
+      "variables": {}
+    }
+  ]
+}
