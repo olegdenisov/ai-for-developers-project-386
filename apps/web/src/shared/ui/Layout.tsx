@@ -35,9 +35,10 @@ export function Layout({ children, title }: LayoutProps) {
               >
                 Записаться
               </Button>
-              <Button 
-                variant="subtle" 
+              <Button
+                variant="subtle"
                 color="gray"
+                onClick={() => navigate.admin()}
                 styles={{
                   root: {
                     color: '#6b7280',

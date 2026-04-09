@@ -1,5 +1,3 @@
-// Public API for owner-bookings feature
-export const ownerBookingsFeature = {
-  // This feature will be implemented when needed
-  // It will contain the logic for owner to view and manage bookings
-};
+// Публичный API фичи бронирований администратора
+export { bookingsTab, upcomingBookings, pastBookings, cancelAdminBooking } from './model/model';
+export type { BookingsTab } from './model/model';

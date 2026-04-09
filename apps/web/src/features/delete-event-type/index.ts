@@ -1,5 +1,3 @@
-// Public API for delete-event-type feature
-export const deleteEventTypeFeature = {
-  // This feature will be implemented when needed
-  // It will contain the logic for owner to delete event types
-};
+// Публичный API фичи удаления типа события
+export { DeleteEventTypeModal } from './DeleteEventTypeModal';
+export { deletingEventType, openDeleteEventType, closeDeleteEventType, confirmDeleteEventType } from './model/model';

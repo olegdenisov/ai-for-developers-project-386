@@ -4,6 +4,7 @@ import { homeRoute } from '@pages/home';
 import { bookCatalogRoute } from '@pages/book-catalog';
 import { bookingConfirmationRoute } from '@pages/booking-confirmation';
 import { bookingDetailRoute } from '@pages/booking-detail';
+import { adminRoute, adminBookingsRoute, adminEventTypesRoute } from '@pages/admin';
 
 // ============================================
 // EXPORTS
@@ -14,6 +15,7 @@ export { homeRoute } from '@pages/home';
 export { bookCatalogRoute } from '@pages/book-catalog';
 export { bookingConfirmationRoute } from '@pages/booking-confirmation';
 export { bookingDetailRoute } from '@pages/booking-detail';
+export { adminRoute, adminBookingsRoute, adminEventTypesRoute } from '@pages/admin';
 
 // ============================================
 // NAVIGATION HELPERS
@@ -29,6 +31,7 @@ export const navigate = {
   booking: () => wrap(bookCatalogRoute.go()),
   bookingConfirmation: () => wrap(bookingConfirmationRoute.go()),
   bookingDetail: (id: string) => wrap(bookingDetailRoute.go({ id })),
+  admin: () => wrap(adminBookingsRoute.go()),
   back: () => window.history.back(),
 };
 
@@ -60,6 +63,9 @@ export const isAnyRouteLoading = computed(() => {
     homeRoute.loader.pending() ||
     bookCatalogRoute.loader.pending() ||
     bookingConfirmationRoute.loader.pending() ||
-    bookingDetailRoute.loader.pending()
+    bookingDetailRoute.loader.pending() ||
+    adminRoute.loader.pending() ||
+    adminBookingsRoute.loader.pending() ||
+    adminEventTypesRoute.loader.pending()
   );
 }, 'isAnyRouteLoading');

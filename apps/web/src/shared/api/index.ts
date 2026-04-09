@@ -1,2 +1,2 @@
-// Экспортируем API клиент и его типы
-export { apiClient } from './client';
+// Экспортируем API клиенты и их типы
+export { apiClient, ownerApiClient, eventTypesApiClient } from './client';
