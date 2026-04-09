@@ -102,7 +102,6 @@ export const BookingConfirmationPage = reatomComponent(
     // Получаем состояние формы
     const { fields, submit } = form;
     const isSubmitting = submit.pending();
-    const isReady = submit.ready();
 
     // Обработчик отправки формы
     const handleSubmit = (e: React.FormEvent) => {
@@ -212,7 +211,7 @@ export const BookingConfirmationPage = reatomComponent(
                       <Button variant="subtle" onClick={goBack}>
                         Назад
                       </Button>
-                      <Button type="submit" loading={isSubmitting} disabled={!isReady}>
+                      <Button type="submit" loading={isSubmitting}>
                         Подтвердить
                       </Button>
                     </Group>

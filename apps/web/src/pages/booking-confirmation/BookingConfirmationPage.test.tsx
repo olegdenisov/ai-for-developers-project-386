@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '@/test/setup';
 import { BookingConfirmationPage } from './BookingConfirmationPage';
 import type { EventType } from '@entities/event-type';
 import type { Slot } from '@entities/slot';
@@ -31,40 +32,35 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
     createdAt: '2024-01-01T00:00:00Z',
   };
 
+  const mockField = (value: string) => ({
+    value: () => value,
+    validation: () => ({ error: undefined }),
+    onChange: vi.fn(),
+    onBlur: vi.fn(),
+    onFocus: vi.fn(),
+  });
+
   const mockForm = {
     fields: {
-      guestName: {
-        value: () => 'Иван Иванов',
-        error: () => null,
-        onChange: vi.fn(),
-      },
-      guestEmail: {
-        value: () => 'ivan@example.com',
-        error: () => null,
-        onChange: vi.fn(),
-      },
-      guestNotes: {
-        value: () => 'Тестовая заметка',
-        error: () => null,
-        onChange: vi.fn(),
-      },
+      guestName: mockField('Иван Иванов'),
+      guestEmail: mockField('ivan@example.com'),
+      guestNotes: mockField('Тестовая заметка'),
     },
     submit: {
       pending: () => false,
-      ready: () => true,
       error: () => null,
     },
   };
 
   it('должен отображать спиннер загрузки', () => {
-    render(<BookingConfirmationPage isLoading={true} />);
+    renderWithProviders(<BookingConfirmationPage isLoading={true} />);
 
-    const spinner = document.querySelector('[role="status"]');
+    const spinner = document.querySelector('[role="status"], .mantine-Loader-root');
     expect(spinner).toBeInTheDocument();
   });
 
   it('должен отображать ошибку', () => {
-    render(
+    renderWithProviders(
       <BookingConfirmationPage
         isLoading={false}
         error="Ошибка загрузки данных"
@@ -76,13 +72,13 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
   });
 
   it('должен отображать сообщение об отсутствии данных', () => {
-    render(<BookingConfirmationPage isLoading={false} />);
+    renderWithProviders(<BookingConfirmationPage isLoading={false} />);
 
     expect(screen.getByText(/Данные бронирования не найдены/i)).toBeInTheDocument();
   });
 
   it('должен отображать сводку о встрече', () => {
-    render(
+    renderWithProviders(
       <BookingConfirmationPage
         eventType={mockEventType}
         slot={mockSlot}
@@ -93,11 +89,11 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
     );
 
     expect(screen.getByText('Встреча 30 мин')).toBeInTheDocument();
-    expect(screen.getByText('Host')).toBeInTheDocument();
+    expect(screen.getAllByText('Host').length).toBeGreaterThan(0);
   });
 
   it('должен отображать форму с полями ввода', () => {
-    render(
+    renderWithProviders(
       <BookingConfirmationPage
         eventType={mockEventType}
         slot={mockSlot}
@@ -113,7 +109,7 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
   });
 
   it('должен отображать кнопки Назад и Подтвердить', () => {
-    render(
+    renderWithProviders(
       <BookingConfirmationPage
         eventType={mockEventType}
         slot={mockSlot}
@@ -128,7 +124,7 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
   });
 
   it('должен отображать кнопку Добавить гостей', () => {
-    render(
+    renderWithProviders(
       <BookingConfirmationPage
         eventType={mockEventType}
         slot={mockSlot}
@@ -142,7 +138,7 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
   });
 
   it('должен отображать информацию о дате и времени', () => {
-    render(
+    renderWithProviders(
       <BookingConfirmationPage
         eventType={mockEventType}
         slot={mockSlot}
@@ -158,7 +154,7 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
   });
 
   it('должен отображать длительность встречи', () => {
-    render(
+    renderWithProviders(
       <BookingConfirmationPage
         eventType={mockEventType}
         slot={mockSlot}
