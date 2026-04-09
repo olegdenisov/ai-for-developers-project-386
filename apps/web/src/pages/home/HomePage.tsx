@@ -15,35 +15,16 @@ import {
 import { IconArrowRight } from '@tabler/icons-react';
 import { navigate } from '@app/router';
 import { Layout } from '@shared/ui';
-import type { EventType } from '@entities/event-type';
-
-// ============================================
-// PROPS INTERFACE
-// ============================================
-
-interface HomePageProps {
-  eventTypes: EventType[];
-  isLoading: boolean;
-  error?: string | null;
-}
 
 // ============================================
 // COMPONENT
 // ============================================
 
-export const HomePage = reatomComponent(({ error }: HomePageProps) => {
+export const HomePage = reatomComponent(() => {
   const handleBookClick = () => {
     // Переходим к выбору типа события
     navigate.booking();
   };
-
-  if (error) {
-    return (
-      <Layout title="Ошибка">
-        <Text c="red">{error}</Text>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>

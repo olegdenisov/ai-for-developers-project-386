@@ -1,24 +1,10 @@
-import { wrap } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
-import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import { HomePage } from '../HomePage';
-import type { EventType } from '@entities/event-type';
 
 // ============================================
 // HOME ROUTE
 // ============================================
-
-/**
- * Тип для self параметра в render функции
- */
-interface RouteSelf {
-  loader: {
-    pending: () => boolean;
-    data: () => EventType[] | null;
-    error: () => Error | null;
-  };
-}
 
 /**
  * Home route - главная страница
@@ -28,37 +14,8 @@ interface RouteSelf {
 export const homeRoute = layoutRoute.reatomRoute({
   path: '',
 
-  /**
-   * Loader загружает список доступных типов событий
-   */
-  async loader(): Promise<EventType[]> {
-    const response = await wrap(apiClient.listPublicEventTypes());
-    
-    if (response.status >= 400) {
-      throw new Error('Failed to fetch event types');
-    }
-    
-    // API возвращает { eventTypes: [...] }
-    const data = response.data;
-    const eventTypes = data.eventTypes || [];
-    return eventTypes;
-  },
-
-  /**
-   * Render function возвращает React компонент
-   */
-  render(self: RouteSelf): RouteChild {
-    const isPending = self.loader.pending();
-    const eventTypes = self.loader.data();
-    const error = self.loader.error();
-
-    return (
-      <HomePage
-        eventTypes={eventTypes || []}
-        isLoading={isPending}
-        error={error?.message}
-      />
-    );
+  render(): RouteChild {
+    return <HomePage />;
   },
 });
 

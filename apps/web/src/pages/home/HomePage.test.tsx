@@ -13,13 +13,13 @@ import { navigate } from '@app/router';
 
 describe('pages/home/HomePage', () => {
   it('должен отображать заголовок Calendar', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} />);
+    render(<HomePage />);
 
     expect(screen.getByText('Calendar')).toBeInTheDocument();
   });
 
   it('должен отображать описание приложения', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} />);
+    render(<HomePage />);
 
     expect(
       screen.getByText(/Забронируйте встречу за минуту/i)
@@ -27,14 +27,14 @@ describe('pages/home/HomePage', () => {
   });
 
   it('должен отображать кнопку Записаться', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} />);
+    render(<HomePage />);
 
     const button = screen.getByText('Записаться');
     expect(button).toBeInTheDocument();
   });
 
   it('должен вызывать navigate.booking при клике на кнопку Записаться', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} />);
+    render(<HomePage />);
 
     const button = screen.getByText('Записаться');
     fireEvent.click(button);
@@ -43,13 +43,13 @@ describe('pages/home/HomePage', () => {
   });
 
   it('должен отображать бейдж Быстрая запись на звонок', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} />);
+    render(<HomePage />);
 
     expect(screen.getByText(/Быстрая запись на звонок/i)).toBeInTheDocument();
   });
 
   it('должен отображать карточку возможностей', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} />);
+    render(<HomePage />);
 
     expect(screen.getByText('Возможности')).toBeInTheDocument();
     expect(
@@ -57,17 +57,9 @@ describe('pages/home/HomePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('должен отображать ошибку если передана', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} error="Тестовая ошибка" />);
-
-    expect(screen.getByText('Ошибка')).toBeInTheDocument();
-    expect(screen.getByText('Тестовая ошибка')).toBeInTheDocument();
-  });
-
   it('должен отображать список возможностей', () => {
-    render(<HomePage eventTypes={[]} isLoading={false} />);
+    render(<HomePage />);
 
-    // Проверяем что есть элементы списка
     expect(
       screen.getByText(/Быстрое бронирование с подтверждением/i)
     ).toBeInTheDocument();
