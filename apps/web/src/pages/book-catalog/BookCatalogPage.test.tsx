@@ -1,24 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BookCatalogPage } from './BookCatalogPage';
 import type { EventType } from '@entities/event-type';
 
-// Мок для navigate
-vi.mock('@app/router', () => ({
-  navigate: {
-    eventType: vi.fn(),
-  },
-}));
-
+// Мок для handleEventTypeClick
 vi.mock('./model/model', () => ({
-  handleEventTypeClick: vi.fn((id: string) => {
-    const { navigate } = require('@app/router');
-    navigate.eventType(id);
-  }),
+  handleEventTypeClick: vi.fn(),
 }));
 
-import { handleEventTypeClick } from '../model/model';
-import { navigate } from '@app/router';
+import { handleEventTypeClick } from './model/model';
 
 describe('pages/book-catalog/BookCatalogPage', () => {
   const mockEventTypes: EventType[] = [

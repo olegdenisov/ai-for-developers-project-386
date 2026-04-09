@@ -1,5 +1,5 @@
 import { reatomComponent } from '@reatom/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Title,
   Text,
@@ -24,16 +24,18 @@ import {
 } from '@tabler/icons-react';
 import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatTime, formatDate } from '@shared/lib';
+import { apiClient } from '@shared/api';
 import {
   fetchSlotsForDate,
   fetchSlotsForCalendar,
   isSlotsLoading,
   currentCalendarMonthAtom,
-  selectedDateForRoute,
+  selectedDateAtom,
+  selectedSlotAtom,
+  selectedSlotIdAtom,
   slotsAtom,
 } from './model/route';
 import {
-  selectedSlotAtom,
   calendarDaysAtom,
   slotsForSelectedDateAtom,
   goToPrevMonth,
@@ -55,25 +57,61 @@ import 'dayjs/locale/ru';
 // ============================================
 
 interface EventTypePageProps {
-  eventType?: EventType;
-  owner?: Owner;
-  isLoading: boolean;
-  error?: string | null;
+  eventTypeId?: string;
 }
 
 // ============================================
 // COMPONENT
 // ============================================
 
-export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, error }: EventTypePageProps) => {
+export const EventTypePage = reatomComponent(({ eventTypeId }: EventTypePageProps) => {
+  // Состояние загрузки данных типа события
+  const [eventType, setEventType] = useState<EventType | undefined>(undefined);
+  const [owner] = useState<Owner>({
+    id: 'default',
+    name: 'Host',
+    email: '',
+    isPredefined: true,
+    createdAt: '',
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Получаем состояние из atoms
-  const selectedDate = selectedDateForRoute();
+  const selectedDate = selectedDateAtom();
   const currentMonth = currentCalendarMonthAtom();
   const slotsLoading = isSlotsLoading();
   const slots = slotsAtom();
   const selectedSlot = selectedSlotAtom();
   const calendarDays = calendarDaysAtom();
   const slotsForSelectedDate = slotsForSelectedDateAtom();
+
+  // Загружаем данные типа события при монтировании или смене ID
+  useEffect(() => {
+    if (!eventTypeId) {
+      setIsLoading(false);
+      setError('Тип события не найден');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    apiClient.getPublicEventType(eventTypeId)
+      .then((response) => {
+        if (response.status >= 400) {
+          setError('Не удалось загрузить тип события');
+          return;
+        }
+        setEventType(response.data as EventType);
+      })
+      .catch(() => {
+        setError('Не удалось загрузить тип события');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [eventTypeId]);
 
   // Загружаем слоты при изменении выбранной даты
   useEffect(() => {
@@ -84,7 +122,6 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
 
   // Загружаем слоты для календаря при монтировании
   useEffect(() => {
-    // Небольшая задержка для гарантии что компонент полностью смонтирован
     const timeoutId = setTimeout(() => {
       fetchSlotsForCalendar();
     }, 100);
@@ -95,6 +132,17 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
   useEffect(() => {
     fetchSlotsForCalendar();
   }, [currentMonth]);
+
+  // Восстанавливаем selectedSlotAtom из selectedSlotIdAtom после загрузки слотов (при прямой навигации по URL)
+  const slotId = selectedSlotIdAtom();
+  useEffect(() => {
+    if (slotId && slots.length > 0) {
+      const slot = slots.find((s: import('@entities/slot').Slot) => s.id === slotId);
+      if (slot && slot.isAvailable) {
+        selectedSlotAtom.set(slot);
+      }
+    }
+  }, [slotId, slots]);
 
   // Отображение состояния загрузки
   if (isLoading) {

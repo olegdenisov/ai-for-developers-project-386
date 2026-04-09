@@ -1,19 +1,20 @@
 // Импорты
-import { atom, action, computed } from '@reatom/core';
-import { navigate } from '@app/router';
-import { selectedDateForRoute, slotsAtom, currentCalendarMonthAtom } from './route';
+import { action, computed } from '@reatom/core';
+import {
+  selectedDateAtom,
+  selectedSlotIdAtom,
+  selectedSlotAtom,
+  selectedEventTypeIdAtom,
+  slotsAtom,
+  currentCalendarMonthAtom,
+  updateUrlParam,
+} from './route';
 import { bookingEventTypeAtom, bookingSlotAtom } from '@features/create-booking';
+import { navigate } from '@app/router';
 import type { Slot } from '@entities/slot';
 import type { EventType } from '@entities/event-type';
 import dayjs from 'dayjs';
 import { getSlotsForDate } from '../helpers';
-
-// ============================================
-// ATOMS
-// ============================================
-
-// Атом для хранения выбранного слота
-export const selectedSlotAtom = atom<Slot | null>(null, 'eventTypePage.selectedSlot');
 
 // ============================================
 // COMPUTED
@@ -22,7 +23,7 @@ export const selectedSlotAtom = atom<Slot | null>(null, 'eventTypePage.selectedS
 // Computed для генерации дней календаря
 export const calendarDaysAtom = computed(() => {
   const currentMonth = currentCalendarMonthAtom();
-  
+
   const startOfMonth = dayjs(currentMonth).startOf('month');
   const endOfMonth = dayjs(currentMonth).endOf('month');
   const startOfCalendar = startOfMonth.startOf('week');
@@ -41,9 +42,9 @@ export const calendarDaysAtom = computed(() => {
 
 // Computed для получения слотов на выбранную дату
 export const slotsForSelectedDateAtom = computed(() => {
-  const selectedDate = selectedDateForRoute();
+  const selectedDate = selectedDateAtom();
   const slots = slotsAtom();
-  
+
   if (!selectedDate) return [];
   return getSlotsForDate(slots, selectedDate);
 }, 'slotsForSelectedDateAtom');
@@ -66,24 +67,30 @@ export const goToNextMonth = action(() => {
   currentCalendarMonthAtom.set(newMonth);
 }, 'goToNextMonth');
 
-// Выбор даты
+// Выбор даты — обновляет атом и URL
 export const selectDate = action((date: Date) => {
-  selectedDateForRoute.set(date);
+  selectedDateAtom.set(date);
   // Сбрасываем выбранный слот при смене даты
   selectedSlotAtom.set(null);
+  selectedSlotIdAtom.set(null);
+  // Синхронизируем с URL
+  updateUrlParam('date', date.toISOString().split('T')[0]);
+  updateUrlParam('slotId', null);
 }, 'selectDate');
 
-// Выбор слота
+// Выбор слота — обновляет атом и URL
 export const selectSlot = action((slot: Slot) => {
   if (slot.isAvailable) {
     selectedSlotAtom.set(slot);
+    selectedSlotIdAtom.set(slot.id);
+    updateUrlParam('slotId', slot.id);
   }
 }, 'selectSlot');
 
 // Переход к бронированию
 export const proceedToBooking = action((eventType: EventType | undefined) => {
   const selectedSlot = selectedSlotAtom();
-  
+
   if (selectedSlot && eventType) {
     // Сохраняем данные в atoms контекста бронирования
     bookingEventTypeAtom.set(eventType);
@@ -93,7 +100,13 @@ export const proceedToBooking = action((eventType: EventType | undefined) => {
   }
 }, 'proceedToBooking');
 
-// Возврат на страницу выбора типа события (каталог)
+// Возврат на страницу каталога — очищает выбранный тип события и URL-параметры
 export const goBack = action(() => {
-  navigate.booking();
+  selectedEventTypeIdAtom.set(null);
+  selectedDateAtom.set(null);
+  selectedSlotAtom.set(null);
+  selectedSlotIdAtom.set(null);
+  updateUrlParam('eventTypeId', null);
+  updateUrlParam('date', null);
+  updateUrlParam('slotId', null);
 }, 'goBack');

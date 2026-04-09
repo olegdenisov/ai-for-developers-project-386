@@ -1,34 +1,43 @@
 import { wrap, atom, computed, withAsync, action } from '@reatom/core';
-import type { RouteChild } from '@reatom/core';
-import { z } from 'zod';
-import { apiClient } from '@shared/api';
-import { layoutRoute } from '@shared/router';
-import { EventTypePage } from '../EventTypePage';
-import type { EventType } from '@entities/event-type';
-import type { Owner } from '@entities/owner';
 import type { Slot } from '@entities/slot';
+import { apiClient } from '@shared/api';
 
 // ============================================
-// EVENT TYPE ROUTE
+// URL HELPERS
 // ============================================
 
 /**
- * Тип для params в loader
+ * Вспомогательная функция для обновления query-параметра в URL
+ * без перезагрузки страницы
  */
-interface RouteParams {
-  id: string;
+export function updateUrlParam(key: string, value: string | null): void {
+  const url = new URL(window.location.href);
+  if (value === null) {
+    url.searchParams.delete(key);
+  } else {
+    url.searchParams.set(key, value);
+  }
+  window.history.replaceState(null, '', url.toString());
 }
 
 /**
- * Тип для self параметра в render функции
+ * Вспомогательная функция для разбора даты из строки ISO
  */
-interface RouteSelf {
-  loader: {
-    pending: () => boolean;
-    data: () => { eventType: EventType; owner: Owner } | null;
-    error: () => Error | null;
-  };
+export function parseDateParam(value: string | null): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? null : date;
 }
+
+// ============================================
+// URL-SYNCED ATOMS
+// ============================================
+
+/**
+ * Atom для хранения ID выбранного типа события
+ * Синхронизирован с URL query-параметром ?eventTypeId=
+ */
+export const selectedEventTypeIdAtom = atom<string | null>(null, 'selectedEventTypeId');
 
 /**
  * Atom для хранения текущего месяца календаря
@@ -37,106 +46,38 @@ interface RouteSelf {
 export const currentCalendarMonthAtom = atom<Date>(new Date(), 'currentCalendarMonth');
 
 /**
- * Event type route - страница выбора слотов для типа события
- * Путь: '/event-types/:id'
- * Page route - рендерится только при exact match
+ * Atom для хранения выбранной даты
+ * Синхронизирован с URL query-параметром ?date=
  */
-export const eventTypeRoute = layoutRoute.reatomRoute({
-  path: 'event-types/:id',
-
-  /**
-   * Валидация параметров с помощью Zod
-   */
-  params: z.object({
-    id: z.string(),
-  }),
-
-  /**
-   * Loader загружает детали типа события и информацию о владельце
-   */
-  async loader(params: RouteParams): Promise<{ eventType: EventType; owner: Owner }> {
-    // Загружаем тип события
-    const eventTypeResponse = await wrap(apiClient.getPublicEventType(params.id));
-    
-    if (eventTypeResponse.status >= 400) {
-      throw new Error('Failed to fetch event type');
-    }
-    
-    const eventType: EventType = eventTypeResponse.data;
-
-    // Используем fallback значение для владельца
-    // (в текущей версии API нет метода getOwnerProfile)
-    const owner: Owner = {
-      id: 'default',
-      name: 'Host',
-      email: '',
-      isPredefined: true,
-      createdAt: '',
-    };
-
-    return { eventType, owner };
-  },
-
-  /**
-   * Render function возвращает React компонент
-   */
-  render(self: RouteSelf): RouteChild {
-    const isPending = self.loader.pending();
-    const data = self.loader.data();
-    const error = self.loader.error();
-
-    if (isPending) {
-      return <EventTypePage isLoading={true} />;
-    }
-
-    if (error) {
-      return <EventTypePage isLoading={false} error={error.message} />;
-    }
-
-    if (!data) {
-      return <EventTypePage isLoading={false} error="Event type not found" />;
-    }
-
-    return (
-      <EventTypePage
-        eventType={data.eventType}
-        owner={data.owner}
-        isLoading={false}
-      />
-    );
-  },
-});
-
-// ============================================
-// SLOTS COMPUTED
-// ============================================
+export const selectedDateAtom = atom<Date | null>(null, 'selectedDate');
 
 /**
- * Atom для хранения выбранной даты в маршруте
- * Используется fetchSlotsForDate action
+ * Atom для хранения ID выбранного слота
+ * Синхронизирован с URL query-параметром ?slotId=
  */
-export const selectedDateForRoute = atom<Date | null>(null, 'selectedDateForRoute');
+export const selectedSlotIdAtom = atom<string | null>(null, 'selectedSlotId');
+
+/**
+ * Atom для хранения выбранного слота (объект, не только ID)
+ * Устанавливается при выборе слота или восстановлении из URL
+ */
+export const selectedSlotAtom = atom<Slot | null>(null, 'eventTypePage.selectedSlot');
 
 /**
  * Atom для хранения загруженных слотов
  */
 export const slotsAtom = atom<Slot[]>([], 'slotsAtom');
 
-/**
- * Вспомогательная функция для получения eventTypeId из URL
- */
-function getEventTypeIdFromUrl(): string | null {
-  const pathname = window.location.pathname;
-  const match = pathname.match(/\/event-types\/([^/]+)/);
-  return match ? match[1] : null;
-}
+// ============================================
+// SLOTS ACTIONS
+// ============================================
 
 /**
  * Action для загрузки слотов за период
- * Используется для загрузки слотов для календаря и при выборе даты
+ * Читает eventTypeId из selectedEventTypeIdAtom
  */
 export const fetchSlotsForPeriod = action(async (startDate: Date, endDate: Date) => {
-  const eventTypeId = getEventTypeIdFromUrl();
+  const eventTypeId = selectedEventTypeIdAtom();
 
   if (!eventTypeId) {
     slotsAtom.set([]);
@@ -166,7 +107,7 @@ export const fetchSlotsForPeriod = action(async (startDate: Date, endDate: Date)
  * Загружает слоты для всего видимого диапазона (6 недель ~ 42 дня)
  */
 export const fetchSlotsForCalendar = action(async () => {
-  const eventTypeId = getEventTypeIdFromUrl();
+  const eventTypeId = selectedEventTypeIdAtom();
 
   if (!eventTypeId) {
     slotsAtom.set([]);
@@ -174,16 +115,16 @@ export const fetchSlotsForCalendar = action(async () => {
   }
 
   const currentMonth = currentCalendarMonthAtom();
-  
+
   // Вычисляем диапазон: начало первой недели месяца до конца последней недели
   const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-  
+
   // Расширяем диапазон до полных недель (воскресенье до субботы)
   const startOfCalendar = new Date(startOfMonth);
   startOfCalendar.setDate(startOfMonth.getDate() - startOfMonth.getDay());
   startOfCalendar.setHours(0, 0, 0, 0);
-  
+
   const endOfCalendar = new Date(endOfMonth);
   endOfCalendar.setDate(endOfMonth.getDate() + (6 - endOfMonth.getDay()));
   endOfCalendar.setHours(23, 59, 59, 999);
@@ -193,10 +134,9 @@ export const fetchSlotsForCalendar = action(async () => {
 
 /**
  * Action для загрузки доступных слотов на выбранную дату
- * Отдельно от loader маршрута, чтобы не перезагружать event type при смене даты
  */
 export const fetchSlotsForDate = action(async () => {
-  const selectedDate = selectedDateForRoute();
+  const selectedDate = selectedDateAtom();
   if (!selectedDate) {
     slotsAtom.set([]);
     return [];
@@ -222,7 +162,8 @@ export const isSlotsLoading = computed(() => {
 }, 'isSlotsLoading');
 
 // ============================================
-// EXPORTS
+// EXPORTS (для обратной совместимости)
 // ============================================
 
-export { EventTypePage } from '../EventTypePage';
+// selectedDateForRoute -> selectedDateAtom (псевдоним для плавной миграции)
+export { selectedDateAtom as selectedDateForRoute };

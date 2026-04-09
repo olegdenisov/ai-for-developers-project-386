@@ -1,6 +1,5 @@
 export {
   homeRoute,
-  eventTypeRoute,
   bookCatalogRoute,
   navigate,
   appRender,
