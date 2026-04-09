@@ -105,6 +105,7 @@ export const BookCatalogPage = reatomComponent(({ eventTypes, isLoading, error }
             {eventTypes.map((eventType) => (
               <Card
                 key={eventType.id}
+                data-testid="event-type-card"
                 withBorder
                 padding="lg"
                 radius="md"

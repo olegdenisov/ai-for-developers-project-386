@@ -1,4 +1,22 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/mock-api';
+import type { Page } from '@playwright/test';
+
+/**
+ * Вспомогательная функция: выбирает первую доступную дату в календаре.
+ * Кликает по дате с индикатором доступных слотов (data-testid="calendar-day-available").
+ */
+async function selectAvailableDate(page: Page) {
+  const dateWithSlots = page.getByTestId('calendar-day-available').first();
+  await dateWithSlots.click();
+}
+
+/**
+ * Вспомогательная функция: выбирает первый доступный слот.
+ */
+async function selectAvailableSlot(page: Page) {
+  await page.waitForSelector('text=/Свободно/', { timeout: 5000 });
+  await page.getByText('Свободно').first().click();
+}
 
 test.describe('Полный флоу бронирования', () => {
   test('пользователь может успешно забронировать встречу', async ({ page }) => {
@@ -18,23 +36,20 @@ test.describe('Полный флоу бронирования', () => {
     await expect(page.getByText('Выберите тип события')).toBeVisible();
 
     // 5. Выбираем первый доступный тип события
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    await eventTypeCards.click();
+    await page.getByTestId('event-type-card').first().click();
 
     // 6. Проверяем переход на страницу выбора слотов
     await expect(page).toHaveURL(/.*event-types\//);
     await expect(page.getByText('Календарь')).toBeVisible();
 
-    // 7. Выбираем доступную дату (8 апреля - есть слоты в моке)
-    const availableDate = page.getByText('8').first();
-    await availableDate.click();
+    // 7. Выбираем доступную дату (динамически, по наличию слотов)
+    await selectAvailableDate(page);
 
     // 8. Проверяем что отображаются слоты
     await expect(page.getByText('Статус слотов')).toBeVisible();
 
     // 9. Выбираем доступный слот
-    const availableSlot = page.getByText('Свободно').first();
-    await availableSlot.click();
+    await selectAvailableSlot(page);
 
     // 10. Кликаем "Продолжить"
     await page.getByRole('button', { name: 'Продолжить' }).click();
@@ -52,9 +67,6 @@ test.describe('Полный флоу бронирования', () => {
     const submitButton = page.getByRole('button', { name: 'Подтвердить' });
     await expect(submitButton).toBeVisible();
     await expect(submitButton).toBeEnabled();
-    
-    // Примечание: полный флоу до страницы подтверждения проверяется здесь.
-    // Mock-сервер теперь возвращает UUID для слотов, соответствующий схеме API.
   });
 
   test('пользователь видит ошибку при попытке бронирования без выбора слота', async ({ page }) => {
@@ -62,8 +74,7 @@ test.describe('Полный флоу бронирования', () => {
     await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     // Выбираем тип события
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    await eventTypeCards.click();
+    await page.getByTestId('event-type-card').first().click();
 
     // Проверяем что кнопка "Продолжить" неактивна без выбора слота
     const continueButton = page.getByRole('button', { name: 'Продолжить' });
@@ -75,33 +86,32 @@ test.describe('Полный флоу бронирования', () => {
     await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
     // Выбираем тип события
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    await eventTypeCards.click();
+    await page.getByTestId('event-type-card').first().click();
 
-    // Выбираем дату (8 апреля - есть слоты в моке) и слот
-    await page.getByText('8').first().click();
-    // Ждем появления слотов
-    await page.waitForSelector('text=/Свободно/', { timeout: 5000 });
-    const availableSlot = page.getByText('Свободно').first();
-    await availableSlot.click();
+    // Выбираем доступную дату и слот
+    await selectAvailableDate(page);
+    await selectAvailableSlot(page);
     await page.getByRole('button', { name: 'Продолжить' }).click();
 
     // Проверяем страницу подтверждения
     await expect(page).toHaveURL(/.*confirm/);
 
-    // Пытаемся отправить пустую форму
-    // В Mantine форма с валидацией Zod должна блокировать отправку
     const submitButton = page.getByRole('button', { name: 'Подтвердить' });
-
-    // Проверяем что поля обязательные
-    const nameInput = page.getByLabel(/Ваше имя/i);
     const emailInput = page.getByLabel(/Адрес электронной почты/i);
 
-    // Заполняем невалидный email
+    // Заполняем невалидный email и отправляем
     await emailInput.fill('invalid-email');
     await submitButton.click();
 
     // Проверяем что остались на странице (валидация не прошла)
+    await expect(page).toHaveURL(/.*confirm/);
+
+    // Проверяем отображение ошибки валидации email
+    await expect(page.getByText(/некорректный|invalid|email/i)).toBeVisible();
+
+    // Проверяем что поле имени обязательно
+    await emailInput.fill('valid@example.com');
+    await submitButton.click();
     await expect(page).toHaveURL(/.*confirm/);
   });
 });

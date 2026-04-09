@@ -1,4 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/mock-api';
+import type { Page } from '@playwright/test';
+
+/**
+ * Вспомогательная функция: выбирает первую доступную дату в календаре.
+ */
+async function selectAvailableDate(page: Page) {
+  const dateWithSlots = page.getByTestId('calendar-day-available').first();
+  await dateWithSlots.click();
+}
+
+/**
+ * Вспомогательная функция: выбирает первый доступный слот.
+ */
+async function selectAvailableSlot(page: Page) {
+  await page.waitForSelector('text=/Свободно/', { timeout: 5000 });
+  await page.getByText('Свободно').first().click();
+}
 
 test.describe('Навигация', () => {
   test('пользователь может перейти с главной на страницу бронирования', async ({ page }) => {
@@ -20,8 +37,7 @@ test.describe('Навигация', () => {
     await page.goto('/bookings/new');
 
     // Выбираем тип события
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    await eventTypeCards.click();
+    await page.getByTestId('event-type-card').first().click();
 
     // Проверяем что мы на странице выбора слотов
     await expect(page).toHaveURL(/.*event-types\//);
@@ -33,25 +49,16 @@ test.describe('Навигация', () => {
     await expect(page).toHaveURL(/.*bookings\/new/);
   });
 
-  /**
-   * Примечание: этот тест требует успешного создания бронирования,
-   * что невозможно в mock-режиме из-за несоответствия форматов ID.
-   * Пропускаем в mock-режиме.
-   */
-  test.skip('пользователь может вернуться на главную со страницы деталей бронирования', async ({ page }) => {
+  test('пользователь может вернуться на главную со страницы деталей бронирования', async ({ page }) => {
     // Создаем бронирование
     await page.goto('/');
     await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    await eventTypeCards.click();
+    await page.getByTestId('event-type-card').first().click();
 
-    // Выбираем дату (8 апреля - есть слоты в моке) и слот
-    await page.getByText('8').first().click();
-    // Ждем появления слотов
-    await page.waitForSelector('text=/Свободно/', { timeout: 5000 });
-    const availableSlot = page.getByText('Свободно').first();
-    await availableSlot.click();
+    // Выбираем доступную дату и слот
+    await selectAvailableDate(page);
+    await selectAvailableSlot(page);
     await page.getByRole('button', { name: 'Продолжить' }).click();
 
     await page.getByLabel(/Ваше имя/i).fill('Тест Навигации');
@@ -66,7 +73,7 @@ test.describe('Навигация', () => {
 
     // Проверяем переход на главную
     await expect(page).toHaveURL('/');
-    await expect(page.getByText('Calendar')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Calendar' })).toBeVisible();
   });
 
   test('навигация через Layout работает корректно', async ({ page }) => {
@@ -92,9 +99,9 @@ test.describe('Навигация', () => {
     await page.goto('/bookings/new');
 
     // Выбираем тип события
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    const eventName = await eventTypeCards.textContent();
-    await eventTypeCards.click();
+    const eventTypeCard = page.getByTestId('event-type-card').first();
+    const eventName = await eventTypeCard.textContent();
+    await eventTypeCard.click();
 
     // Проверяем что тип события отображается на странице выбора слотов
     await expect(page.getByText(eventName || '')).toBeVisible();

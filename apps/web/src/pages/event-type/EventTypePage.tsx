@@ -250,6 +250,7 @@ export const EventTypePage = reatomComponent(({ eventType, owner, isLoading, err
                 return (
                   <UnstyledButton
                     key={index}
+                    data-testid={hasSlots && isCurrentMonth ? 'calendar-day-available' : undefined}
                     onClick={() => isCurrentMonth && selectDate(date)}
                     disabled={!isCurrentMonth}
                     style={{

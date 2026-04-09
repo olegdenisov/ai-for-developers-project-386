@@ -1,26 +1,33 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/mock-api';
+import type { Page } from '@playwright/test';
 
 /**
- * Примечание: тесты требуют успешного создания бронирования.
- * Mock-сервер теперь возвращает UUID для слотов, соответствующий схеме API.
- * Тесты пропущены (skip), так как требуют настроенного mock-сервера Prism.
+ * Вспомогательная функция: выбирает первую доступную дату в календаре.
  */
+async function selectAvailableDate(page: Page) {
+  const dateWithSlots = page.getByTestId('calendar-day-available').first();
+  await dateWithSlots.click();
+}
+
+/**
+ * Вспомогательная функция: выбирает первый доступный слот.
+ */
+async function selectAvailableSlot(page: Page) {
+  await page.waitForSelector('text=/Свободно/', { timeout: 5000 });
+  await page.getByText('Свободно').first().click();
+}
+
 test.describe('Отмена бронирования', () => {
-  test.skip('пользователь может отменить бронирование', async ({ page }) => {
+  test('пользователь может отменить бронирование', async ({ page }) => {
     // Создаем бронирование
     await page.goto('/');
     await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
-    // Выбираем тип события
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    await eventTypeCards.click();
+    await page.getByTestId('event-type-card').first().click();
 
-    // Выбираем дату (8 апреля - есть слоты в моке) и слот
-    await page.getByText('8').first().click();
-    // Ждем появления слотов
-    await page.waitForSelector('text=/Свободно/', { timeout: 5000 });
-    const availableSlot = page.getByText('Свободно').first();
-    await availableSlot.click();
+    // Выбираем доступную дату и слот
+    await selectAvailableDate(page);
+    await selectAvailableSlot(page);
     await page.getByRole('button', { name: 'Продолжить' }).click();
 
     // Заполняем форму и создаем бронирование
@@ -35,31 +42,26 @@ test.describe('Отмена бронирования', () => {
     await page.getByText('Отмена').click();
 
     // Проверяем что открылось модальное окно
-    await expect(page.getByText('Отменить бронирование')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Отменить бронирование' })).toBeVisible();
     await expect(page.getByText(/Вы уверены, что хотите отменить/i)).toBeVisible();
 
     // Подтверждаем отмену
     await page.getByRole('button', { name: 'Отменить бронирование' }).click();
 
-    // Проверяем что бронирование отменено
-    // В реальном приложении здесь должна быть проверка статуса
-    await expect(page.getByText('Встреча запланирована')).not.toBeVisible();
+    // Проверяем что бронирование отменено — перенаправление на главную
+    await expect(page).toHaveURL('/');
   });
 
-  test.skip('пользователь может закрыть модальное окно отмены без отмены', async ({ page }) => {
+  test('пользователь может закрыть модальное окно отмены без отмены', async ({ page }) => {
     // Создаем бронирование
     await page.goto('/');
     await page.locator('main').getByRole('button', { name: /Записаться/i }).click();
 
-    const eventTypeCards = page.locator('[style*="cursor: pointer"]').first();
-    await eventTypeCards.click();
+    await page.getByTestId('event-type-card').first().click();
 
-    // Выбираем дату (8 апреля - есть слоты в моке) и слот
-    await page.getByText('8').first().click();
-    // Ждем появления слотов
-    await page.waitForSelector('text=/Свободно/', { timeout: 5000 });
-    const availableSlot = page.getByText('Свободно').first();
-    await availableSlot.click();
+    // Выбираем доступную дату и слот
+    await selectAvailableDate(page);
+    await selectAvailableSlot(page);
     await page.getByRole('button', { name: 'Продолжить' }).click();
 
     await page.getByLabel(/Ваше имя/i).fill('Тест');
@@ -70,7 +72,7 @@ test.describe('Отмена бронирования', () => {
 
     // Открываем модалку отмены
     await page.getByText('Отмена').click();
-    await expect(page.getByText('Отменить бронирование')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Отменить бронирование' })).toBeVisible();
 
     // Закрываем модалку по кнопке "Закрыть"
     await page.getByRole('button', { name: /^Закрыть$/ }).click();
