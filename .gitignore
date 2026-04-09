@@ -45,3 +45,5 @@ coverage/
 # Misc
 .cache/
 *.pem
+docs/bugs
+docs/screens

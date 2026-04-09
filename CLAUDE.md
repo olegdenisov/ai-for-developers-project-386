@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. **Зафикси план в markdown-файле** — сохрани согласованный план в файл `plan.md` в корне репозитория.
 4. **Разбей на шаги и пронумеруй** — план должен содержать пронумерованные шаги.
 5. **В конце каждого шага**:
-   - Обнови/запусти тесты (`pnpm type-check`, unit и E2E при необходимости)
+   - Обнови/создай/запусти тесты (`pnpm type-check`, unit и E2E при необходимости)
    - Проверь сборку (`pnpm build`)
    - Сделай коммит изменений с описанием выполненного шага
 
@@ -136,25 +136,8 @@ Path aliases (configured in `vite.config.ts` and `tsconfig.json`):
 
 ### Reatom v1000 Patterns
 
-Always name atoms/actions/computed (second argument is mandatory):
-```typescript
-atom<T>(value, 'atomName')
-action(fn, 'actionName').extend(withAsync())
-computed(() => ..., 'computedName')
-```
-
-Async action pattern using `wrap()` from `@reatom/core`:
-```typescript
-const fetchData = action(async () => {
-  const response = await wrap(apiClient.method())
-  if (!response.ok) throw new Error('...')
-  const data = await wrap(response.json())
-  atom.set(data)
-  return data
-}, 'fetchData').extend(withAsync())
-```
-
-Use `reatomComponent()` from `@reatom/react` for components that read atoms.
+@docs/reatom-summary-doc.md
+@docs/reatom-v1000.md
 
 ### Module System
 
