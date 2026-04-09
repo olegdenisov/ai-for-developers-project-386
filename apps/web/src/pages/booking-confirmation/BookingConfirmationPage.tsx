@@ -101,7 +101,7 @@ export const BookingConfirmationPage = reatomComponent(
 
     // Получаем состояние формы
     const { fields, submit } = form;
-    const isSubmitting = submit.pending();
+    const isSubmitting = !submit.ready();
 
     // Обработчик отправки формы
     const handleSubmit = (e: React.FormEvent) => {
