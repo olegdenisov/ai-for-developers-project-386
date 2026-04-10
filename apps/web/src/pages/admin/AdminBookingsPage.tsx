@@ -35,7 +35,7 @@ function BookingRow({
   const endTime = booking.slot?.endTime ?? '';
 
   return (
-    <Table.Tr>
+    <Table.Tr style={booking.status === 'CANCELLED' ? { opacity: 0.45 } : undefined}>
       <Table.Td>
         <Text size="sm">{startTime ? formatDate(startTime, 'DD.MM.YYYY') : '—'}</Text>
       </Table.Td>

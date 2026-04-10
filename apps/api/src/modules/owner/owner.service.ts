@@ -48,7 +48,7 @@ export async function getUpcomingBookings(filters: {
         slot: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        slot: { startTime: 'asc' },
       },
       skip,
       take: pageSize,
