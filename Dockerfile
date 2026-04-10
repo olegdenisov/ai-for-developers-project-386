@@ -33,6 +33,9 @@ RUN VITE_API_URL=/ pnpm --filter @calendar-booking/web build
 # Собираем API (TypeScript → JavaScript)
 RUN pnpm --filter @calendar-booking/api build
 
+# Создаём standalone-деплой API: flat node_modules без симлинков (включая devDeps для prisma CLI)
+RUN pnpm deploy --filter @calendar-booking/api /standalone
+
 # ===================== STAGE 3: Production =====================
 FROM node:24-alpine AS production
 
@@ -41,35 +44,17 @@ WORKDIR /app
 # Системные зависимости для Prisma
 RUN apk add --no-cache openssl
 
-# Копируем root node_modules (виртуальный .pnpm стор с реальными пакетами)
-COPY --from=builder /app/node_modules ./node_modules
+# Копируем standalone-деплой API (flat node_modules, dist, prisma, package.json)
+COPY --from=builder /standalone .
 
-# Копируем node_modules самого API (симлинки на .pnpm стор — нужны для резолва зависимостей)
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-
-# Копируем конфигурацию workspace
-COPY --from=builder /app/package.json /app/pnpm-workspace.yaml ./
-
-# Копируем манифесты пакетов
-COPY --from=builder /app/apps/api/package.json ./apps/api/
-COPY --from=builder /app/apps/web/package.json ./apps/web/
-COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/
-COPY --from=builder /app/packages/api-client/package.json ./packages/api-client/
-
-# Копируем исходники пакетов (нужны для workspace-ссылок в TypeScript)
-COPY --from=builder /app/packages ./packages
-
-# Копируем собранный API и Prisma схему с миграциями
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-
-# Копируем собранный фронтенд (статические файлы)
-COPY --from=builder /app/apps/web/dist ./apps/web/dist
+# Копируем собранный фронтенд в путь, который ожидает API:
+# __dirname = /app/dist, path.resolve(__dirname, '../../web/dist') = /app/web/dist
+COPY --from=builder /app/apps/web/dist ./web/dist
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
 EXPOSE ${PORT}
 
-# Запуск: применяем миграции (|| true — не падаем если нет БД), затем стартуем API
-CMD ["sh", "-c", "apps/api/node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma || true && exec node apps/api/dist/main.js"]
+# Запуск: применяем миграции, затем стартуем API
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma || true && exec node dist/main.js"]
