@@ -62,7 +62,7 @@ await app.register(swaggerUi, {
 });
 
 // Раздача статических файлов фронтенда (в production: apps/web/dist)
-const webDistPath = path.resolve(__dirname, '../../web/dist');
+const webDistPath = path.resolve(__dirname, '../web/dist');
 await app.register(fastifyStatic, {
   root: webDistPath,
   wildcard: false,
