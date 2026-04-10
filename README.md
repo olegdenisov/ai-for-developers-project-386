@@ -2,6 +2,10 @@
 
 Turborepo монорепозиторий с системой бронирования встреч (Fastify + React 19 + FSD + Reatom v1000 + Mantine)
 
+## Live Demo
+
+https://ai-for-developers-project-386-production.up.railway.app/
+
 ## 📁 Структура
 
 ```
