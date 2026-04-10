@@ -1,3 +1,4 @@
+import { Prisma } from '../../../prisma/generated/client/index.js';
 import { prisma } from '../../main.js';
 import { NotFoundError } from '../../common/errors/customErrors.js';
 
@@ -24,7 +25,7 @@ export async function getUpcomingBookings(filters: {
   const pageSize = filters.pageSize || 20;
   const skip = (page - 1) * pageSize;
 
-  const where: any = {};
+  const where: Prisma.BookingWhereInput = {};
 
   if (filters.status) {
     where.status = filters.status;

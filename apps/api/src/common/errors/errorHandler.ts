@@ -1,6 +1,16 @@
 import { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 import { AppError, ValidationError } from './customErrors.js';
 
+// Типы для внешних ошибок без публичных конструкторов
+interface PrismaKnownError extends Error {
+  code: string;
+  meta?: { target?: string[] };
+}
+
+interface ZodLikeError extends Error {
+  errors?: Array<{ path?: (string | number)[]; message: string }>;
+}
+
 export const errorHandler = (
   error: FastifyError | AppError | Error,
   request: FastifyRequest,
@@ -27,7 +37,7 @@ export const errorHandler = (
 
   // Handle Prisma errors
   if (error.name === 'PrismaClientKnownRequestError') {
-    const prismaError = error as any;
+    const prismaError = error as PrismaKnownError;
     
     // P2002 - Unique constraint violation
     if (prismaError.code === 'P2002') {
@@ -57,11 +67,11 @@ export const errorHandler = (
 
   // Handle Zod validation errors from fastify-type-provider-zod
   if (error.name === 'ZodError') {
-    const zodError = error as any;
+    const zodError = error as ZodLikeError;
     return reply.status(400).send({
       code: 'VALIDATION_ERROR',
       message: 'Invalid request data',
-      errors: zodError.errors?.map((e: any) => ({
+      errors: zodError.errors?.map((e) => ({
         field: e.path?.join('.'),
         message: e.message,
       })),

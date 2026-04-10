@@ -1,3 +1,4 @@
+import { Prisma } from '../../../prisma/generated/client/index.js';
 import { prisma } from '../../main.js';
 import { NotFoundError, ValidationError } from '../../common/errors/customErrors.js';
 
@@ -18,7 +19,7 @@ export async function listAvailableSlots(filters: {
     throw new ValidationError('startDate must be before endDate');
   }
 
-  const where: any = {
+  const where: Prisma.SlotWhereInput = {
     isAvailable: true,
     startTime: {
       gte: start,
@@ -64,28 +65,6 @@ export async function getSlotById(id: string) {
   }
 
   return slot;
-}
-
-export async function getSlotsForEventType(
-  eventTypeId: string,
-  filters: {
-    startDate: string;
-    endDate: string;
-  }
-) {
-  // Verify event type exists
-  const eventType = await prisma.eventType.findUnique({
-    where: { id: eventTypeId },
-  });
-
-  if (!eventType) {
-    throw new NotFoundError('Event type not found');
-  }
-
-  return listAvailableSlots({
-    eventTypeId,
-    ...filters,
-  });
 }
 
 // Helper function to generate slots (can be used for admin/seeding)

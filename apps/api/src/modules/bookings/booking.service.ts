@@ -81,7 +81,7 @@ export async function getAvailableSlotsForEventType(
   });
 
   // Filter slots by duration compatibility
-  return slots.filter((slot: { startTime: Date; endTime: Date }) => {
+  return slots.filter((slot) => {
     const slotDuration = (new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 60000;
     return slotDuration >= eventType.durationMinutes;
   });

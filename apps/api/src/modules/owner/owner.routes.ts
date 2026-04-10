@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import * as ownerController from './owner.controller.js';
 
+// Конвертация Date-объекта в ISO-строку при сериализации ответа
+const dateToIso = (val: unknown): unknown =>
+  val instanceof Date ? val.toISOString() : val;
+
 export async function ownerRoutes(app: FastifyInstance) {
   // Set up Zod type provider
   app.setValidatorCompiler(validatorCompiler);
@@ -20,7 +24,7 @@ export async function ownerRoutes(app: FastifyInstance) {
           name: z.string(),
           email: z.string(),
           isPredefined: z.boolean(),
-          createdAt: z.union([z.string().datetime(), z.date()]).transform((v) => (v instanceof Date ? v.toISOString() : v)),
+          createdAt: z.preprocess(dateToIso, z.string()),
         }),
       },
     },
@@ -47,8 +51,8 @@ export async function ownerRoutes(app: FastifyInstance) {
           guestEmail: z.string(),
           guestNotes: z.string().nullable(),
           status: z.enum(['CONFIRMED', 'CANCELLED', 'COMPLETED']),
-          createdAt: z.union([z.string().datetime(), z.date()]).transform((v) => (v instanceof Date ? v.toISOString() : v)),
-          updatedAt: z.union([z.string().datetime(), z.date()]).transform((v) => (v instanceof Date ? v.toISOString() : v)),
+          createdAt: z.preprocess(dateToIso, z.string()),
+          updatedAt: z.preprocess(dateToIso, z.string()),
           eventType: z.object({
             id: z.string(),
             name: z.string(),
@@ -57,8 +61,8 @@ export async function ownerRoutes(app: FastifyInstance) {
           }),
           slot: z.object({
             id: z.string(),
-            startTime: z.union([z.string().datetime(), z.date()]).transform((v) => (v instanceof Date ? v.toISOString() : v)),
-            endTime: z.union([z.string().datetime(), z.date()]).transform((v) => (v instanceof Date ? v.toISOString() : v)),
+            startTime: z.preprocess(dateToIso, z.string()),
+            endTime: z.preprocess(dateToIso, z.string()),
             isAvailable: z.boolean(),
           }),
         })),

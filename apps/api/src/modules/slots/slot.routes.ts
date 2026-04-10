@@ -2,14 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import * as slotController from './slot.controller.js';
-
-const slotSchema = z.object({
-  id: z.string(),
-  startTime: z.string().datetime(),
-  endTime: z.string().datetime(),
-  isAvailable: z.boolean(),
-  createdAt: z.string().datetime(),
-});
+import { slotSchema } from '../../common/schemas.js';
 
 export async function slotRoutes(app: FastifyInstance) {
   app.setValidatorCompiler(validatorCompiler);
@@ -44,12 +37,7 @@ export async function slotRoutes(app: FastifyInstance) {
         id: z.string(),
       }),
       response: {
-        200: z.object({
-          id: z.string(),
-          startTime: z.string().datetime(),
-          endTime: z.string().datetime(),
-          isAvailable: z.boolean(),
-          createdAt: z.string().datetime(),
+        200: slotSchema.extend({
           booking: z.object({
             id: z.string(),
             guestName: z.string(),

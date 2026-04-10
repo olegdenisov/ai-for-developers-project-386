@@ -2,15 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import * as eventTypeController from './event-type.controller.js';
-
-const eventTypeSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  durationMinutes: z.number(),
-  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-  updatedAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-});
+import { eventTypeSchema } from '../../common/schemas.js';
 
 const createEventTypeSchema = z.object({
   name: z.string().min(1).max(100),

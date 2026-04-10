@@ -2,37 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import * as bookingController from './booking.controller.js';
-
-const eventTypeSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  durationMinutes: z.number(),
-  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-  updatedAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-});
-
-const slotSchema = z.object({
-  id: z.string(),
-  startTime: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-  endTime: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-  isAvailable: z.boolean(),
-  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-});
-
-const bookingSchema = z.object({
-  id: z.string(),
-  eventTypeId: z.string(),
-  slotId: z.string(),
-  guestName: z.string(),
-  guestEmail: z.string(),
-  guestNotes: z.string().nullable(),
-  status: z.enum(['CONFIRMED', 'CANCELLED', 'COMPLETED']),
-  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-  updatedAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
-  eventType: eventTypeSchema,
-  slot: slotSchema,
-});
+import { bookingSchema, eventTypeSchema, slotSchema } from '../../common/schemas.js';
 
 export async function bookingRoutes(app: FastifyInstance) {
   app.setValidatorCompiler(validatorCompiler);
