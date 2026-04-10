@@ -47,16 +47,16 @@ function BookingRow({
         </Text>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">
-          {booking.slot?.startTime ? (
-            <Badge variant="outline" color="orange" size="sm">
-              {booking.eventType?.durationMinutes} мин •{' '}
-              {booking.eventType?.name ?? '—'}
-            </Badge>
-          ) : (
-            booking.eventType?.name ?? '—'
-          )}
-        </Text>
+        {booking.slot?.startTime ? (
+          <Badge variant="outline" color="orange" size="sm">
+            {booking.eventType?.durationMinutes} мин •{' '}
+            {booking.eventType?.name ?? '—'}
+          </Badge>
+        ) : (
+          <Text size="sm" component="span">
+            {booking.eventType?.name ?? '—'}
+          </Text>
+        )}
       </Table.Td>
       <Table.Td>
         <Text size="sm" fw={500}>

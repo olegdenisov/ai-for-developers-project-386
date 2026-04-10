@@ -41,7 +41,7 @@ const adminEventTypes = computed(async () => {
  */
 export const AdminEventTypesPage = reatomComponent(() => {
   const eventTypes = adminEventTypes.data();
-  const isPending = adminEventTypes.pending();
+  const isReady = adminEventTypes.ready();
   const error = adminEventTypes.error();
 
   const handleRefresh = () => adminEventTypes.retry();
@@ -100,19 +100,19 @@ export const AdminEventTypesPage = reatomComponent(() => {
       </Group>
 
       {/* Таблица */}
-      {isPending && (
+      {!isReady && (
         <Center py="xl">
           <Loader color="orange" />
         </Center>
       )}
 
-      {error && !isPending && (
+      {error && isReady && (
         <Text c="red" ta="center" py="xl">
           Не удалось загрузить типы событий
         </Text>
       )}
 
-      {!isPending && !error && (
+      {isReady && !error && (
         <Table highlightOnHover>
           <Table.Thead>
             <Table.Tr>
