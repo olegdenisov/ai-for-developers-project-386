@@ -34,9 +34,9 @@ export const fetchEventTypeById = action(async (id: string) => {
 
 // Computed: check if currently fetching
 export const isFetchingEventTypes = computed(() => {
-  return fetchEventTypes.pending();
+  return fetchEventTypes.pending() > 0;
 }, 'isFetchingEventTypes');
 
 export const isFetchingEventType = computed(() => {
-  return fetchEventTypeById.pending();
+  return fetchEventTypeById.pending() > 0;
 }, 'isFetchingEventType');

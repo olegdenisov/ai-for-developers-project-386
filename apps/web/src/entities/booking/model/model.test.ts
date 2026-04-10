@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestCtx } from '@reatom/core';
+import { context, peek } from '@reatom/core';
 import {
   currentBookingAtom,
   bookingErrorAtom,
@@ -28,8 +28,6 @@ vi.mock('@shared/api', () => ({
 import { apiClient } from '@shared/api';
 
 describe('entities/booking/model', () => {
-  let ctx: ReturnType<typeof createTestCtx>;
-
   const mockEventType: EventType = {
     id: 'event-1',
     name: 'Встреча 30 мин',
@@ -62,36 +60,36 @@ describe('entities/booking/model', () => {
   };
 
   beforeEach(() => {
-    ctx = createTestCtx();
+    context.reset();
     vi.clearAllMocks();
   });
 
   describe('atoms', () => {
     it('currentBookingAtom должен иметь начальное значение - null', () => {
-      expect(ctx.get(currentBookingAtom)).toBeNull();
+      expect(peek(currentBookingAtom)).toBeNull();
     });
 
     it('bookingErrorAtom должен иметь начальное значение - null', () => {
-      expect(ctx.get(bookingErrorAtom)).toBeNull();
+      expect(peek(bookingErrorAtom)).toBeNull();
     });
 
     it('isBookingSuccessAtom должен иметь начальное значение - false', () => {
-      expect(ctx.get(isBookingSuccessAtom)).toBe(false);
+      expect(peek(isBookingSuccessAtom)).toBe(false);
     });
 
     it('currentBookingAtom должен обновляться при установке значения', () => {
-      currentBookingAtom(ctx, mockBooking);
-      expect(ctx.get(currentBookingAtom)).toEqual(mockBooking);
+      currentBookingAtom.set(mockBooking);
+      expect(peek(currentBookingAtom)).toEqual(mockBooking);
     });
 
     it('bookingErrorAtom должен обновляться при установке значения', () => {
-      bookingErrorAtom(ctx, 'Ошибка бронирования');
-      expect(ctx.get(bookingErrorAtom)).toBe('Ошибка бронирования');
+      bookingErrorAtom.set('Ошибка бронирования');
+      expect(peek(bookingErrorAtom)).toBe('Ошибка бронирования');
     });
 
     it('isBookingSuccessAtom должен обновляться при установке значения', () => {
-      isBookingSuccessAtom(ctx, true);
-      expect(ctx.get(isBookingSuccessAtom)).toBe(true);
+      isBookingSuccessAtom.set(true);
+      expect(peek(isBookingSuccessAtom)).toBe(true);
     });
   });
 
@@ -102,11 +100,11 @@ describe('entities/booking/model', () => {
         data: mockBooking,
       } as unknown as Response);
 
-      const result = await fetchBooking(ctx, 'booking-1');
+      const result = await fetchBooking('booking-1');
 
       expect(apiClient.getBooking).toHaveBeenCalledWith('booking-1');
       expect(result).toEqual(mockBooking);
-      expect(ctx.get(currentBookingAtom)).toEqual(mockBooking);
+      expect(peek(currentBookingAtom)).toEqual(mockBooking);
     });
 
     it('должен обрабатывать ошибку 404', async () => {
@@ -115,7 +113,7 @@ describe('entities/booking/model', () => {
         data: {},
       } as unknown as Response);
 
-      await expect(fetchBooking(ctx, 'nonexistent')).rejects.toThrow('Failed to fetch booking');
+      await expect(fetchBooking('nonexistent')).rejects.toThrow('Failed to fetch booking');
     });
 
     it('должен обрабатывать ошибку сервера', async () => {
@@ -124,7 +122,7 @@ describe('entities/booking/model', () => {
         data: {},
       } as unknown as Response);
 
-      await expect(fetchBooking(ctx, 'booking-1')).rejects.toThrow('Failed to fetch booking');
+      await expect(fetchBooking('booking-1')).rejects.toThrow('Failed to fetch booking');
     });
   });
 
@@ -139,20 +137,20 @@ describe('entities/booking/model', () => {
 
     beforeEach(() => {
       // Устанавливаем начальные ошибочные состояния
-      bookingErrorAtom(ctx, 'Старая ошибка');
-      isBookingSuccessAtom(ctx, false);
+      bookingErrorAtom.set('Старая ошибка');
+      isBookingSuccessAtom.set(false);
     });
 
-    it('должен сбрасывать ошибку и флаг успеха перед созданием', async () => {
+    it('должен сбросить ошибку и установить флаг успеха после создания', async () => {
       vi.mocked(apiClient.createBooking).mockResolvedValue({
         status: 200,
         data: mockBooking,
       } as unknown as Response);
 
-      await createBooking(ctx, createRequest);
+      await createBooking(createRequest);
 
-      expect(ctx.get(bookingErrorAtom)).toBeNull();
-      expect(ctx.get(isBookingSuccessAtom)).toBe(false);
+      expect(peek(bookingErrorAtom)).toBeNull();
+      expect(peek(isBookingSuccessAtom)).toBe(true);
     });
 
     it('должен создавать бронирование успешно', async () => {
@@ -161,12 +159,12 @@ describe('entities/booking/model', () => {
         data: mockBooking,
       } as unknown as Response);
 
-      const result = await createBooking(ctx, createRequest);
+      const result = await createBooking(createRequest);
 
       expect(apiClient.createBooking).toHaveBeenCalledWith(createRequest);
       expect(result).toEqual(mockBooking);
-      expect(ctx.get(currentBookingAtom)).toEqual(mockBooking);
-      expect(ctx.get(isBookingSuccessAtom)).toBe(true);
+      expect(peek(currentBookingAtom)).toEqual(mockBooking);
+      expect(peek(isBookingSuccessAtom)).toBe(true);
     });
 
     it('должен обрабатывать ошибку конфликта слота (409)', async () => {
@@ -180,10 +178,10 @@ describe('entities/booking/model', () => {
 
       vi.mocked(apiClient.createBooking).mockResolvedValue(conflictError as unknown as Response);
 
-      await expect(createBooking(ctx, createRequest)).rejects.toThrow('Этот слот уже забронирован');
+      await expect(createBooking(createRequest)).rejects.toThrow('Этот слот уже забронирован');
 
-      expect(ctx.get(bookingErrorAtom)).toBe('Этот слот уже забронирован');
-      expect(ctx.get(isBookingSuccessAtom)).toBe(false);
+      expect(peek(bookingErrorAtom)).toBe('Этот слот уже забронирован');
+      expect(peek(isBookingSuccessAtom)).toBe(false);
     });
 
     it('должен обрабатывать ошибку валидации (400)', async () => {
@@ -196,9 +194,9 @@ describe('entities/booking/model', () => {
 
       vi.mocked(apiClient.createBooking).mockResolvedValue(validationError as unknown as Response);
 
-      await expect(createBooking(ctx, createRequest)).rejects.toThrow('Некорректные данные');
+      await expect(createBooking(createRequest)).rejects.toThrow('Некорректные данные');
 
-      expect(ctx.get(bookingErrorAtom)).toBe('Некорректные данные');
+      expect(peek(bookingErrorAtom)).toBe('Некорректные данные');
     });
 
     it('должен использовать дефолтное сообщение об ошибке если нет message', async () => {
@@ -207,9 +205,9 @@ describe('entities/booking/model', () => {
         data: {},
       } as unknown as Response);
 
-      await expect(createBooking(ctx, createRequest)).rejects.toThrow('Failed to create booking');
+      await expect(createBooking(createRequest)).rejects.toThrow('Failed to create booking');
 
-      expect(ctx.get(bookingErrorAtom)).toBe('Failed to create booking');
+      expect(peek(bookingErrorAtom)).toBe('Failed to create booking');
     });
   });
 
@@ -225,11 +223,11 @@ describe('entities/booking/model', () => {
         data: cancelledBooking,
       } as unknown as Response);
 
-      const result = await cancelBooking(ctx, 'booking-1', 'Не могу прийти');
+      const result = await cancelBooking('booking-1', 'Не могу прийти');
 
       expect(apiClient.cancelBooking).toHaveBeenCalledWith('booking-1', 'Не могу прийти');
       expect(result).toEqual(cancelledBooking);
-      expect(ctx.get(currentBookingAtom)).toEqual(cancelledBooking);
+      expect(peek(currentBookingAtom)).toEqual(cancelledBooking);
     });
 
     it('должен отменять бронирование без причины', async () => {
@@ -238,7 +236,7 @@ describe('entities/booking/model', () => {
         data: cancelledBooking,
       } as unknown as Response);
 
-      const result = await cancelBooking(ctx, 'booking-1');
+      const result = await cancelBooking('booking-1');
 
       expect(apiClient.cancelBooking).toHaveBeenCalledWith('booking-1', undefined);
       expect(result).toEqual(cancelledBooking);
@@ -250,32 +248,32 @@ describe('entities/booking/model', () => {
         data: {},
       } as unknown as Response);
 
-      await expect(cancelBooking(ctx, 'nonexistent')).rejects.toThrow('Failed to cancel booking');
+      await expect(cancelBooking('nonexistent')).rejects.toThrow('Failed to cancel booking');
     });
   });
 
   describe('clearCurrentBooking', () => {
     it('должен очищать все booking-related атомы', () => {
       // Устанавливаем значения
-      currentBookingAtom(ctx, mockBooking);
-      bookingErrorAtom(ctx, 'Ошибка');
-      isBookingSuccessAtom(ctx, true);
+      currentBookingAtom.set(mockBooking);
+      bookingErrorAtom.set('Ошибка');
+      isBookingSuccessAtom.set(true);
 
       // Очищаем
-      clearCurrentBooking(ctx);
+      clearCurrentBooking();
 
       // Проверяем что всё очищено
-      expect(ctx.get(currentBookingAtom)).toBeNull();
-      expect(ctx.get(bookingErrorAtom)).toBeNull();
-      expect(ctx.get(isBookingSuccessAtom)).toBe(false);
+      expect(peek(currentBookingAtom)).toBeNull();
+      expect(peek(bookingErrorAtom)).toBeNull();
+      expect(peek(isBookingSuccessAtom)).toBe(false);
     });
 
     it('должен работать корректно когда значения уже null/false', () => {
-      clearCurrentBooking(ctx);
+      clearCurrentBooking();
 
-      expect(ctx.get(currentBookingAtom)).toBeNull();
-      expect(ctx.get(bookingErrorAtom)).toBeNull();
-      expect(ctx.get(isBookingSuccessAtom)).toBe(false);
+      expect(peek(currentBookingAtom)).toBeNull();
+      expect(peek(bookingErrorAtom)).toBeNull();
+      expect(peek(isBookingSuccessAtom)).toBe(false);
     });
   });
 
@@ -287,13 +285,13 @@ describe('entities/booking/model', () => {
           data: mockBooking,
         } as unknown as Response);
 
-        expect(ctx.get(isFetchingBooking)).toBe(false);
+        expect(peek(isFetchingBooking)).toBe(false);
 
-        const promise = fetchBooking(ctx, 'booking-1');
-        expect(ctx.get(isFetchingBooking)).toBe(true);
+        const promise = fetchBooking('booking-1');
+        expect(peek(isFetchingBooking)).toBe(true);
 
         await promise;
-        expect(ctx.get(isFetchingBooking)).toBe(false);
+        expect(peek(isFetchingBooking)).toBe(false);
       });
     });
 
@@ -304,18 +302,18 @@ describe('entities/booking/model', () => {
           data: mockBooking,
         } as unknown as Response);
 
-        expect(ctx.get(isCreatingBooking)).toBe(false);
+        expect(peek(isCreatingBooking)).toBe(false);
 
-        const promise = createBooking(ctx, {
+        const promise = createBooking({
           eventTypeId: 'event-1',
           slotId: 'slot-1',
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         });
-        expect(ctx.get(isCreatingBooking)).toBe(true);
+        expect(peek(isCreatingBooking)).toBe(true);
 
         await promise;
-        expect(ctx.get(isCreatingBooking)).toBe(false);
+        expect(peek(isCreatingBooking)).toBe(false);
       });
     });
 
@@ -326,13 +324,13 @@ describe('entities/booking/model', () => {
           data: { ...mockBooking, status: 'CANCELLED' },
         } as unknown as Response);
 
-        expect(ctx.get(isCancellingBooking)).toBe(false);
+        expect(peek(isCancellingBooking)).toBe(false);
 
-        const promise = cancelBooking(ctx, 'booking-1');
-        expect(ctx.get(isCancellingBooking)).toBe(true);
+        const promise = cancelBooking('booking-1');
+        expect(peek(isCancellingBooking)).toBe(true);
 
         await promise;
-        expect(ctx.get(isCancellingBooking)).toBe(false);
+        expect(peek(isCancellingBooking)).toBe(false);
       });
     });
   });

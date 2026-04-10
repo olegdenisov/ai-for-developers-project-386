@@ -37,5 +37,5 @@ export const changeCalendarView = action((date: Date) => {
 
 // Computed: check if calendar is loading
 export const calendarLoadingAtom = computed(() => {
-  return fetchAvailableSlots.pending();
+  return fetchAvailableSlots.pending() > 0;
 }, 'calendarLoadingAtom');

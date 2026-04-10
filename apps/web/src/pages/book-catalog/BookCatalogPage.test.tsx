@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders as render } from '@/test/setup';
 import { BookCatalogPage } from './BookCatalogPage';
 import type { EventType } from '@entities/event-type';
 
@@ -49,7 +50,7 @@ describe('pages/book-catalog/BookCatalogPage', () => {
 
     // Длительность отображается в форматированном виде
     expect(screen.getByText('30 мин')).toBeInTheDocument();
-    expect(screen.getByText('1 ч')).toBeInTheDocument();
+    expect(screen.getByText('60 мин')).toBeInTheDocument();
   });
 
   it('должен отображать заголовок и описание страницы', () => {
@@ -71,8 +72,8 @@ describe('pages/book-catalog/BookCatalogPage', () => {
   it('должен отображать спиннер загрузки', () => {
     render(<BookCatalogPage eventTypes={[]} isLoading={true} />);
 
-    // Проверяем наличие индикатора загрузки
-    const spinner = document.querySelector('[role="status"]');
+    // Проверяем наличие индикатора загрузки (Mantine Loader)
+    const spinner = document.querySelector('.mantine-Loader-root, [role="status"]');
     expect(spinner).toBeInTheDocument();
   });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestCtx } from '@reatom/core';
+import { context, peek } from '@reatom/core';
 import {
   eventTypesAtom,
   selectedEventTypeAtom,
@@ -21,22 +21,18 @@ vi.mock('@shared/api', () => ({
 import { apiClient } from '@shared/api';
 
 describe('entities/event-type/model', () => {
-  let ctx: ReturnType<typeof createTestCtx>;
-
   beforeEach(() => {
-    ctx = createTestCtx();
+    context.reset();
     vi.clearAllMocks();
   });
 
   describe('atoms', () => {
     it('eventTypesAtom должен иметь начальное значение - пустой массив', () => {
-      const value = ctx.get(eventTypesAtom);
-      expect(value).toEqual([]);
+      expect(peek(eventTypesAtom)).toEqual([]);
     });
 
     it('selectedEventTypeAtom должен иметь начальное значение - null', () => {
-      const value = ctx.get(selectedEventTypeAtom);
-      expect(value).toBeNull();
+      expect(peek(selectedEventTypeAtom)).toBeNull();
     });
 
     it('eventTypesAtom должен обновляться при установке значения', () => {
@@ -51,10 +47,9 @@ describe('entities/event-type/model', () => {
         },
       ];
 
-      eventTypesAtom(ctx, mockEventTypes);
-      const value = ctx.get(eventTypesAtom);
+      eventTypesAtom.set(mockEventTypes);
 
-      expect(value).toEqual(mockEventTypes);
+      expect(peek(eventTypesAtom)).toEqual(mockEventTypes);
     });
 
     it('selectedEventTypeAtom должен обновляться при установке значения', () => {
@@ -67,10 +62,9 @@ describe('entities/event-type/model', () => {
         updatedAt: '2024-01-01T00:00:00Z',
       };
 
-      selectedEventTypeAtom(ctx, mockEventType);
-      const value = ctx.get(selectedEventTypeAtom);
+      selectedEventTypeAtom.set(mockEventType);
 
-      expect(value).toEqual(mockEventType);
+      expect(peek(selectedEventTypeAtom)).toEqual(mockEventType);
     });
   });
 
@@ -100,10 +94,10 @@ describe('entities/event-type/model', () => {
         data: { eventTypes: mockEventTypes },
       } as unknown as Response);
 
-      const result = await fetchEventTypes(ctx);
+      const result = await fetchEventTypes();
 
       expect(result).toEqual(mockEventTypes);
-      expect(ctx.get(eventTypesAtom)).toEqual(mockEventTypes);
+      expect(peek(eventTypesAtom)).toEqual(mockEventTypes);
     });
 
     it('должен обрабатывать пустой ответ', async () => {
@@ -112,10 +106,10 @@ describe('entities/event-type/model', () => {
         data: { eventTypes: [] },
       } as unknown as Response);
 
-      const result = await fetchEventTypes(ctx);
+      const result = await fetchEventTypes();
 
       expect(result).toEqual([]);
-      expect(ctx.get(eventTypesAtom)).toEqual([]);
+      expect(peek(eventTypesAtom)).toEqual([]);
     });
 
     it('должен обрабатывать ошибку API (status >= 400)', async () => {
@@ -124,7 +118,7 @@ describe('entities/event-type/model', () => {
         data: {},
       } as unknown as Response);
 
-      await expect(fetchEventTypes(ctx)).rejects.toThrow('Failed to fetch event types');
+      await expect(fetchEventTypes()).rejects.toThrow('Failed to fetch event types');
     });
 
     it('должен обрабатывать отсутствие eventTypes в ответе', async () => {
@@ -133,10 +127,10 @@ describe('entities/event-type/model', () => {
         data: {},
       } as unknown as Response);
 
-      const result = await fetchEventTypes(ctx);
+      const result = await fetchEventTypes();
 
       expect(result).toEqual([]);
-      expect(ctx.get(eventTypesAtom)).toEqual([]);
+      expect(peek(eventTypesAtom)).toEqual([]);
     });
   });
 
@@ -156,10 +150,10 @@ describe('entities/event-type/model', () => {
         data: mockEventType,
       } as unknown as Response);
 
-      const result = await fetchEventTypeById(ctx, '1');
+      const result = await fetchEventTypeById('1');
 
       expect(result).toEqual(mockEventType);
-      expect(ctx.get(selectedEventTypeAtom)).toEqual(mockEventType);
+      expect(peek(selectedEventTypeAtom)).toEqual(mockEventType);
     });
 
     it('должен обрабатывать ошибку 404', async () => {
@@ -168,7 +162,7 @@ describe('entities/event-type/model', () => {
         data: {},
       } as unknown as Response);
 
-      await expect(fetchEventTypeById(ctx, 'nonexistent')).rejects.toThrow(
+      await expect(fetchEventTypeById('nonexistent')).rejects.toThrow(
         'Failed to fetch event type'
       );
     });
@@ -179,7 +173,7 @@ describe('entities/event-type/model', () => {
         data: {},
       } as unknown as Response);
 
-      await fetchEventTypeById(ctx, '123');
+      await fetchEventTypeById('123');
 
       expect(apiClient.getPublicEventType).toHaveBeenCalledWith('123');
     });
@@ -192,20 +186,13 @@ describe('entities/event-type/model', () => {
         data: { eventTypes: [] },
       } as unknown as Response);
 
-      // До вызова - должен быть false
-      expect(ctx.get(isFetchingEventTypes)).toBe(false);
+      expect(peek(isFetchingEventTypes)).toBe(false);
 
-      // Запускаем загрузку
-      const promise = fetchEventTypes(ctx);
+      const promise = fetchEventTypes();
+      expect(peek(isFetchingEventTypes)).toBe(true);
 
-      // Во время загрузки - должен быть true
-      expect(ctx.get(isFetchingEventTypes)).toBe(true);
-
-      // Ждем завершения
       await promise;
-
-      // После загрузки - должен быть false
-      expect(ctx.get(isFetchingEventTypes)).toBe(false);
+      expect(peek(isFetchingEventTypes)).toBe(false);
     });
 
     it('isFetchingEventType должен отслеживать состояние загрузки', async () => {
@@ -214,14 +201,13 @@ describe('entities/event-type/model', () => {
         data: {},
       } as unknown as Response);
 
-      expect(ctx.get(isFetchingEventType)).toBe(false);
+      expect(peek(isFetchingEventType)).toBe(false);
 
-      const promise = fetchEventTypeById(ctx, '1');
-      expect(ctx.get(isFetchingEventType)).toBe(true);
+      const promise = fetchEventTypeById('1');
+      expect(peek(isFetchingEventType)).toBe(true);
 
       await promise;
-
-      expect(ctx.get(isFetchingEventType)).toBe(false);
+      expect(peek(isFetchingEventType)).toBe(false);
     });
   });
 });

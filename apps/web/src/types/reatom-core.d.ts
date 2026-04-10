@@ -9,4 +9,6 @@ declare module '@reatom/core' {
   export const withAsyncData: typeof import('@reatom/core/build/async/withAsyncData').withAsyncData;
   export const reatomRoute: typeof import('@reatom/core/build/routing/route').reatomRoute;
   export type RouteChild = import('@reatom/core/build/routing/route').RouteChild;
+  export const context: import('@reatom/core/build/core/atom').ContextAtom;
+  export const peek: typeof import('@reatom/core/build/methods/peek').peek;
 }

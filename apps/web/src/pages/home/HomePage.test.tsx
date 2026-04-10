@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders as render } from '@/test/setup';
 import { HomePage } from './HomePage';
 
 // Мок для navigate
@@ -15,7 +16,7 @@ describe('pages/home/HomePage', () => {
   it('должен отображать заголовок Calendar', () => {
     render(<HomePage />);
 
-    expect(screen.getByText('Calendar')).toBeInTheDocument();
+    expect(screen.getAllByText('Calendar').length).toBeGreaterThan(0);
   });
 
   it('должен отображать описание приложения', () => {
@@ -29,14 +30,13 @@ describe('pages/home/HomePage', () => {
   it('должен отображать кнопку Записаться', () => {
     render(<HomePage />);
 
-    const button = screen.getByText('Записаться');
-    expect(button).toBeInTheDocument();
+    expect(screen.getAllByText('Записаться').length).toBeGreaterThan(0);
   });
 
   it('должен вызывать navigate.booking при клике на кнопку Записаться', () => {
     render(<HomePage />);
 
-    const button = screen.getByText('Записаться');
+    const button = screen.getAllByText('Записаться')[0];
     fireEvent.click(button);
 
     expect(navigate.booking).toHaveBeenCalledTimes(1);

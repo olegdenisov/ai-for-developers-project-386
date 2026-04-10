@@ -62,13 +62,13 @@ export const clearCurrentBooking = action(() => {
 
 // Computed: check if operations are pending
 export const isFetchingBooking = computed(() => {
-  return fetchBooking.pending();
+  return fetchBooking.pending() > 0;
 }, 'isFetchingBooking');
 
 export const isCreatingBooking = computed(() => {
-  return createBooking.pending();
+  return createBooking.pending() > 0;
 }, 'isCreatingBooking');
 
 export const isCancellingBooking = computed(() => {
-  return cancelBooking.pending();
+  return cancelBooking.pending() > 0;
 }, 'isCancellingBooking');

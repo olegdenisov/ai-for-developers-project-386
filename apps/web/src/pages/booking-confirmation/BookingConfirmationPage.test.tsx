@@ -47,6 +47,7 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
       guestNotes: mockField('Тестовая заметка'),
     },
     submit: {
+      ready: () => true,
       pending: () => false,
       error: () => null,
     },

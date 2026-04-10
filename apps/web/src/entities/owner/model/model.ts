@@ -34,5 +34,5 @@ export const fetchOwner = action(async () => {
 
 // Computed: check if fetching owner
 export const isFetchingOwner = computed(() => {
-  return fetchOwner.pending();
+  return fetchOwner.pending() > 0;
 }, 'isFetchingOwner');

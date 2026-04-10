@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestCtx } from '@reatom/core';
+import { context, peek } from '@reatom/core';
 import {
   calendarViewDateAtom,
   selectedDateAtom,
@@ -8,40 +8,31 @@ import {
   calendarLoadingAtom,
 } from './model';
 
-// Мок для entities/slot
+// Мок для entities/slot — нужно имитировать структуру Reatom action с .pending
 vi.mock('@entities/slot', () => ({
-  fetchAvailableSlots: vi.fn().mockResolvedValue([]),
-  fetchAvailableSlotsPending: { get: () => false },
-}));
-
-vi.mock('@entities/slot/model/model', () => ({
-  fetchAvailableSlots: {
-    pending: vi.fn().mockReturnValue(false),
-  },
+  fetchAvailableSlots: Object.assign(vi.fn().mockResolvedValue([]), {
+    pending: vi.fn().mockReturnValue(0),
+  }),
 }));
 
 describe('features/view-slots/model', () => {
-  let ctx: ReturnType<typeof createTestCtx>;
-
   beforeEach(() => {
-    ctx = createTestCtx();
+    context.reset();
     vi.clearAllMocks();
   });
 
   describe('atoms', () => {
     it('calendarViewDateAtom должен иметь начальное значение - текущая дата', () => {
-      const value = ctx.get(calendarViewDateAtom);
+      const value = peek(calendarViewDateAtom);
       const now = new Date();
 
-      // Сравниваем только дату, без времени
       expect(value.getDate()).toBe(now.getDate());
       expect(value.getMonth()).toBe(now.getMonth());
       expect(value.getFullYear()).toBe(now.getFullYear());
     });
 
     it('selectedDateAtom должен иметь начальное значение - null', () => {
-      const value = ctx.get(selectedDateAtom);
-      expect(value).toBeNull();
+      expect(peek(selectedDateAtom)).toBeNull();
     });
   });
 
@@ -49,9 +40,9 @@ describe('features/view-slots/model', () => {
     it('должен изменять дату просмотра календаря', () => {
       const newDate = new Date('2024-06-15');
 
-      changeCalendarView(ctx, newDate);
+      changeCalendarView(newDate);
 
-      expect(ctx.get(calendarViewDateAtom)).toEqual(newDate);
+      expect(peek(calendarViewDateAtom)).toEqual(newDate);
     });
 
     it('должен работать с разными датами', () => {
@@ -62,8 +53,8 @@ describe('features/view-slots/model', () => {
       ];
 
       dates.forEach((date) => {
-        changeCalendarView(ctx, date);
-        expect(ctx.get(calendarViewDateAtom)).toEqual(date);
+        changeCalendarView(date);
+        expect(peek(calendarViewDateAtom)).toEqual(date);
       });
     });
   });
@@ -72,17 +63,16 @@ describe('features/view-slots/model', () => {
     it('должен устанавливать выбранную дату', async () => {
       const date = new Date('2024-01-15');
 
-      await selectDate(ctx, date, 'event-1');
+      await selectDate(date, 'event-1');
 
-      expect(ctx.get(selectedDateAtom)).toEqual(date);
+      expect(peek(selectedDateAtom)).toEqual(date);
     });
 
     it('должен загружать слоты для выбранной даты', async () => {
       const date = new Date('2024-01-15');
 
-      await selectDate(ctx, date, 'event-1');
+      await selectDate(date, 'event-1');
 
-      // Проверяем что fetchAvailableSlots был вызван
       const { fetchAvailableSlots } = await import('@entities/slot');
       expect(fetchAvailableSlots).toHaveBeenCalled();
     });
@@ -91,12 +81,11 @@ describe('features/view-slots/model', () => {
       // Воскресенье 14 января 2024
       const sunday = new Date('2024-01-14');
 
-      await selectDate(ctx, sunday, 'event-1');
+      await selectDate(sunday, 'event-1');
 
       const { fetchAvailableSlots } = await import('@entities/slot');
-      const callArgs = vi.mocked(fetchAvailableSlots).mock.calls[0][1];
+      const callArgs = vi.mocked(fetchAvailableSlots).mock.calls[0][0];
 
-      // Проверяем что startDate - начало недели (воскресенье)
       expect(callArgs.startDate).toBeDefined();
       expect(callArgs.endDate).toBeDefined();
       expect(callArgs.eventTypeId).toBe('event-1');
@@ -105,8 +94,7 @@ describe('features/view-slots/model', () => {
 
   describe('calendarLoadingAtom', () => {
     it('должен отражать состояние загрузки', () => {
-      // Значение computed атома зависит от fetchAvailableSlots.pending()
-      const value = ctx.get(calendarLoadingAtom);
+      const value = peek(calendarLoadingAtom);
       expect(typeof value).toBe('boolean');
     });
   });

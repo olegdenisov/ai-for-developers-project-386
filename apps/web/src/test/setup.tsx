@@ -10,8 +10,8 @@ afterEach(() => {
 });
 
 // Мок для window.matchMedia
-global.matchMedia =
-  global.matchMedia ||
+globalThis.matchMedia =
+  globalThis.matchMedia ||
   function () {
     return {
       matches: false,
@@ -26,8 +26,8 @@ global.matchMedia =
   };
 
 // Мок для ResizeObserver
-global.ResizeObserver =
-  global.ResizeObserver ||
+globalThis.ResizeObserver =
+  globalThis.ResizeObserver ||
   class ResizeObserver {
     observe() {}
     unobserve() {}
@@ -35,8 +35,8 @@ global.ResizeObserver =
   };
 
 // Мок для IntersectionObserver
-global.IntersectionObserver =
-  global.IntersectionObserver ||
+globalThis.IntersectionObserver =
+  globalThis.IntersectionObserver ||
   class IntersectionObserver {
     constructor() {}
     disconnect() {}

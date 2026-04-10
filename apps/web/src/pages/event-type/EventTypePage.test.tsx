@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { renderWithProviders as render } from '@/test/setup';
 import { EventTypePage } from './EventTypePage';
 
 // Мок для API клиента

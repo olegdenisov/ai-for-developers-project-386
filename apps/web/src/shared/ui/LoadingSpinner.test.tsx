@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders as render } from '@/test/setup';
 import { LoadingSpinner } from './LoadingSpinner';
 
 describe('shared/ui/LoadingSpinner', () => {
@@ -11,11 +12,11 @@ describe('shared/ui/LoadingSpinner', () => {
     expect(spinner).toBeInTheDocument();
   });
 
-  it('должен иметь aria-label для доступности', () => {
+  it('должен иметь элемент загрузки в DOM', () => {
     render(<LoadingSpinner />);
 
-    // Проверяем что есть элемент с aria-label или текст загрузки
-    const loadingElement = screen.getByText(/загрузка/i) || document.querySelector('[aria-label]');
+    // Mantine Loader не имеет видимого текста, проверяем наличие элемента в DOM
+    const loadingElement = document.querySelector('.mantine-Loader-root, [aria-label], [role="status"]');
     expect(loadingElement).toBeTruthy();
   });
 

@@ -49,5 +49,5 @@ export const clearSelectedSlot = action(() => {
 
 // Computed: check if fetching slots
 export const isFetchingSlots = computed(() => {
-  return fetchAvailableSlots.pending();
+  return fetchAvailableSlots.pending() > 0;
 }, 'isFetchingSlots');

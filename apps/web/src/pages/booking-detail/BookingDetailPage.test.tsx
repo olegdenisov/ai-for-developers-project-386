@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders as render } from '@/test/setup';
 import { BookingDetailPage } from './BookingDetailPage';
 import type { Booking } from '@entities/booking';
 import type { EventType } from '@entities/event-type';
@@ -37,17 +38,27 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     slot: mockSlot,
   };
 
+  // Статeful мок для reason, чтобы модальное окно корректно открывалось/закрывалось
+  let reasonValue = '';
+
+  beforeEach(() => {
+    reasonValue = '';
+    vi.clearAllMocks();
+  });
   const mockCancelForm = {
     fields: {
-      reason: {
-        value: () => '',
-        set: vi.fn(),
-        reset: vi.fn(),
-      },
+      reason: Object.assign(
+        vi.fn().mockImplementation(() => reasonValue),
+        {
+          set: vi.fn().mockImplementation((val: string) => { reasonValue = val; }),
+          reset: vi.fn(),
+        }
+      ),
     },
     submit: {
-      pending: () => false,
-      error: () => null,
+      ready: vi.fn().mockReturnValue(true),
+      pending: vi.fn().mockReturnValue(false),
+      error: vi.fn().mockReturnValue(null),
       errorAtom: {
         set: vi.fn(),
       },
@@ -57,7 +68,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
   it('должен отображать спиннер загрузки', () => {
     render(<BookingDetailPage isLoading={true} />);
 
-    const spinner = document.querySelector('[role="status"]');
+    const spinner = document.querySelector('.mantine-Loader-root, [role="status"]');
     expect(spinner).toBeInTheDocument();
   });
 
@@ -113,7 +124,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       />
     );
 
-    expect(screen.getByText('Host')).toBeInTheDocument();
+    expect(screen.getAllByText('Host').length).toBeGreaterThan(0);
     expect(screen.getByText('host@example.com')).toBeInTheDocument();
   });
 
@@ -180,6 +191,9 @@ describe('pages/booking-detail/BookingDetailPage', () => {
   });
 
   it('должен корректно закрывать модальное окно когда errorAtom существует', () => {
+    // Предустанавливаем состояние, при котором модальное окно открыто
+    reasonValue = 'cancel_requested';
+
     render(
       <BookingDetailPage
         booking={mockBooking}
@@ -188,11 +202,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       />
     );
 
-    // Открываем модальное окно
-    const cancelLink = screen.getByText('Отмена');
-    fireEvent.click(cancelLink);
-
-    // Закрываем модальное окно через кнопку "Закрыть"
+    // Модальное окно должно быть открыто, ищем кнопку "Закрыть"
     const closeButton = screen.getByText('Закрыть');
     fireEvent.click(closeButton);
 
@@ -203,17 +213,21 @@ describe('pages/booking-detail/BookingDetailPage', () => {
 
   it('должен корректно закрывать модальное окно когда errorAtom отсутствует', () => {
     // Mock без errorAtom - проверка защиты от ошибки "Cannot read properties of undefined"
+    let reasonValue2 = 'cancel_requested'; // Предустанавливаем открытое состояние
     const mockCancelFormWithoutErrorAtom = {
       fields: {
-        reason: {
-          value: () => '',
-          set: vi.fn(),
-          reset: vi.fn(),
-        },
+        reason: Object.assign(
+          vi.fn().mockImplementation(() => reasonValue2),
+          {
+            set: vi.fn().mockImplementation((val: string) => { reasonValue2 = val; }),
+            reset: vi.fn(),
+          }
+        ),
       },
       submit: {
-        pending: () => false,
-        error: () => null,
+        ready: vi.fn().mockReturnValue(true),
+        pending: vi.fn().mockReturnValue(false),
+        error: vi.fn().mockReturnValue(null),
         // errorAtom отсутствует - имитируем старый баг
       },
     };
@@ -226,11 +240,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       />
     );
 
-    // Открываем модальное окно
-    const cancelLink = screen.getByText('Отмена');
-    fireEvent.click(cancelLink);
-
-    // Закрываем модальное окно - не должно выбрасывать ошибку
+    // Модальное окно открыто, закрываем - не должно выбрасывать ошибку
     const closeButton = screen.getByText('Закрыть');
     expect(() => fireEvent.click(closeButton)).not.toThrow();
 

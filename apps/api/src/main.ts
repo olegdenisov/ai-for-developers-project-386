@@ -3,8 +3,9 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { PrismaClient } from '../prisma/generated/client';
+import { PrismaClient } from '../prisma/generated/client/index.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+// @ts-ignore — модуль pg не имеет деклараций типов для ESM
 import { Pool } from 'pg';
 
 import { ownerRoutes } from './modules/owner/owner.routes.js';

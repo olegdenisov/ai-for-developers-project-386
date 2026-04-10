@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestCtx } from '@reatom/core';
+import { context, peek } from '@reatom/core';
 import {
   bookingFormAtom,
   formErrorsAtom,
   updateFormField,
   setFormErrors,
   clearForm,
-  submitBookingForm,
   bookingEventTypeAtom,
   bookingSlotAtom,
   submitBooking,
@@ -36,11 +35,8 @@ vi.mock('@entities/booking', () => ({
 }));
 
 import { apiClient } from '@shared/api';
-import { createBooking as createBookingEntity } from '@entities/booking';
 
 describe('features/create-booking/model', () => {
-  let ctx: ReturnType<typeof createTestCtx>;
-
   const mockEventType: EventType = {
     id: 'event-1',
     name: 'Встреча 30 мин',
@@ -73,14 +69,13 @@ describe('features/create-booking/model', () => {
   };
 
   beforeEach(() => {
-    ctx = createTestCtx();
+    context.reset();
     vi.clearAllMocks();
   });
 
   describe('atoms', () => {
     it('bookingFormAtom должен иметь начальное значение с пустыми полями', () => {
-      const value = ctx.get(bookingFormAtom);
-      expect(value).toEqual({
+      expect(peek(bookingFormAtom)).toEqual({
         guestName: '',
         guestEmail: '',
         guestNotes: '',
@@ -88,59 +83,53 @@ describe('features/create-booking/model', () => {
     });
 
     it('formErrorsAtom должен иметь начальное значение - пустой объект', () => {
-      const value = ctx.get(formErrorsAtom);
-      expect(value).toEqual({});
+      expect(peek(formErrorsAtom)).toEqual({});
     });
 
     it('bookingEventTypeAtom должен иметь начальное значение - null', () => {
-      const value = ctx.get(bookingEventTypeAtom);
-      expect(value).toBeNull();
+      expect(peek(bookingEventTypeAtom)).toBeNull();
     });
 
     it('bookingSlotAtom должен иметь начальное значение - null', () => {
-      const value = ctx.get(bookingSlotAtom);
-      expect(value).toBeNull();
+      expect(peek(bookingSlotAtom)).toBeNull();
     });
   });
 
   describe('updateFormField', () => {
     it('должен обновлять поле формы', () => {
-      updateFormField(ctx, 'guestName', 'Иван');
+      updateFormField('guestName', 'Иван');
 
-      expect(ctx.get(bookingFormAtom).guestName).toBe('Иван');
+      expect(peek(bookingFormAtom).guestName).toBe('Иван');
     });
 
     it('должен сохранять остальные поля при обновлении одного', () => {
-      updateFormField(ctx, 'guestName', 'Иван');
-      updateFormField(ctx, 'guestEmail', 'ivan@example.com');
+      updateFormField('guestName', 'Иван');
+      updateFormField('guestEmail', 'ivan@example.com');
 
-      const form = ctx.get(bookingFormAtom);
+      const form = peek(bookingFormAtom);
       expect(form.guestName).toBe('Иван');
       expect(form.guestEmail).toBe('ivan@example.com');
       expect(form.guestNotes).toBe('');
     });
 
     it('должен очищать ошибку для поля при его обновлении', () => {
-      // Устанавливаем ошибку
-      setFormErrors(ctx, { guestName: 'Имя обязательно' });
-      expect(ctx.get(formErrorsAtom).guestName).toBe('Имя обязательно');
+      setFormErrors({ guestName: 'Имя обязательно' });
+      expect(peek(formErrorsAtom).guestName).toBe('Имя обязательно');
 
-      // Обновляем поле
-      updateFormField(ctx, 'guestName', 'Иван');
+      updateFormField('guestName', 'Иван');
 
-      // Ошибка должна быть очищена
-      expect(ctx.get(formErrorsAtom).guestName).toBeUndefined();
+      expect(peek(formErrorsAtom).guestName).toBeUndefined();
     });
 
     it('не должен очищать ошибки других полей', () => {
-      setFormErrors(ctx, {
+      setFormErrors({
         guestName: 'Имя обязательно',
         guestEmail: 'Email обязателен',
       });
 
-      updateFormField(ctx, 'guestName', 'Иван');
+      updateFormField('guestName', 'Иван');
 
-      const errors = ctx.get(formErrorsAtom);
+      const errors = peek(formErrorsAtom);
       expect(errors.guestName).toBeUndefined();
       expect(errors.guestEmail).toBe('Email обязателен');
     });
@@ -153,23 +142,21 @@ describe('features/create-booking/model', () => {
         guestEmail: 'Введите корректный email',
       };
 
-      setFormErrors(ctx, errors);
+      setFormErrors(errors);
 
-      expect(ctx.get(formErrorsAtom)).toEqual(errors);
+      expect(peek(formErrorsAtom)).toEqual(errors);
     });
   });
 
   describe('clearForm', () => {
     it('должен очищать все поля формы', () => {
-      // Заполняем форму
-      updateFormField(ctx, 'guestName', 'Иван');
-      updateFormField(ctx, 'guestEmail', 'ivan@example.com');
-      updateFormField(ctx, 'guestNotes', 'Заметка');
+      updateFormField('guestName', 'Иван');
+      updateFormField('guestEmail', 'ivan@example.com');
+      updateFormField('guestNotes', 'Заметка');
 
-      // Очищаем
-      clearForm(ctx);
+      clearForm();
 
-      expect(ctx.get(bookingFormAtom)).toEqual({
+      expect(peek(bookingFormAtom)).toEqual({
         guestName: '',
         guestEmail: '',
         guestNotes: '',
@@ -177,39 +164,39 @@ describe('features/create-booking/model', () => {
     });
 
     it('должен очищать ошибки формы', () => {
-      setFormErrors(ctx, { guestName: 'Ошибка' });
+      setFormErrors({ guestName: 'Ошибка' });
 
-      clearForm(ctx);
+      clearForm();
 
-      expect(ctx.get(formErrorsAtom)).toEqual({});
+      expect(peek(formErrorsAtom)).toEqual({});
     });
   });
 
   describe('booking context atoms', () => {
     it('bookingEventTypeAtom должен сохранять тип события для бронирования', () => {
-      bookingEventTypeAtom(ctx, mockEventType);
+      bookingEventTypeAtom.set(mockEventType);
 
-      expect(ctx.get(bookingEventTypeAtom)).toEqual(mockEventType);
+      expect(peek(bookingEventTypeAtom)).toEqual(mockEventType);
     });
 
     it('bookingSlotAtom должен сохранять слот для бронирования', () => {
-      bookingSlotAtom(ctx, mockSlot);
+      bookingSlotAtom.set(mockSlot);
 
-      expect(ctx.get(bookingSlotAtom)).toEqual(mockSlot);
+      expect(peek(bookingSlotAtom)).toEqual(mockSlot);
     });
   });
 
   describe('submitBooking (shared context)', () => {
     beforeEach(() => {
-      bookingEventTypeAtom(ctx, mockEventType);
-      bookingSlotAtom(ctx, mockSlot);
+      bookingEventTypeAtom.set(mockEventType);
+      bookingSlotAtom.set(mockSlot);
     });
 
     it('должен выбрасывать ошибку если тип события не выбран', async () => {
-      bookingEventTypeAtom(ctx, null);
+      bookingEventTypeAtom.set(null);
 
       await expect(
-        submitBooking(ctx, {
+        submitBooking({
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         })
@@ -217,10 +204,10 @@ describe('features/create-booking/model', () => {
     });
 
     it('должен выбрасывать ошибку если слот не выбран', async () => {
-      bookingSlotAtom(ctx, null);
+      bookingSlotAtom.set(null);
 
       await expect(
-        submitBooking(ctx, {
+        submitBooking({
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         })
@@ -239,7 +226,7 @@ describe('features/create-booking/model', () => {
         guestNotes: 'Тестовая заметка',
       };
 
-      const result = await submitBooking(ctx, formData);
+      const result = await submitBooking(formData);
 
       expect(apiClient.createBooking).toHaveBeenCalledWith({
         eventTypeId: 'event-1',
@@ -258,13 +245,13 @@ describe('features/create-booking/model', () => {
         data: mockBooking,
       } as unknown as Response);
 
-      await submitBooking(ctx, {
+      await submitBooking({
         guestName: 'Иван',
         guestEmail: 'ivan@example.com',
       });
 
-      expect(ctx.get(bookingEventTypeAtom)).toBeNull();
-      expect(ctx.get(bookingSlotAtom)).toBeNull();
+      expect(peek(bookingEventTypeAtom)).toBeNull();
+      expect(peek(bookingSlotAtom)).toBeNull();
     });
 
     it('должен обрабатывать ошибку API', async () => {
@@ -274,15 +261,14 @@ describe('features/create-booking/model', () => {
       } as unknown as Response);
 
       await expect(
-        submitBooking(ctx, {
+        submitBooking({
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         })
       ).rejects.toThrow('Слот уже занят');
 
-      // Контекст не должен очищаться при ошибке
-      expect(ctx.get(bookingEventTypeAtom)).toEqual(mockEventType);
-      expect(ctx.get(bookingSlotAtom)).toEqual(mockSlot);
+      expect(peek(bookingEventTypeAtom)).toEqual(mockEventType);
+      expect(peek(bookingSlotAtom)).toEqual(mockSlot);
     });
 
     it('должен использовать дефолтное сообщение если нет message', async () => {
@@ -292,7 +278,7 @@ describe('features/create-booking/model', () => {
       } as unknown as Response);
 
       await expect(
-        submitBooking(ctx, {
+        submitBooking({
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         })

@@ -1,8 +1,9 @@
+import { Prisma } from '../../../prisma/generated/client/index.js';
 import { prisma } from '../../main.js';
-import { 
-  NotFoundError, 
+import {
+  NotFoundError,
   SlotConflictError,
-  ValidationError 
+  ValidationError
 } from '../../common/errors/customErrors.js';
 
 // Re-export event type functions for public API
@@ -80,7 +81,7 @@ export async function getAvailableSlotsForEventType(
   });
 
   // Filter slots by duration compatibility
-  return slots.filter(slot => {
+  return slots.filter((slot: { startTime: Date; endTime: Date }) => {
     const slotDuration = (new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 60000;
     return slotDuration >= eventType.durationMinutes;
   });
@@ -93,7 +94,7 @@ export async function createBooking(data: {
   guestEmail: string;
   guestNotes?: string;
 }) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // 1. Check if slot exists and is available (WITH LOCK)
     const slot = await tx.slot.findUnique({
       where: { id: data.slotId },
@@ -173,7 +174,7 @@ export async function cancelBooking(
   id: string,
   data?: { reason?: string }
 ) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Check if booking exists and is not already cancelled
     const booking = await tx.booking.findUnique({
       where: { id },

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestCtx } from '@reatom/core';
+import { context, peek } from '@reatom/core';
 import {
   availableSlotsAtom,
   selectedSlotAtom,
@@ -21,27 +21,22 @@ vi.mock('@shared/api', () => ({
 import { apiClient } from '@shared/api';
 
 describe('entities/slot/model', () => {
-  let ctx: ReturnType<typeof createTestCtx>;
-
   beforeEach(() => {
-    ctx = createTestCtx();
+    context.reset();
     vi.clearAllMocks();
   });
 
   describe('atoms', () => {
     it('availableSlotsAtom должен иметь начальное значение - пустой массив', () => {
-      const value = ctx.get(availableSlotsAtom);
-      expect(value).toEqual([]);
+      expect(peek(availableSlotsAtom)).toEqual([]);
     });
 
     it('selectedSlotAtom должен иметь начальное значение - null', () => {
-      const value = ctx.get(selectedSlotAtom);
-      expect(value).toBeNull();
+      expect(peek(selectedSlotAtom)).toBeNull();
     });
 
     it('slotsDateRangeAtom должен иметь начальное значение - null', () => {
-      const value = ctx.get(slotsDateRangeAtom);
-      expect(value).toBeNull();
+      expect(peek(slotsDateRangeAtom)).toBeNull();
     });
 
     it('availableSlotsAtom должен обновляться при установке значения', () => {
@@ -55,10 +50,9 @@ describe('entities/slot/model', () => {
         },
       ];
 
-      availableSlotsAtom(ctx, mockSlots);
-      const value = ctx.get(availableSlotsAtom);
+      availableSlotsAtom.set(mockSlots);
 
-      expect(value).toEqual(mockSlots);
+      expect(peek(availableSlotsAtom)).toEqual(mockSlots);
     });
 
     it('selectedSlotAtom должен обновляться при установке значения', () => {
@@ -70,19 +64,17 @@ describe('entities/slot/model', () => {
         createdAt: '2024-01-01T00:00:00Z',
       };
 
-      selectedSlotAtom(ctx, mockSlot);
-      const value = ctx.get(selectedSlotAtom);
+      selectedSlotAtom.set(mockSlot);
 
-      expect(value).toEqual(mockSlot);
+      expect(peek(selectedSlotAtom)).toEqual(mockSlot);
     });
 
     it('slotsDateRangeAtom должен обновляться при установке значения', () => {
       const dateRange = { startDate: '2024-01-15', endDate: '2024-01-21' };
 
-      slotsDateRangeAtom(ctx, dateRange);
-      const value = ctx.get(slotsDateRangeAtom);
+      slotsDateRangeAtom.set(dateRange);
 
-      expect(value).toEqual(dateRange);
+      expect(peek(slotsDateRangeAtom)).toEqual(dateRange);
     });
   });
 
@@ -110,7 +102,7 @@ describe('entities/slot/model', () => {
         data: mockSlots,
       } as unknown as Response);
 
-      const result = await fetchAvailableSlots(ctx, {
+      const result = await fetchAvailableSlots({
         eventTypeId: 'event-1',
         startDate: '2024-01-15',
         endDate: '2024-01-21',
@@ -122,7 +114,7 @@ describe('entities/slot/model', () => {
         '2024-01-21'
       );
       expect(result).toEqual(mockSlots);
-      expect(ctx.get(availableSlotsAtom)).toEqual(mockSlots);
+      expect(peek(availableSlotsAtom)).toEqual(mockSlots);
     });
 
     it('должен устанавливать диапазон дат в atoms', async () => {
@@ -131,13 +123,13 @@ describe('entities/slot/model', () => {
         data: [],
       } as unknown as Response);
 
-      await fetchAvailableSlots(ctx, {
+      await fetchAvailableSlots({
         eventTypeId: 'event-1',
         startDate: '2024-01-15',
         endDate: '2024-01-21',
       });
 
-      expect(ctx.get(slotsDateRangeAtom)).toEqual({
+      expect(peek(slotsDateRangeAtom)).toEqual({
         startDate: '2024-01-15',
         endDate: '2024-01-21',
       });
@@ -149,14 +141,14 @@ describe('entities/slot/model', () => {
         data: [],
       } as unknown as Response);
 
-      const result = await fetchAvailableSlots(ctx, {
+      const result = await fetchAvailableSlots({
         eventTypeId: 'event-1',
         startDate: '2024-01-15',
         endDate: '2024-01-21',
       });
 
       expect(result).toEqual([]);
-      expect(ctx.get(availableSlotsAtom)).toEqual([]);
+      expect(peek(availableSlotsAtom)).toEqual([]);
     });
 
     it('должен обрабатывать ошибку API', async () => {
@@ -166,7 +158,7 @@ describe('entities/slot/model', () => {
       } as unknown as Response);
 
       await expect(
-        fetchAvailableSlots(ctx, {
+        fetchAvailableSlots({
           eventTypeId: 'event-1',
           startDate: '2024-01-15',
           endDate: '2024-01-21',
@@ -185,9 +177,9 @@ describe('entities/slot/model', () => {
         createdAt: '2024-01-01T00:00:00Z',
       };
 
-      selectSlot(ctx, mockSlot);
+      selectSlot(mockSlot);
 
-      expect(ctx.get(selectedSlotAtom)).toEqual(mockSlot);
+      expect(peek(selectedSlotAtom)).toEqual(mockSlot);
     });
   });
 
@@ -201,20 +193,20 @@ describe('entities/slot/model', () => {
         createdAt: '2024-01-01T00:00:00Z',
       };
 
-      selectedSlotAtom(ctx, mockSlot);
-      expect(ctx.get(selectedSlotAtom)).toEqual(mockSlot);
+      selectedSlotAtom.set(mockSlot);
+      expect(peek(selectedSlotAtom)).toEqual(mockSlot);
 
-      clearSelectedSlot(ctx);
+      clearSelectedSlot();
 
-      expect(ctx.get(selectedSlotAtom)).toBeNull();
+      expect(peek(selectedSlotAtom)).toBeNull();
     });
 
     it('должен работать когда слот не выбран', () => {
-      expect(ctx.get(selectedSlotAtom)).toBeNull();
+      expect(peek(selectedSlotAtom)).toBeNull();
 
-      clearSelectedSlot(ctx);
+      clearSelectedSlot();
 
-      expect(ctx.get(selectedSlotAtom)).toBeNull();
+      expect(peek(selectedSlotAtom)).toBeNull();
     });
   });
 
@@ -225,19 +217,19 @@ describe('entities/slot/model', () => {
         data: [],
       } as unknown as Response);
 
-      expect(ctx.get(isFetchingSlots)).toBe(false);
+      expect(peek(isFetchingSlots)).toBe(false);
 
-      const promise = fetchAvailableSlots(ctx, {
+      const promise = fetchAvailableSlots({
         eventTypeId: 'event-1',
         startDate: '2024-01-15',
         endDate: '2024-01-21',
       });
 
-      expect(ctx.get(isFetchingSlots)).toBe(true);
+      expect(peek(isFetchingSlots)).toBe(true);
 
       await promise;
 
-      expect(ctx.get(isFetchingSlots)).toBe(false);
+      expect(peek(isFetchingSlots)).toBe(false);
     });
   });
 });
