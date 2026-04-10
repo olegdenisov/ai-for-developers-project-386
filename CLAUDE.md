@@ -116,10 +116,10 @@ await prisma.$transaction(async (tx) => { ... }, { isolationLevel: 'Serializable
 
 ```
 app/        # Providers (Mantine, Reatom), router, global styles
-pages/      # home/, event-type/, booking/
-features/   # create-booking/, view-slots/, ...
+pages/      # home/, book-catalog/, event-type/, booking-confirmation/, booking-detail/, admin/
+features/   # create-booking/, view-slots/, cancel-booking/, create-event-type/, edit-event-type/, delete-event-type/, owner-bookings/
 entities/   # event-type/, slot/, booking/, owner/ — Reatom atoms
-shared/     # api/, config/, lib/, ui/
+shared/     # api/, config/, lib/, ui/, router/
 ```
 
 Each entity follows this layout:
@@ -130,6 +130,27 @@ entities/[name]/
     ├── types.ts    # Domain interfaces
     └── model.ts    # Reatom atoms + actions (all in one file)
 ```
+
+Each page follows this layout:
+```
+pages/[name]/
+├── index.ts
+├── [Name]Page.tsx
+└── model/
+    ├── index.ts
+    ├── model.ts    # Page-level atoms (optional)
+    └── route.tsx   # Reatom route definition with loader and render
+```
+
+### Admin Panel (`/admin`)
+
+- `/admin/bookings` — owner's bookings list with cancel action
+- `/admin/event-types` — event type CRUD (create, edit, delete)
+- Routes: `adminRoute`, `adminBookingsRoute`, `adminEventTypesRoute` exported from `@pages/admin`
+
+### Routing (`apps/web/src/shared/router/`)
+
+Routes use Reatom `reatomRoute` with loaders and `render`. The app tree: `layoutRoute` → page routes. Navigation helpers in `apps/web/src/app/router/routes.ts` (`navigate.home()`, `navigate.admin()`, etc.).
 
 Path aliases (configured in `vite.config.ts` and `tsconfig.json`):
 `@/` → `src/`, `@app/`, `@pages/`, `@features/`, `@entities/`, `@shared/`
