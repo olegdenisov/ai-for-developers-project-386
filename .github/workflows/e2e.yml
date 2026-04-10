@@ -1,0 +1,47 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Установить зависимости
+        run: pnpm install --frozen-lockfile
+
+      - name: Сгенерировать OpenAPI схему и TypeScript типы
+        run: pnpm generate:openapi && pnpm generate:types
+
+      - name: Установить браузеры Playwright (только Chromium)
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Запустить E2E тесты
+        run: pnpm --filter web exec playwright test --project=chromium
+        env:
+          CI: true
+          VITE_API_URL: http://localhost:3000
+
+      - name: Загрузить отчёт Playwright
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
