@@ -15,7 +15,7 @@ export const CancelBookingModal = reatomComponent(
     const isOpen =
       cancelForm.fields.reason() === 'cancel_requested' ||
       !!cancelForm.submit.error()
-    const isCancelling = cancelForm.submit.pending()
+    const isCancelling = !cancelForm.submit.ready()
 
     const handleConfirm = (e: React.FormEvent) => {
       e.preventDefault()
