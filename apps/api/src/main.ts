@@ -3,10 +3,15 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import fastifyStatic from '@fastify/static';
 import { PrismaClient } from '../prisma/generated/client/index.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 // @ts-ignore — модуль pg не имеет деклараций типов для ESM
 import { Pool } from 'pg';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { ownerRoutes } from './modules/owner/owner.routes.js';
 import { eventTypeRoutes } from './modules/event-types/event-type.routes.js';
@@ -56,6 +61,13 @@ await app.register(swaggerUi, {
   },
 });
 
+// Раздача статических файлов фронтенда (в production: apps/web/dist)
+const webDistPath = path.resolve(__dirname, '../../web/dist');
+await app.register(fastifyStatic, {
+  root: webDistPath,
+  wildcard: false,
+});
+
 // Register error handler
 app.setErrorHandler(errorHandler);
 
@@ -71,8 +83,13 @@ await app.register(eventTypeRoutes, { prefix: '/event-types' });
 await app.register(slotRoutes, { prefix: '/slots' });
 await app.register(bookingRoutes, { prefix: '/public' });
 
-// 404 handler
+// 404 handler: API-маршруты → JSON ошибка, остальное → index.html (SPA routing)
+const API_PREFIXES = ['/owner', '/event-types', '/slots', '/public', '/docs', '/health'];
 app.setNotFoundHandler((request, reply) => {
+  const isApiRoute = API_PREFIXES.some((prefix) => request.url.startsWith(prefix));
+  if (!isApiRoute && request.method === 'GET') {
+    return reply.sendFile('index.html');
+  }
   reply.status(404).send({
     code: 'NOT_FOUND',
     message: `Route ${request.method} ${request.url} not found`,

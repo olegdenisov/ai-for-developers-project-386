@@ -1,0 +1,32 @@
+# Зависимости
+node_modules
+**/node_modules
+
+# Собранные артефакты
+**/dist
+apps/api/prisma/generated
+
+# Git
+.git
+.gitignore
+
+# Переменные окружения
+.env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Тестовые артефакты
+**/playwright-report
+**/test-results
+**/.playwright
+
+# Docker (не включаем в build context)
+docker/
+
+# Turbo cache
+.turbo
+**/.turbo
+
+# Логи
+*.log
