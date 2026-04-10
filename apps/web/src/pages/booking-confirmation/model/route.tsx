@@ -1,4 +1,4 @@
-import { wrap } from '@reatom/core';
+import { wrap, atom } from '@reatom/core';
 // @ts-ignore - reatomForm доступен в runtime, но не объявлен в типах
 import { reatomForm } from '@reatom/core';
 import { z } from 'zod/v4';
@@ -32,7 +32,10 @@ export function createBookingForm(
   slot: Slot,
   navigateFn: (id: string) => void
 ) {
-  return reatomForm(
+  // Флаг: была ли попытка отправить форму хотя бы раз
+  const wasSubmitted = atom(false, 'bookingConfirmationForm.wasSubmitted');
+
+  const form = reatomForm(
     {
       guestName: '',
       guestEmail: '',
@@ -41,7 +44,8 @@ export function createBookingForm(
     {
       name: 'bookingConfirmationForm',
       schema: bookingFormSchema,
-      validateOnBlur: true,
+      // Перевалидировать поля при изменении — ошибки обновляются сразу после исправления
+      validateOnChange: true,
       onSubmit: async (values: BookingFormData): Promise<Booking> => {
         const response = await wrap(
           apiClient.createBooking({
@@ -71,6 +75,8 @@ export function createBookingForm(
       },
     }
   );
+
+  return { form, wasSubmitted };
 }
 
 /**

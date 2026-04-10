@@ -100,12 +100,15 @@ export const BookingConfirmationPage = reatomComponent(
     }
 
     // Получаем состояние формы
-    const { fields, submit } = form;
+    const { form: bookingForm, wasSubmitted } = form;
+    const { fields, submit } = bookingForm;
     const isSubmitting = !submit.ready();
 
     // Обработчик отправки формы
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
+      // Помечаем форму как отправленную — с этого момента ошибки отображаются
+      wasSubmitted.set(true);
       // Отправляем форму и ловим ошибки валидации
       submit().catch(() => {
         // Ошибки валидации или сабмита обрабатываются через submit.error() и поля формы
@@ -169,14 +172,14 @@ export const BookingConfirmationPage = reatomComponent(
 
               {/* Правая колонка — форма */}
               <Grid.Col span={{ base: 12, md: 7 }}>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                   <Stack gap="md">
                     {/* Имя гостя */}
                     <TextInput
                       {...bindField(fields.guestName)}
                       label="Ваше имя *"
                       placeholder="Введите ваше имя"
-                      error={fields.guestName.validation().error}
+                      error={wasSubmitted() ? fields.guestName.validation().error : undefined}
                     />
 
                     {/* Email гостя */}
@@ -185,7 +188,7 @@ export const BookingConfirmationPage = reatomComponent(
                       label="Адрес электронной почты *"
                       placeholder="email@example.com"
                       type="email"
-                      error={fields.guestEmail.validation().error}
+                      error={wasSubmitted() ? fields.guestEmail.validation().error : undefined}
                     />
 
                     {/* Дополнительная информация */}
@@ -194,7 +197,7 @@ export const BookingConfirmationPage = reatomComponent(
                       label="Дополнительная информация"
                       placeholder="Дополнительная информация, которая может помочь подготовиться к нашей встрече."
                       minRows={3}
-                      error={fields.guestNotes.validation().error}
+                      error={wasSubmitted() ? fields.guestNotes.validation().error : undefined}
                     />
 
                     {/* Добавить гостей */}
