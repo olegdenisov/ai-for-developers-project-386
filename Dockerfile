@@ -57,4 +57,4 @@ ENV PORT=3000
 EXPOSE ${PORT}
 
 # Запуск: применяем миграции, затем стартуем API
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma || true && exec node dist/main.js"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma && node_modules/.bin/tsx prisma/seed.ts || true && exec node dist/main.js"]
