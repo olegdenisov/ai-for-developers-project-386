@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: calendar-db
+    environment:
+      POSTGRES_USER: calendar
+      POSTGRES_PASSWORD: calendar
+      POSTGRES_DB: calendar_booking
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calendar"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: calendar-app
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      DATABASE_URL: postgresql://calendar:calendar@db:5432/calendar_booking
+      WEB_URL: http://localhost:${PORT:-3000}
+    depends_on:
+      db:
+        condition: service_healthy
+    # Применяем миграции, сидируем БД (idempotent), запускаем приложение
+    command: >
+      sh -c "
+        node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma &&
+        node_modules/.bin/tsx apps/api/prisma/seed.ts || true &&
+        exec node apps/api/dist/main.js
+      "
+
+volumes:
+  postgres_data:
