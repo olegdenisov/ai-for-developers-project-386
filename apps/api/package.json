@@ -1,0 +1,42 @@
+{
+  "name": "@calendar-booking/api",
+  "version": "1.0.0",
+  "description": "Calendar Booking API - Fastify + Prisma",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist prisma/generated"
+  },
+  "dependencies": {
+    "@fastify/cors": "11.2.0",
+    "@fastify/swagger": "9.7.0",
+    "@fastify/swagger-ui": "5.2.5",
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "7.6.0",
+    "dotenv": "^17.4.1",
+    "fastify": "5.3.2",
+    "fastify-type-provider-zod": "4.0.2",
+    "pg": "^8.20.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "25.5.2",
+    "prisma": "7.6.0",
+    "tsx": "4.21.0",
+    "typescript": "6.0.2"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

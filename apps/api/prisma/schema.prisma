@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Owner {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  isPredefined  Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  
+  eventTypes    EventType[]
+
+  @@map("owners")
+}
+
+model EventType {
+  id              String    @id @default(uuid())
+  name            String
+  description     String?
+  durationMinutes Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  owner           Owner     @relation(fields: [ownerId], references: [id])
+  ownerId         String
+
+  bookings        Booking[]
+
+  @@map("event_types")
+}
+
+model Slot {
+  id            String    @id @default(uuid())
+  startTime     DateTime
+  endTime       DateTime
+  isAvailable   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  
+  booking       Booking?
+
+  @@map("slots")
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  guestName   String
+  guestEmail  String
+  guestNotes  String?
+  status      BookingStatus @default(CONFIRMED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  eventType   EventType     @relation(fields: [eventTypeId], references: [id])
+  eventTypeId String
+  
+  slot        Slot          @relation(fields: [slotId], references: [id])
+  slotId      String        @unique
+
+  @@index([slotId])
+  @@index([eventTypeId])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+
+  @@map("booking_status")
+}

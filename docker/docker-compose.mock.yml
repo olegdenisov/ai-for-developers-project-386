@@ -1,0 +1,23 @@
+version: "3.8"
+
+# Docker Compose для разработки с изолированными моками (Prism)
+# Используется для разработки фронтенда без запущенного API и БД
+
+services:
+  prism-mock:
+    image: stoplight/prism:5
+    container_name: calendar-prism-mock
+    # Запуск Prism в однопроцессном режиме для стабильной работы
+    command: mock -h 0.0.0.0 --multiprocess=false /spec/openapi.json
+    ports:
+      - "3100:4010"
+    volumes:
+      - ../tsp-output/openapi.json:/spec/openapi.json:ro
+    networks:
+      - calendar-mock-network
+    # Prism автоматически генерирует моки на основе OpenAPI спецификации
+    # При изменении openapi.json файл перезагружается автоматически
+
+networks:
+  calendar-mock-network:
+    driver: bridge

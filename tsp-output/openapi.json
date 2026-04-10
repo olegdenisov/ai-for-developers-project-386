@@ -1,0 +1,1177 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "(title)",
+    "version": "0.0.0"
+  },
+  "tags": [
+    {
+      "name": "Owner"
+    },
+    {
+      "name": "Event Types"
+    },
+    {
+      "name": "Slots"
+    },
+    {
+      "name": "Guest Public API"
+    }
+  ],
+  "paths": {
+    "/event-types": {
+      "get": {
+        "operationId": "EventTypesApi_listEventTypes",
+        "description": "Получить список всех типов событий.\nДоступно как владельцу, так и гостям (для выбора при бронировании).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventType"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ]
+      },
+      "post": {
+        "operationId": "EventTypesApi_createEventType",
+        "description": "Создать новый тип события (только владелец).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventTypeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/event-types/{id}": {
+      "get": {
+        "operationId": "EventTypesApi_getEventType",
+        "description": "Получить тип события по ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ]
+      },
+      "put": {
+        "operationId": "EventTypesApi_updateEventType",
+        "description": "Обновить тип события (только владелец).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEventTypeRequest"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "EventTypesApi_deleteEventType",
+        "description": "Удалить тип события (только владелец).\nНельзя удалить тип, если есть активные бронирования.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Event Types"
+        ]
+      }
+    },
+    "/owner/bookings": {
+      "get": {
+        "operationId": "OwnerApi_getUpcomingBookings",
+        "description": "Получить список всех предстоящих встреч (бронирований).\nПоказывает бронирования всех типов событий в одном списке.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по статусу",
+            "schema": {
+              "$ref": "#/components/schemas/BookingStatus"
+            },
+            "explode": false
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по дате начала (включительно)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по дате окончания (включительно)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Пагинация - номер страницы",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            },
+            "explode": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "Пагинация - размер страницы",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "headers": {
+              "total-count": {
+                "required": true,
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Booking"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Owner"
+        ]
+      }
+    },
+    "/owner/profile": {
+      "get": {
+        "operationId": "OwnerApi_getProfile",
+        "description": "Получить информацию о владельце календаря.\nВ системе только один предопределённый владелец.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Owner"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Owner"
+        ]
+      }
+    },
+    "/public/bookings": {
+      "post": {
+        "operationId": "GuestPublicApi_createBooking",
+        "description": "Создать бронирование на выбранный слот.\nГость выбирает тип события и свободный слот, указывает свои данные.\nБизнес-правило: нельзя создать две записи на одно и то же время.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with the current state of the server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotConflictError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/bookings/{id}": {
+      "get": {
+        "operationId": "GuestPublicApi_getBooking",
+        "description": "Получить информацию о бронировании по ID.\nГость может проверить детали своего бронирования.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/public/bookings/{id}/cancel": {
+      "post": {
+        "operationId": "GuestPublicApi_cancelBooking",
+        "description": "Отменить бронирование.\nГость может отменить своё бронирование.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelBookingRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/event-types": {
+      "get": {
+        "operationId": "GuestPublicApi_listPublicEventTypes",
+        "description": "Получить список доступных типов бронирования.\nГость видит название, описание и длительность каждого типа.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventType"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/public/event-types/{eventTypeId}/slots": {
+      "get": {
+        "operationId": "GuestPublicApi_getAvailableSlotsForEventType",
+        "description": "Получить доступные слоты для выбранного типа события.\nГость выбирает тип события и видит свободные слоты в календаре.",
+        "parameters": [
+          {
+            "name": "eventTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата начала периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата окончания периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Slot"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/public/event-types/{id}": {
+      "get": {
+        "operationId": "GuestPublicApi_getPublicEventType",
+        "description": "Получить подробную информацию о типе события.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventType"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ]
+      }
+    },
+    "/slots": {
+      "get": {
+        "operationId": "SlotsApi_listAvailableSlots",
+        "description": "Получить доступные слоты для бронирования.\nГость использует этот endpoint для выбора свободного слота.",
+        "parameters": [
+          {
+            "name": "eventTypeId",
+            "in": "query",
+            "required": false,
+            "description": "Фильтр по типу события",
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата начала периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "Дата окончания периода",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Slot"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Slots"
+        ]
+      }
+    },
+    "/slots/{id}": {
+      "get": {
+        "operationId": "SlotsApi_getSlot",
+        "description": "Получить информацию о конкретном слоте.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Slot"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Slots"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Booking": {
+        "type": "object",
+        "required": [
+          "id",
+          "eventTypeId",
+          "slotId",
+          "guestName",
+          "guestEmail",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventTypeId": {
+            "type": "string",
+            "description": "Ссылка на тип события"
+          },
+          "slotId": {
+            "type": "string",
+            "description": "Ссылка на забронированный слот"
+          },
+          "guestName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Имя гостя"
+          },
+          "guestEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Email гостя"
+          },
+          "guestNotes": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "Дополнительные заметки от гостя"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BookingStatus"
+              }
+            ],
+            "description": "Статус бронирования"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени создания"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени обновления"
+          },
+          "eventType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EventType"
+              }
+            ],
+            "description": "Вложенный тип события (включается при получении деталей бронирования)"
+          },
+          "slot": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Slot"
+              }
+            ],
+            "description": "Вложенный слот (включается при получении деталей бронирования)"
+          }
+        },
+        "description": "Booking - бронирование, создаваемое гостём на выбранный слот.\nСодержит информацию о госте и выбранном типе события."
+      },
+      "BookingStatus": {
+        "type": "string",
+        "enum": [
+          "confirmed",
+          "cancelled",
+          "completed"
+        ],
+        "description": "Статусы бронирования"
+      },
+      "CancelBookingRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Причина отмены (опционально)"
+          }
+        },
+        "description": "DTO для отмены бронирования (гость)"
+      },
+      "CreateBookingRequest": {
+        "type": "object",
+        "required": [
+          "eventTypeId",
+          "slotId",
+          "guestName",
+          "guestEmail"
+        ],
+        "properties": {
+          "eventTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "guestName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "guestEmail": {
+            "type": "string",
+            "format": "email"
+          },
+          "guestNotes": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "description": "DTO для создания бронирования (гость)"
+      },
+      "CreateEventTypeRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "durationMinutes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 480
+          }
+        },
+        "description": "DTO для создания типа события (владелец)"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Код ошибки"
+          },
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Детали ошибки"
+          }
+        }
+      },
+      "EventType": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "durationMinutes",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 480,
+            "description": "Длительность события в минутах"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени создания"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени обновления"
+          }
+        },
+        "description": "EventType - тип события, создаваемый владельцем календаря.\nКаждый тип определяет характеристики встречи (название, описание, длительность)."
+      },
+      "FieldError": {
+        "type": "object",
+        "required": [
+          "field",
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "NotFoundError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "NOT_FOUND"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Owner": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "isPredefined",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "isPredefined": {
+            "type": "boolean",
+            "description": "Признак предопределённого системного профиля"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Owner - единый предопределённый профиль владельца календаря.\nВ системе нет регистрации и авторизации, владелец - один заранее заданный профиль."
+      },
+      "Slot": {
+        "type": "object",
+        "required": [
+          "id",
+          "startTime",
+          "endTime",
+          "isAvailable",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время начала слота"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время окончания слота"
+          },
+          "isAvailable": {
+            "type": "boolean",
+            "description": "Статус доступности слота"
+          },
+          "eventTypeId": {
+            "type": "string",
+            "description": "Опциональная ссылка на тип события, если слот привязан к конкретному типу"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Автоматически генерируемая метка времени создания"
+          }
+        },
+        "description": "Slot - временной слот в календаре для бронирования.\nСлоты генерируются на основе доступности и привязаны ко времени.\nБизнес-правило: на одно и то же время нельзя создать две записи."
+      },
+      "SlotConflictError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "SLOT_ALREADY_BOOKED"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "enum": [
+              "Этот слот уже забронирован. На одно и то же время нельзя создать две записи."
+            ]
+          }
+        }
+      },
+      "UpdateEventTypeRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 480
+          }
+        },
+        "description": "DTO для обновления типа события (владелец)"
+      },
+      "ValidationError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "errors"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "enum": [
+              "Некорректные данные запроса"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server",
+      "variables": {}
+    },
+    {
+      "url": "https://api.calendar-booking.example.com",
+      "description": "Production server",
+      "variables": {}
+    }
+  ]
+}

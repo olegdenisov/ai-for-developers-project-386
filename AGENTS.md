@@ -1,233 +1,158 @@
-# AGENTS.md - TypeSpec Calendar Booking API
+# AGENTS.md - Calendar Booking System
 
-## Project Overview
+Turborepo monorepo: Fastify backend + React 19 frontend with FSD architecture.
 
-This is a **Hexlet educational project** implementing a Calendar Call Booking API specification using **TypeSpec**. The API describes a booking system where guests can schedule calls with a calendar owner without authentication.
-
-**Key Features:**
-- TypeSpec API specification (`main.tsp`)
-- OpenAPI 3.0 generation
-- REST API design with HTTP/REST decorators
-- No authentication/authorization - single predefined owner
-- Business rule: no double-booking at the same time
-
-## Build/Lint/Test Commands
-
-### TypeSpec CLI Commands
+## Quick Commands
 
 ```bash
-# Compile and validate TypeSpec (basic check)
-tsp compile main.tsp
+# Full development (RECOMMENDED) - PostgreSQL + tables + data + API + Web
+pnpm start:dev
 
-# Compile with OpenAPI emitter (generates openapi.json)
-tsp compile main.tsp --emit @typespec/openapi3
+# Frontend-only with mocks (Prism on :3100, Web on :5173)
+pnpm start:mock         # Note: in README this is `dev:mock`, but package.json has `start:mock`
 
-# Format TypeSpec files
-tsp format "**/*.tsp"
+# Turbo mode (PostgreSQL must be running)
+pnpm dev
 
-# Check formatting without writing
-tsp format "**/*.tsp" --check
-
-# Validate only (no emit)
-tsp compile main.tsp --no-emit
+# Docker full stack
+pnpm docker:up
 ```
 
-### Alternative: Using npx
+## Code Generation (TypeSpec → OpenAPI → Types + Client)
 
 ```bash
-npx tsp compile main.tsp
-npx tsp format "**/*.tsp"
+pnpm generate:all       # Run all generators
+# Or step by step:
+pnpm generate:openapi   # main.tsp → tsp-output/openapi.json
+pnpm generate:types     # openapi.json → packages/shared-types/src/index.ts
+pnpm generate:client    # openapi.json → packages/api-client/src/ (requires Java)
 ```
 
-### Hexlet Tests
+## Database
 
 ```bash
-# Hexlet tests run automatically on every commit via GitHub Actions
-# Workflow file: .github/workflows/hexlet-check.yml
-# DO NOT MODIFY the hexlet-check.yml file
+pnpm db:generate        # Prisma client → apps/api/prisma/generated/client
+pnpm db:migrate         # Run migrations
+pnpm db:seed            # Seed with test data
+pnpm db:studio          # Prisma Studio GUI
 ```
 
-## Code Style Guidelines
+## Critical Rules
 
-### Naming Conventions
+### Language (STRICT)
+- **All code comments must be in Russian** (auto-generated code exempted)
+- **Git commit messages in Russian** with conventional style: `feat: добавлена функция`
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Namespace | PascalCase | `CalendarBooking` |
-| Models | PascalCase | `EventType`, `Booking` |
-| Interfaces | PascalCase + Api suffix | `OwnerApi`, `SlotsApi` |
-| Enums | PascalCase | `BookingStatus` |
-| Enum members | camelCase | `confirmed`, `cancelled` |
-| Properties | camelCase | `durationMinutes`, `guestEmail` |
-| Operations | camelCase | `createBooking`, `getProfile` |
-| DTOs | PascalCase + Request/Response suffix | `CreateEventTypeRequest` |
+### Module System
+- **ESM only**: `"type": "module"` in all packages
+- Import local files **without extension**: `import { foo } from './bar'`
 
-### Imports and Using Statements
+### Import Order
+1. External deps (`react`, `fastify`, `@reatom/core`)
+2. Workspace packages (`@calendar-booking/api-client`)
+3. Path aliases (`@shared/config`, `@entities/booking`)
+4. Relative imports (`./validation`, `../model/model`)
 
-Order and format:
-```typespec
-import "@typespec/http";
-import "@typespec/rest";
-import "@typespec/openapi3";
+## Backend (Fastify + Prisma)
 
-using TypeSpec.Http;
-using TypeSpec.Rest;
-using TypeSpec.OpenAPI;
+### Module Pattern
 ```
-
-- Always use `using` after imports to avoid prefixing decorators
-- Group imports logically: standard library first, then third-party
-
-### Model Definitions
-
-```typespec
-model EventType {
-  @key
-  @format("uuid")
-  id: string;
-
-  @minLength(1)
-  @maxLength(100)
-  name: string;
-
-  /** Длительность события в минутах */
-  @minValue(1)
-  @maxValue(480)
-  durationMinutes: int32;
-
-  @visibility("read")
-  createdAt: utcDateTime;
-}
+modules/[name]/
+├── [name].routes.ts      # Routes with Zod schemas (fastify-type-provider-zod)
+├── [name].controller.ts  # Request handlers
+└── [name].service.ts     # Business logic + Prisma transactions
 ```
-
-**Rules:**
-- Use `@key` for identifier fields
-- Use `@format("uuid")` for UUID fields
-- Use validation decorators: `@minLength`, `@maxLength`, `@minValue`, `@maxValue`
-- Add doc comments `/** */` for business logic fields
-- Use `@visibility("read")` for auto-generated timestamp fields
-
-### Interface Definitions
-
-```typespec
-@route("/event-types")
-@tag("Event Types")
-interface EventTypesApi {
-  @get
-  listEventTypes(): EventType[];
-
-  @get
-  @route("/{id}")
-  getEventType(@path id: string): EventType | NotFoundError;
-
-  @post
-  createEventType(@body request: CreateEventTypeRequest): EventType | ValidationError;
-}
-```
-
-**Rules:**
-- Always use `@route()` at interface level for base path
-- Use `@tag()` for OpenAPI grouping
-- Combine HTTP method decorators (`@get`, `@post`, etc.) with `@route()` for sub-paths
-- Use `@path` for path parameters
-- Use `@body` for request bodies
-- Use `@query` for query parameters
 
 ### Error Handling
+Use custom errors from `common/errors/customErrors.ts`:
+- `NotFoundError(message)` → 404, code: `NOT_FOUND`
+- `ValidationError(message, errors[])` → 400, code: `VALIDATION_ERROR`
+- `SlotConflictError()` → 409, code: `SLOT_ALREADY_BOOKED` (double booking prevention)
+- `ConflictError(message)` → 409, code: `CONFLICT`
 
-```typespec
-@error
-model ErrorResponse {
-  code: string;
-  message: string;
-  details?: string[];
-}
+API returns: `{ code, message, errors? }`
 
-@error
-model NotFoundError {
-  @statusCode
-  statusCode: 404;
-  code: "NOT_FOUND";
-  message: string;
-}
+### Database Transactions
+Use `isolationLevel: 'Serializable'` for critical operations (booking creation/cancellation):
+```typescript
+await prisma.$transaction(async (tx) => {
+  // ... logic
+}, { isolationLevel: 'Serializable' });
 ```
 
-**Rules:**
-- Mark error models with `@error` decorator
-- Include `@statusCode` in error models
-- Use union return types: `SuccessType | ErrorType`
+## Frontend (FSD + Reatom v1000 + Mantine v7)
 
-### Documentation
+### Path Aliases (vite.config.ts)
+- `@/` → `src/`
+- `@app/`, `@pages/`, `@features/`, `@entities/`, `@shared/`
 
-- Use `/** */` doc comments for models, properties, and operations
-- Document business rules explicitly
-- Use Russian for domain-specific descriptions (project convention)
-- Include HTTP method descriptions in doc comments
+### Reatom v1000 Patterns
+```typescript
+// ALWAYS name atoms/actions/computed (second argument)
+atom<T>(value, 'name')
+action(fn, 'name').extend(withAsync())
+computed(() => ..., 'name')
 
-### Formatting
-
-- Use 2 spaces for indentation
-- Max line length: 100 characters
-- Group related models with section comments:
-```typespec
-// ============================================
-// DOMAIN ENTITIES
-// ============================================
+// Async pattern with wrap() from @reatom/core
+const fetchData = action(async () => {
+  const response = await wrap(apiClient.method())
+  if (!response.ok) throw new Error('...')
+  const data = await wrap(response.json())
+  atom.set(data)
+  return data
+}, 'fetchData').extend(withAsync())
 ```
+
+### Component Patterns
+- Use `reatomComponent()` from `@reatom/react` for components with atoms
+- Props interfaces at top with Russian comments
+- UI: Mantine v7, Icons: `@tabler/icons-react`
+- Forms: Zod + Mantine form validation
 
 ### File Structure
+```
+entities/[name]/
+├── index.ts
+└── model/
+    ├── types.ts        # Domain types (interfaces)
+    └── model.ts        # Reatom atoms + actions (single file!)
 
-Typical `.tsp` file organization:
-1. Imports
-2. `using` statements
-3. Service decorator with `@service`
-4. Server definitions with `@server`
-5. Namespace declaration
-6. Domain entities (Models)
-7. DTOs for operations
-8. Error models
-9. API interfaces (grouped by domain)
-10. Service description alias
+features/[name]/
+├── index.ts
+└── model/
+    ├── model.ts        # Feature atoms + actions
+    └── validation.ts   # Zod schemas
+```
 
-## TypeSpec-Specific Conventions
+## Mock Development
 
-### Built-in Types
+Prism mock server serves from `tsp-output/openapi.json` on port 3100:
+- `pnpm mock:up` / `pnpm mock:down`
+- Vite mock mode uses `apps/web/.env.mock` → API at :3100
 
-| Type | Use For |
-|------|---------|
-| `string` | Text data |
-| `int32` | Integer values (duration, counts) |
-| `boolean` | Flags |
-| `utcDateTime` | Timestamps |
-| `plainDate` | Date-only fields |
+## Known Issues
 
-### Common Decorators
+### PostgreSQL P1010 (Permission Denied)
+In PostgreSQL 15+, schema public permissions changed. **Workaround**: use mock mode:
+```bash
+pnpm start:mock  # Frontend-only development
+```
 
-| Decorator | Usage |
-|-----------|-------|
-| `@service()` | Define API metadata |
-| `@server()` | Define server URLs |
-| `@route()` | Define URL path |
-| `@tag()` | Group operations in OpenAPI |
-| `@key` | Primary key identifier |
-| `@format("uuid")` | UUID format validation |
-| `@error` | Error response model |
-| `@statusCode` | HTTP status code |
-| `@visibility()` | Control serialization |
-| `@minLength/@maxLength` | String validation |
-| `@minValue/@maxValue` | Numeric validation |
-| `@path` | Path parameter |
-| `@query` | Query parameter |
-| `@body` | Request body |
+**Full fix**: Ensure postgres owns public schema:
+```sql
+ALTER SCHEMA public OWNER TO postgres;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+```
 
-## CI/CD
+### openapi-generator-cli Requires Java
+The API client generator needs Java installed. Types are generated via `openapi-typescript` (no Java needed).
 
-GitHub Actions runs Hexlet tests on every push. Do not modify:
-- `.github/workflows/hexlet-check.yml`
+## Environment
 
-## References
+- Node.js 24+, pnpm 9+
+- TypeScript 6.x with strict mode
+- No test framework configured
 
-- [TypeSpec Documentation](https://typespec.io/docs)
-- [TypeSpec Style Guide](https://typespec.io/docs/handbook/style-guide)
-- [TypeSpec CLI](https://typespec.io/docs/handbook/cli/)
-- [REST API Guide](https://typespec.io/docs/getting-started/getting-started-rest/)
+## Guidelines Note
+
+From `docs/guidelines.md`: Start mock server for testing **only after receiving an error that it's not running**.

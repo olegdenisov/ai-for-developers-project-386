@@ -1,0 +1,55 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local", "main.tsp"],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "PORT",
+    "WEB_URL",
+    "API_URL"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "^db:generate"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    },
+    "type-check": {
+      "dependsOn": ["^db:generate"],
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false,
+      "outputs": ["src/generated/**", "prisma/generated/**"]
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:seed": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "generate:types": {
+      "inputs": ["../../main.tsp"],
+      "outputs": ["src/index.ts"],
+      "cache": false
+    },
+    "generate:client": {
+      "dependsOn": ["generate:types"],
+      "outputs": ["src/**"],
+      "cache": false
+    }
+  }
+}
