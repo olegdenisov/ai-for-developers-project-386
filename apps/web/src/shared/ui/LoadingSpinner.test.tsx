@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { screen } from '@testing-library/react';
 import { renderWithProviders as render } from '@/test/setup';
 import { LoadingSpinner } from './LoadingSpinner';
 
