@@ -11,7 +11,7 @@ build/
 # Generated files
 tsp-output/
 packages/shared-types/src/index.ts
-packages/api-client/src/
+packages/api-client/src/*
 !packages/api-client/src/index.ts
 apps/api/prisma/generated/
 
