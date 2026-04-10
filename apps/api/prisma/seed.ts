@@ -1,6 +1,11 @@
 import { PrismaClient } from './generated/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+// @ts-ignore
+import { Pool } from 'pg';
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // Create predefined owner
