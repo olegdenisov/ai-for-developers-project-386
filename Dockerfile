@@ -41,8 +41,11 @@ WORKDIR /app
 # Системные зависимости для Prisma
 RUN apk add --no-cache openssl
 
-# Копируем node_modules (включает Prisma CLI и все runtime зависимости)
+# Копируем root node_modules (виртуальный .pnpm стор с реальными пакетами)
 COPY --from=builder /app/node_modules ./node_modules
+
+# Копируем node_modules самого API (симлинки на .pnpm стор — нужны для резолва зависимостей)
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 
 # Копируем конфигурацию workspace
 COPY --from=builder /app/package.json /app/pnpm-workspace.yaml ./
@@ -69,4 +72,4 @@ ENV PORT=3000
 EXPOSE ${PORT}
 
 # Запуск: применяем миграции (|| true — не падаем если нет БД), затем стартуем API
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma || true && exec node apps/api/dist/main.js"]
+CMD ["sh", "-c", "apps/api/node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma || true && exec node apps/api/dist/main.js"]

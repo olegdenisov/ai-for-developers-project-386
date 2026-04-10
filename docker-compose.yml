@@ -32,8 +32,8 @@ services:
     # Применяем миграции, сидируем БД (idempotent), запускаем приложение
     command: >
       sh -c "
-        node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma &&
-        node_modules/.bin/tsx apps/api/prisma/seed.ts || true &&
+        apps/api/node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma &&
+        apps/api/node_modules/.bin/tsx apps/api/prisma/seed.ts || true &&
         exec node apps/api/dist/main.js
       "
 
