@@ -8,8 +8,8 @@ const eventTypeSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   durationMinutes: z.number(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
+  updatedAt: z.preprocess((val) => val instanceof Date ? val.toISOString() : val, z.string()),
 });
 
 const createEventTypeSchema = z.object({
