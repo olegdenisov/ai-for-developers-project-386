@@ -1,10 +1,8 @@
 import { wrap } from '@reatom/core';
-// @ts-ignore - reatomForm доступен в runtime, но не объявлен в типах
-import { reatomForm } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
-import { navigate } from '@app/router';
+import { createCancelForm } from '@features/cancel-booking';
 import { BookingDetailPage } from '../BookingDetailPage';
 import type { Booking } from '@entities/booking';
 
@@ -14,36 +12,6 @@ import type { Booking } from '@entities/booking';
 interface LoaderData {
   booking: Booking;
   cancelForm: ReturnType<typeof createCancelForm>;
-}
-
-/**
- * Factory function для создания формы отмены бронирования
- * Создается внутри route loader для автоматической очистки
- */
-export function createCancelForm(bookingId: string) {
-  return reatomForm(
-    {
-      reason: '',
-    },
-    {
-      name: 'cancelBookingForm',
-      onSubmit: async (values: { reason: string }): Promise<Booking> => {
-        const response = await wrap(
-          apiClient.cancelBooking(bookingId, values.reason || undefined)
-        );
-
-        if (response.status >= 400) {
-          const errorData = response.data as { message?: string };
-          throw new Error(errorData.message || 'Failed to cancel booking');
-        }
-
-        // После успешной отмены переходим на главную
-        navigate.home();
-
-        return response.data as Booking;
-      },
-    }
-  );
 }
 
 /**

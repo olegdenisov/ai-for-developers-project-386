@@ -12,7 +12,6 @@ import {
   Container,
   ThemeIcon,
   ActionIcon,
-  Modal,
 } from '@mantine/core';
 import {
   IconCheck,
@@ -25,7 +24,8 @@ import {
 import { Layout, LoadingSpinner, ErrorMessage } from '@shared/ui';
 import { formatDate, formatTime } from '@shared/lib';
 import type { Booking } from '@entities/booking';
-import type { createCancelForm } from './model/route';
+import { CancelBookingModal } from '@features/cancel-booking';
+import type { createCancelForm } from '@features/cancel-booking';
 
 /**
  * Props для компонента страницы деталей бронирования
@@ -81,9 +81,6 @@ export const BookingDetailPage = reatomComponent(
       );
     }
 
-    // Получаем состояние формы отмены (если есть)
-    const isCancelling = cancelForm ? cancelForm.submit.pending() : false;
-
     // Обработчики
     const goHome = () => {
       window.location.href = '/';
@@ -93,24 +90,6 @@ export const BookingDetailPage = reatomComponent(
       if (cancelForm) {
         // Открываем модальное окно, устанавливая reason в специальное значение
         cancelForm.fields.reason.set('cancel_requested');
-      }
-    };
-
-    const handleConfirmCancel = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (cancelForm) {
-        cancelForm.submit();
-      }
-    };
-
-    const handleCloseCancel = () => {
-      if (cancelForm) {
-        // Сбрасываем reason чтобы закрыть модальное окно
-        cancelForm.fields.reason.set('');
-        // Сбрасываем ошибку отправки формы
-        if (cancelForm.submit.errorAtom) {
-          cancelForm.submit.errorAtom.set(null);
-        }
       }
     };
 
@@ -255,47 +234,7 @@ export const BookingDetailPage = reatomComponent(
         </Container>
 
         {/* Модальное окно отмены бронирования */}
-        {cancelForm && (
-          <Modal
-            opened={cancelForm.fields.reason() === 'cancel_requested' || !!cancelForm.submit.error()}
-            onClose={handleCloseCancel}
-            title="Отменить бронирование"
-            centered
-          >
-            <form onSubmit={handleConfirmCancel}>
-              <Stack gap="md">
-                <Text>
-                  Вы уверены, что хотите отменить бронирование? Это действие
-                  нельзя отменить.
-                </Text>
-                {cancelForm.fields.reason && (
-                  <div>
-                    {/* Поле причины отмены - пока заглушка */}
-                  </div>
-                )}
-                {cancelForm.submit.error() && (
-                  <Text c="red" size="sm">
-                    {cancelForm.submit.error()?.message}
-                  </Text>
-                )}
-                <Group justify="flex-end" wrap="nowrap">
-                  <Button variant="subtle" onClick={handleCloseCancel}>
-                    Закрыть
-                  </Button>
-                  <Button
-                    color="red"
-                    type="submit"
-                    loading={isCancelling}
-                    loaderProps={{ type: 'dots' }}
-                    miw={180}
-                  >
-                    Отменить бронирование
-                  </Button>
-                </Group>
-              </Stack>
-            </form>
-          </Modal>
-        )}
+        {cancelForm && <CancelBookingModal cancelForm={cancelForm} />}
       </Layout>
     );
   },
