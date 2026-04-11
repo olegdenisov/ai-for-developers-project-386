@@ -32,25 +32,35 @@ describe('pages/booking-confirmation/BookingConfirmationPage', () => {
     createdAt: '2024-01-01T00:00:00Z',
   };
 
-  const mockField = (value: string) => ({
+  // Мок поля формы: совместим с bindField из @reatom/react
+  const mockField = (value: string, name: string) => ({
     value: () => value,
     validation: () => ({ error: undefined }),
-    onChange: vi.fn(),
-    onBlur: vi.fn(),
-    onFocus: vi.fn(),
+    change: vi.fn(),
+    focus: { in: vi.fn(), out: vi.fn() },
+    name,
   });
 
+  // submit — вызываемая функция с методами ready/pending/error
+  const submitFn = Object.assign(vi.fn(() => Promise.resolve()), {
+    ready: () => true,
+    pending: () => false,
+    error: () => null,
+  });
+
+  // wasSubmitted — вызываемый атом (функция) с методом set
+  const wasSubmittedAtom = Object.assign(() => false, { set: vi.fn() });
+
   const mockForm = {
-    fields: {
-      guestName: mockField('Иван Иванов'),
-      guestEmail: mockField('ivan@example.com'),
-      guestNotes: mockField('Тестовая заметка'),
+    form: {
+      fields: {
+        guestName: mockField('Иван Иванов', 'guestName'),
+        guestEmail: mockField('ivan@example.com', 'guestEmail'),
+        guestNotes: mockField('Тестовая заметка', 'guestNotes'),
+      },
+      submit: submitFn,
     },
-    submit: {
-      ready: () => true,
-      pending: () => false,
-      error: () => null,
-    },
+    wasSubmitted: wasSubmittedAtom,
   };
 
   it('должен отображать спиннер загрузки', () => {
