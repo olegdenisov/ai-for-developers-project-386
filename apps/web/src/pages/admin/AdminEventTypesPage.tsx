@@ -93,7 +93,7 @@ export const AdminEventTypesPage = reatomComponent(() => {
         <Button
           leftSection={<IconPlus size={16} />}
           color="orange"
-          onClick={() => isCreateEventTypeModalOpen.setTrue()}
+          onClick={() => isCreateEventTypeModalOpen.set(true)}
         >
           Создать
         </Button>
