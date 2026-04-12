@@ -109,21 +109,21 @@
 
 ### Task 7: Подключить RescheduleModal к booking-detail
 
-- [ ] В `apps/web/src/pages/booking-detail/model/route.tsx` — добавить создание
+- [x] В `apps/web/src/pages/booking-detail/model/route.tsx` — добавить создание
       `rescheduleForm` через фабрику в loader
-- [ ] В `apps/web/src/pages/booking-detail/BookingDetailPage.tsx`:
+- [x] В `apps/web/src/pages/booking-detail/BookingDetailPage.tsx`:
   - передать `rescheduleForm` в пропсы
   - кнопку «Перенести» связать с открытием модалки
   - добавить `<RescheduleModal>` в рендер
-- [ ] После успешного переноса — данные бронирования обновляются автоматически
-- [ ] Запустить `pnpm type-check` — должно пройти
+- [x] После успешного переноса — данные бронирования обновляются автоматически
+- [x] Запустить `pnpm type-check` — должно пройти
 
 ### Task 8: Проверка acceptance criteria
 
-- [ ] Проверить, что все требования из Overview реализованы
-- [ ] Обработка edge-cases: занятый слот (409), слот не найден (404), тот же слот
-- [ ] Запустить `cd apps/web && pnpm test` — все тесты проходят
-- [ ] Запустить `pnpm type-check` — чисто
+- [x] Проверить, что все требования из Overview реализованы
+- [x] Обработка edge-cases: занятый слот (409), слот не найден (404), тот же слот
+- [x] Запустить `cd apps/web && pnpm test` — все тесты проходят (181/181)
+- [x] Запустить `pnpm type-check` — чисто
 - [ ] Запустить `pnpm build` — успешно
 - [ ] Запустить `pnpm lint` — без ошибок
 

@@ -26,6 +26,8 @@ import { formatDate, formatTime } from '@shared/lib';
 import type { Booking } from '@entities/booking';
 import { CancelBookingModal } from '@features/cancel-booking';
 import type { createCancelForm } from '@features/cancel-booking';
+import { RescheduleModal } from '@features/reschedule-booking';
+import type { createRescheduleForm } from '@features/reschedule-booking';
 
 /**
  * Props для компонента страницы деталей бронирования
@@ -33,6 +35,7 @@ import type { createCancelForm } from '@features/cancel-booking';
 interface BookingDetailPageProps {
   booking?: Booking;
   cancelForm?: ReturnType<typeof createCancelForm>;
+  rescheduleForm?: ReturnType<typeof createRescheduleForm>;
   isLoading: boolean;
   error?: string | null;
 }
@@ -45,6 +48,7 @@ export const BookingDetailPage = reatomComponent(
   ({
     booking,
     cancelForm,
+    rescheduleForm,
     isLoading,
     error,
   }: BookingDetailPageProps) => {
@@ -90,6 +94,12 @@ export const BookingDetailPage = reatomComponent(
       if (cancelForm) {
         // Открываем модальное окно, устанавливая reason в специальное значение
         cancelForm.fields.reason.set('cancel_requested');
+      }
+    };
+
+    const handleReschedule = () => {
+      if (rescheduleForm) {
+        rescheduleForm.isOpen.set(true);
       }
     };
 
@@ -193,7 +203,7 @@ export const BookingDetailPage = reatomComponent(
             {/* Действия */}
             <Text ta="center">
               Хотите внести изменения?{' '}
-              <Anchor component="button" type="button">
+              <Anchor component="button" type="button" onClick={handleReschedule}>
                 Перенести
               </Anchor>{' '}
               или{' '}
@@ -235,6 +245,9 @@ export const BookingDetailPage = reatomComponent(
 
         {/* Модальное окно отмены бронирования */}
         {cancelForm && <CancelBookingModal cancelForm={cancelForm} />}
+
+        {/* Модальное окно переноса бронирования */}
+        {rescheduleForm && <RescheduleModal rescheduleForm={rescheduleForm} />}
       </Layout>
     );
   },
