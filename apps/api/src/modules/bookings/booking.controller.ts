@@ -62,3 +62,14 @@ export async function cancelBooking(
   const booking = await bookingService.cancelBooking(request.params.id, request.body);
   return reply.send(booking);
 }
+
+export async function rescheduleBooking(
+  request: FastifyRequest<{
+    Params: { id: string };
+    Body: { newSlotId: string };
+  }>,
+  reply: FastifyReply
+) {
+  const booking = await bookingService.rescheduleBooking(request.params.id, request.body.newSlotId);
+  return reply.send(booking);
+}

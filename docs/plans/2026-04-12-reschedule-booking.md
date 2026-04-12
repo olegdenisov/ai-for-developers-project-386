@@ -68,12 +68,12 @@
 
 ### Task 3: Backend routes + controller
 
-- [ ] В `apps/api/src/modules/bookings/booking.controller.ts` добавить метод `rescheduleBooking`
+- [x] В `apps/api/src/modules/bookings/booking.controller.ts` добавить метод `rescheduleBooking`
       с валидацией через Zod (`newSlotId: z.string().uuid()`)
-- [ ] В `apps/api/src/modules/bookings/booking.routes.ts` добавить
+- [x] В `apps/api/src/modules/bookings/booking.routes.ts` добавить
       `PATCH /bookings/:id/reschedule` → вызывает контроллер
-- [ ] Убедиться, что ошибки обрабатываются стандартным `errorHandler`
-- [ ] Запустить `pnpm type-check` — должно пройти
+- [x] Убедиться, что ошибки обрабатываются стандартным `errorHandler`
+- [x] Запустить `pnpm type-check` — должно пройти
 
 ### Task 4: API client — добавить метод rescheduleBooking
 

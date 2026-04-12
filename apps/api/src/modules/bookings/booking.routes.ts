@@ -112,6 +112,39 @@ export async function bookingRoutes(app: FastifyInstance) {
     },
   }, bookingController.getBooking);
 
+  // Reschedule booking
+  app.patch('/bookings/:id/reschedule', {
+    schema: {
+      summary: 'Reschedule booking',
+      description: 'Move booking to a different slot of the same event type',
+      params: z.object({
+        id: z.string().uuid(),
+      }),
+      body: z.object({
+        newSlotId: z.string().uuid(),
+      }),
+      response: {
+        200: bookingSchema,
+        400: z.object({
+          code: z.string(),
+          message: z.string(),
+          errors: z.array(z.object({
+            field: z.string(),
+            message: z.string(),
+          })).optional(),
+        }),
+        404: z.object({
+          code: z.string(),
+          message: z.string(),
+        }),
+        409: z.object({
+          code: z.string(),
+          message: z.string(),
+        }),
+      },
+    },
+  }, bookingController.rescheduleBooking);
+
   // Cancel booking
   app.post('/bookings/:id/cancel', {
     schema: {
