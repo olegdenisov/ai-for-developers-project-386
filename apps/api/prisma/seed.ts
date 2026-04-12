@@ -60,46 +60,54 @@ async function main() {
 
   console.log('Created event types:', eventTypes);
 
-  // Generate sample slots for the next 14 days
+  // Генерируем слоты для каждого типа события с правильной длительностью
   const today = new Date();
-  const slots = [];
+  today.setHours(0, 0, 0, 0);
+  const endDate = new Date(today);
+  endDate.setDate(endDate.getDate() + 14);
 
-  for (let day = 0; day < 14; day++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() + day);
-    date.setHours(0, 0, 0, 0);
+  let totalSlots = 0;
 
-    // Skip weekends
-    if (date.getDay() === 0 || date.getDay() === 6) continue;
+  for (const eventType of eventTypes) {
+    const slots = [];
 
-    // Create slots from 9:00 to 17:00 with 30-min intervals
-    for (let hour = 9; hour < 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const startTime = new Date(date);
-        startTime.setHours(hour, minute, 0, 0);
+    const currentDate = new Date(today);
+    while (currentDate <= endDate) {
+      // Пропускаем выходные
+      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+        for (let hour = 9; hour < 17; hour++) {
+          for (let minute = 0; minute < 60; minute += eventType.durationMinutes) {
+            const startTime = new Date(currentDate);
+            startTime.setHours(hour, minute, 0, 0);
 
-        const endTime = new Date(startTime);
-        endTime.setMinutes(endTime.getMinutes() + 30);
+            const endTime = new Date(startTime);
+            endTime.setMinutes(endTime.getMinutes() + eventType.durationMinutes);
 
-        slots.push({
-          startTime,
-          endTime,
-          isAvailable: true,
-        });
+            // Не создаём слот если он выходит за пределы рабочего дня (17:00)
+            if (endTime.getHours() > 17 || (endTime.getHours() === 17 && endTime.getMinutes() > 0)) {
+              break;
+            }
+
+            slots.push({
+              startTime,
+              endTime,
+              isAvailable: true,
+              eventTypeId: eventType.id,
+            });
+          }
+        }
       }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate.setHours(0, 0, 0, 0);
     }
+
+    await prisma.slot.createMany({ data: slots });
+    totalSlots += slots.length;
+    console.log(`Created ${slots.length} slots for event type "${eventType.name}" (${eventType.durationMinutes} min)`);
   }
 
-  // Create slots in database
-  const createdSlots = await Promise.all(
-    slots.map(slot =>
-      prisma.slot.create({
-        data: slot,
-      })
-    )
-  );
-
-  console.log(`Created ${createdSlots.length} slots`);
+  console.log(`Total: ${totalSlots} slots created`);
 
   console.log('Seeding completed successfully!');
 }

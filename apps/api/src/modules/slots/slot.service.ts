@@ -67,40 +67,46 @@ export async function getSlotById(id: string) {
   return slot;
 }
 
-// Helper function to generate slots (can be used for admin/seeding)
+// Генерация слотов для конкретного типа события
 export async function generateSlots(
+  eventTypeId: string,
+  durationMinutes: number,
   startDate: Date,
   endDate: Date,
   options: {
     startHour?: number;
     endHour?: number;
-    intervalMinutes?: number;
   } = {}
 ) {
   const {
     startHour = 9,
     endHour = 17,
-    intervalMinutes = 30,
   } = options;
 
   const slots = [];
   const currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {
-    // Skip weekends
+    // Пропускаем выходные
     if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
       for (let hour = startHour; hour < endHour; hour++) {
-        for (let minute = 0; minute < 60; minute += intervalMinutes) {
+        for (let minute = 0; minute < 60; minute += durationMinutes) {
           const slotStart = new Date(currentDate);
           slotStart.setHours(hour, minute, 0, 0);
 
           const slotEnd = new Date(slotStart);
-          slotEnd.setMinutes(slotEnd.getMinutes() + intervalMinutes);
+          slotEnd.setMinutes(slotEnd.getMinutes() + durationMinutes);
+
+          // Не создаём слот если он выходит за пределы рабочего дня
+          if (slotEnd.getHours() > endHour || (slotEnd.getHours() === endHour && slotEnd.getMinutes() > 0)) {
+            break;
+          }
 
           slots.push({
             startTime: slotStart,
             endTime: slotEnd,
             isAvailable: true,
+            eventTypeId,
           });
         }
       }
@@ -110,14 +116,8 @@ export async function generateSlots(
     currentDate.setHours(0, 0, 0, 0);
   }
 
-  // Create slots in database
-  const createdSlots = await Promise.all(
-    slots.map(slot =>
-      prisma.slot.create({
-        data: slot,
-      })
-    )
-  );
+  // Создаём слоты в БД пачками для производительности
+  await prisma.slot.createMany({ data: slots });
 
-  return createdSlots;
+  return slots.length;
 }

@@ -26,11 +26,12 @@ model EventType {
   durationMinutes Int
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
+
   owner           Owner     @relation(fields: [ownerId], references: [id])
   ownerId         String
 
   bookings        Booking[]
+  slots           Slot[]
 
   @@map("event_types")
 }
@@ -41,9 +42,13 @@ model Slot {
   endTime       DateTime
   isAvailable   Boolean   @default(true)
   createdAt     DateTime  @default(now())
-  
+
+  eventType     EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  eventTypeId   String
+
   booking       Booking?
 
+  @@index([eventTypeId])
   @@map("slots")
 }
 
