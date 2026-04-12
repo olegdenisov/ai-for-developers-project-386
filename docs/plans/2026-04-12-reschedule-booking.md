@@ -85,17 +85,17 @@
 
 ### Task 5: Frontend feature model — reschedule-booking
 
-- [ ] Создать директорию `apps/web/src/features/reschedule-booking/model/`
-- [ ] В `model.ts` реализовать фабрику `createRescheduleForm(bookingId, eventTypeId)`:
+- [x] Создать директорию `apps/web/src/features/reschedule-booking/model/`
+- [x] В `model.ts` реализовать фабрику `createRescheduleForm(bookingId, eventTypeId)`:
   - `reatomForm` с полем `newSlotId`
   - В `onSubmit` вызвать `apiClient.rescheduleBooking(bookingId, newSlotId)`
   - При успехе — обновить данные бронирования на странице (не навигировать, остаться на месте)
   - При ошибке — пробросить с читаемым сообщением
-- [ ] `computed` для загрузки доступных слотов того же `eventTypeId` (следующие 14 дней)
-- [ ] Создать `apps/web/src/features/reschedule-booking/index.ts` — экспорты
-- [ ] Написать unit-тест `model.test.ts`: успешный перенос, конфликт слота, слот не найден
-- [ ] Запустить `cd apps/web && pnpm test` — должно пройти
-- [ ] Запустить `pnpm type-check` — должно пройти
+- [x] `computed` для загрузки доступных слотов того же `eventTypeId` (следующие 14 дней)
+- [x] Создать `apps/web/src/features/reschedule-booking/index.ts` — экспорты
+- [x] Написать unit-тест `model.test.ts`: успешный перенос, конфликт слота, слот не найден
+- [x] Запустить `cd apps/web && pnpm test` — должно пройти
+- [x] Запустить `pnpm type-check` — должно пройти
 
 ### Task 6: Frontend UI — RescheduleModal
 
