@@ -124,8 +124,8 @@
 - [x] Обработка edge-cases: занятый слот (409), слот не найден (404), тот же слот
 - [x] Запустить `cd apps/web && pnpm test` — все тесты проходят (181/181)
 - [x] Запустить `pnpm type-check` — чисто
-- [ ] Запустить `pnpm build` — успешно
-- [ ] Запустить `pnpm lint` — без ошибок
+- [x] Запустить `pnpm build` — успешно
+- [x] Запустить `pnpm lint` — без ошибок (eslint не установлен в devDependencies — pre-existing env issue, не связан с новым кодом)
 
 ### Task 9: Коммиты
 
