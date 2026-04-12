@@ -50,7 +50,6 @@ export async function getAvailableSlotsForEventType(
     endDate: string;
   }
 ) {
-  // Verify event type exists
   const eventType = await prisma.eventType.findUnique({
     where: { id: eventTypeId },
   });
@@ -66,10 +65,10 @@ export async function getAvailableSlotsForEventType(
     throw new ValidationError('Invalid date format');
   }
 
-  // Get slots that match the event duration
+  // Слоты только для данного типа события в запрошенном диапазоне
   const slots = await prisma.slot.findMany({
     where: {
-      isAvailable: true,
+      eventTypeId,
       startTime: {
         gte: start,
         lte: end,
@@ -80,10 +79,25 @@ export async function getAvailableSlotsForEventType(
     },
   });
 
-  // Filter slots by duration compatibility
+  // Все подтверждённые бронирования, чьё время пересекается с диапазоном
+  const confirmedBookings = await prisma.booking.findMany({
+    where: {
+      status: 'CONFIRMED',
+      slot: {
+        startTime: { lt: end },
+        endTime: { gt: start },
+      },
+    },
+    include: { slot: true },
+  });
+
+  // Возвращаем только слоты без временного перекрытия с существующими бронированиями
   return slots.filter((slot) => {
-    const slotDuration = (new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 60000;
-    return slotDuration >= eventType.durationMinutes;
+    return !confirmedBookings.some(
+      (booking) =>
+        booking.slot.startTime < slot.endTime &&
+        booking.slot.endTime > slot.startTime,
+    );
   });
 }
 
@@ -119,10 +133,9 @@ export async function createBooking(data: {
       throw new NotFoundError('Event type not found');
     }
 
-    // 4. Check slot duration compatibility
-    const slotDuration = (new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 60000;
-    if (slotDuration < eventType.durationMinutes) {
-      throw new ValidationError('Slot duration is too short for this event type');
+    // 4. Проверяем что слот принадлежит запрошенному типу события
+    if (slot.eventTypeId !== data.eventTypeId) {
+      throw new ValidationError('Slot does not belong to the requested event type');
     }
 
     // 5. Create booking and mark slot as unavailable

@@ -19,18 +19,7 @@ export async function listAvailableSlots(filters: {
     throw new ValidationError('startDate must be before endDate');
   }
 
-  const where: Prisma.SlotWhereInput = {
-    isAvailable: true,
-    startTime: {
-      gte: start,
-      lte: end,
-    },
-  };
-
-  // If eventTypeId is provided, we could filter by duration compatibility
-  // For now, we return all available slots
   if (filters.eventTypeId) {
-    // Verify event type exists
     const eventType = await prisma.eventType.findUnique({
       where: { id: filters.eventTypeId },
     });
@@ -39,6 +28,16 @@ export async function listAvailableSlots(filters: {
       throw new NotFoundError('Event type not found');
     }
   }
+
+  const where: Prisma.SlotWhereInput = {
+    isAvailable: true,
+    startTime: {
+      gte: start,
+      lte: end,
+    },
+    // Фильтруем по типу события если указан
+    ...(filters.eventTypeId ? { eventTypeId: filters.eventTypeId } : {}),
+  };
 
   return prisma.slot.findMany({
     where,
