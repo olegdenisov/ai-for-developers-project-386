@@ -3,6 +3,7 @@ import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import { createCancelForm } from '@features/cancel-booking';
+import { createRescheduleForm } from '@features/reschedule-booking';
 import { BookingDetailPage } from '../BookingDetailPage';
 import type { Booking } from '@entities/booking';
 
@@ -12,6 +13,7 @@ import type { Booking } from '@entities/booking';
 interface LoaderData {
   booking: Booking;
   cancelForm: ReturnType<typeof createCancelForm>;
+  rescheduleForm: ReturnType<typeof createRescheduleForm>;
 }
 
 /**
@@ -50,7 +52,10 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
     // Factory: создаем форму отмены внутри loader
     const cancelForm = createCancelForm(id);
 
-    return { booking, cancelForm };
+    // Factory: создаем форму переноса внутри loader
+    const rescheduleForm = createRescheduleForm(id, booking.eventTypeId);
+
+    return { booking, cancelForm, rescheduleForm };
   },
 
   /**
@@ -90,6 +95,7 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
       <BookingDetailPage
         booking={data.booking}
         cancelForm={data.cancelForm}
+        rescheduleForm={data.rescheduleForm}
         isLoading={false}
       />
     );
