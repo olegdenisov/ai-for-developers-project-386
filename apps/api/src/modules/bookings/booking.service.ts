@@ -183,6 +183,72 @@ export async function getBookingById(id: string) {
   return booking;
 }
 
+export async function rescheduleBooking(id: string, newSlotId: string) {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // 1. Найти бронирование
+    const booking = await tx.booking.findUnique({
+      where: { id },
+      include: { slot: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundError('Booking not found');
+    }
+
+    if (booking.status !== 'CONFIRMED') {
+      throw new ValidationError('Only confirmed bookings can be rescheduled');
+    }
+
+    // 2. Проверить, что не переносят на тот же слот
+    if (booking.slotId === newSlotId) {
+      throw new ValidationError('New slot must be different from the current slot');
+    }
+
+    // 3. Найти новый слот
+    const newSlot = await tx.slot.findUnique({
+      where: { id: newSlotId },
+    });
+
+    if (!newSlot) {
+      throw new NotFoundError('New slot not found');
+    }
+
+    // 4. Проверить, что новый слот принадлежит тому же типу события
+    if (newSlot.eventTypeId !== booking.eventTypeId) {
+      throw new ValidationError('New slot belongs to a different event type');
+    }
+
+    // 5. Проверить доступность нового слота
+    if (!newSlot.isAvailable) {
+      throw new SlotConflictError();
+    }
+
+    // 6. Освободить старый слот, занять новый, обновить бронирование
+    const [updatedBooking] = await Promise.all([
+      tx.booking.update({
+        where: { id },
+        data: { slotId: newSlotId },
+        include: {
+          eventType: true,
+          slot: true,
+        },
+      }),
+      tx.slot.update({
+        where: { id: booking.slotId },
+        data: { isAvailable: true },
+      }),
+      tx.slot.update({
+        where: { id: newSlotId },
+        data: { isAvailable: false },
+      }),
+    ]);
+
+    return updatedBooking;
+  }, {
+    isolationLevel: 'Serializable',
+  });
+}
+
 export async function cancelBooking(
   id: string,
   data?: { reason?: string }

@@ -56,15 +56,15 @@
 
 ### Task 2: Backend service — логика переноса
 
-- [ ] В `apps/api/src/modules/bookings/booking.service.ts` добавить метод `rescheduleBooking(id, newSlotId)`
-- [ ] В транзакции с `isolationLevel: 'Serializable'`: найти бронирование, найти новый слот,
+- [x] В `apps/api/src/modules/bookings/booking.service.ts` добавить метод `rescheduleBooking(id, newSlotId)`
+- [x] В транзакции с `isolationLevel: 'Serializable'`: найти бронирование, найти новый слот,
       проверить что новый слот доступен и принадлежит тому же `eventTypeId`, 
       освободить старый слот (`isAvailable: true`), занять новый слот (`isAvailable: false`),
       обновить `booking.slotId`
-- [ ] Бросать `NotFoundError` если бронирование или слот не найден
-- [ ] Бросать `SlotConflictError` если новый слот уже занят
-- [ ] Бросать `ValidationError` если новый слот принадлежит другому `eventTypeId`
-- [ ] Запустить `pnpm type-check` — должно пройти
+- [x] Бросать `NotFoundError` если бронирование или слот не найден
+- [x] Бросать `SlotConflictError` если новый слот уже занят
+- [x] Бросать `ValidationError` если новый слот принадлежит другому `eventTypeId`
+- [x] Запустить `pnpm type-check` — должно пройти
 
 ### Task 3: Backend routes + controller
 
