@@ -99,13 +99,13 @@
 
 ### Task 6: Frontend UI — RescheduleModal
 
-- [ ] Создать `apps/web/src/features/reschedule-booking/ui/RescheduleModal.tsx`
-- [ ] Модальное окно на Mantine: список слотов сгруппирован по дням, Radio для выбора слота
-- [ ] Показывать состояния: загрузка слотов, пустой список, ошибка загрузки
-- [ ] Кнопки «Отмена» и «Перенести» (disabled пока слот не выбран или идёт submit)
-- [ ] Показывать ошибку submit (`form.submit.error()`) внутри модалки
-- [ ] Экспортировать из `index.ts`
-- [ ] Запустить `pnpm type-check` — должно пройти
+- [x] Создать `apps/web/src/features/reschedule-booking/ui/RescheduleModal.tsx`
+- [x] Модальное окно на Mantine: список слотов сгруппирован по дням, Radio для выбора слота
+- [x] Показывать состояния: загрузка слотов, пустой список, ошибка загрузки
+- [x] Кнопки «Отмена» и «Перенести» (disabled пока слот не выбран или идёт submit)
+- [x] Показывать ошибку submit (`form.submit.error()`) внутри модалки
+- [x] Экспортировать из `index.ts`
+- [x] Запустить `pnpm type-check` — должно пройти
 
 ### Task 7: Подключить RescheduleModal к booking-detail
 
