@@ -31,7 +31,7 @@ export const CreateEventTypeModal = reatomComponent(
 
     return (
       <Modal opened={isOpen} onClose={handleClose} title="Создать тип события" centered>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <Stack gap="md">
             <TextInput
               label="Название"
