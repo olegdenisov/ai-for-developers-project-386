@@ -4,6 +4,7 @@ import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import { createCancelForm } from '@features/cancel-booking';
 import { createRescheduleForm } from '@features/reschedule-booking';
+import { currentBookingAtom } from '@entities/booking';
 import { BookingDetailPage } from '../BookingDetailPage';
 import type { Booking } from '@entities/booking';
 
@@ -49,6 +50,9 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
 
     const booking = response.data as Booking;
 
+    // Инициализируем atom для реактивного обновления после переноса/отмены
+    currentBookingAtom.set(booking);
+
     // Factory: создаем форму отмены внутри loader
     const cancelForm = createCancelForm(id);
 
@@ -91,9 +95,13 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
       );
     }
 
+    // Читаем из currentBookingAtom для реактивного обновления после переноса/отмены
+    const liveBooking = currentBookingAtom();
+    const booking = (liveBooking && liveBooking.id === data.booking.id) ? liveBooking : data.booking;
+
     return (
       <BookingDetailPage
-        booking={data.booking}
+        booking={booking}
         cancelForm={data.cancelForm}
         rescheduleForm={data.rescheduleForm}
         isLoading={false}

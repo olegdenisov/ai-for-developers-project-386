@@ -54,10 +54,8 @@ export const RescheduleModal = reatomComponent(
 
     const handleClose = () => {
       isOpen.set(false)
-      form.fields.newSlotId.set('')
-      if (form.submit.errorAtom) {
-        form.submit.errorAtom.set(null)
-      }
+      form.reset()
+      form.submit.reset()
     }
 
     const handleSubmit = (e: React.FormEvent) => {

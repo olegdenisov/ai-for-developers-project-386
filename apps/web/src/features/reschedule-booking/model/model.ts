@@ -1,4 +1,4 @@
-// @ts-ignore - reatomForm доступен в runtime, но не объявлен в типах
+// @ts-ignore - reatomForm доступен в runtime, но не объявлен в типах (проблема с @standard-schema/spec)
 import { reatomForm } from '@reatom/core'
 import { atom, computed, wrap, withAsyncData } from '@reatom/core'
 import { apiClient } from '@shared/api'
@@ -59,6 +59,8 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
     { newSlotId: '' },
     {
       name: 'rescheduleBookingForm',
+      // Сбрасываем состояние формы после успешного сабмита (очищает поле выбора слота)
+      resetOnSubmit: true,
       onSubmit: async (values: { newSlotId: string }): Promise<Booking> => {
         try {
           const response = await wrap(
