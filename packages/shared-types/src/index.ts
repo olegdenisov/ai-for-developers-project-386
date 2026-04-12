@@ -148,6 +148,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/bookings/{id}/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Перенести бронирование на другой слот того же типа события.
+         *     Освобождает текущий слот и занимает новый в рамках одной транзакции.
+         */
+        patch: operations["GuestPublicApi_rescheduleBooking"];
+        trace?: never;
+    };
     "/public/event-types": {
         parameters: {
             query?: never;
@@ -367,6 +387,14 @@ export interface components {
             isPredefined: boolean;
             /** Format: date-time */
             createdAt: string;
+        };
+        /** @description DTO для переноса бронирования на другой слот */
+        RescheduleBookingRequest: {
+            /**
+             * Format: uuid
+             * @description UUID нового слота того же типа события
+             */
+            newSlotId: string;
         };
         /**
          * @description Slot - временной слот в календаре для бронирования.
@@ -778,6 +806,59 @@ export interface operations {
             };
         };
     };
+    GuestPublicApi_rescheduleBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RescheduleBookingRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description The server could not understand the request due to invalid syntax. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description The server cannot find the requested resource. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFoundError"];
+                };
+            };
+            /** @description The request conflicts with the current state of the server. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlotConflictError"];
+                };
+            };
+        };
+    };
     GuestPublicApi_listPublicEventTypes: {
         parameters: {
             query?: never;
@@ -944,6 +1025,7 @@ export enum ApiPaths {
     GuestPublicApi_createBooking = "/public/bookings",
     GuestPublicApi_getBooking = "/public/bookings/{id}",
     GuestPublicApi_cancelBooking = "/public/bookings/{id}/cancel",
+    GuestPublicApi_rescheduleBooking = "/public/bookings/{id}/reschedule",
     GuestPublicApi_listPublicEventTypes = "/public/event-types",
     GuestPublicApi_getAvailableSlotsForEventType = "/public/event-types/{eventTypeId}/slots",
     GuestPublicApi_getPublicEventType = "/public/event-types/{id}",

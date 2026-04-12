@@ -208,6 +208,13 @@ model CancelBookingRequest {
   reason?: string;
 }
 
+/** DTO для переноса бронирования на другой слот */
+model RescheduleBookingRequest {
+  /** UUID нового слота того же типа события */
+  @format("uuid")
+  newSlotId: string;
+}
+
 // ============================================
 // ERROR MODELS
 // ============================================
@@ -446,6 +453,17 @@ interface GuestPublicApi {
     @path id: string,
     @body request?: CancelBookingRequest,
   ): Booking | NotFoundError | ErrorResponse;
+
+  /**
+   * Перенести бронирование на другой слот того же типа события.
+   * Освобождает текущий слот и занимает новый в рамках одной транзакции.
+   */
+  @patch
+  @route("/bookings/{id}/reschedule")
+  rescheduleBooking(
+    @path id: string,
+    @body request: RescheduleBookingRequest,
+  ): Booking | SlotConflictError | ValidationError | NotFoundError;
 }
 
 // ============================================

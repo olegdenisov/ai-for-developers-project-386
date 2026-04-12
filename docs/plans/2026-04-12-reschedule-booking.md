@@ -48,11 +48,11 @@
 
 ### Task 1: TypeSpec — добавить эндпоинт reschedule
 
-- [ ] В `main.tsp` добавить модель `RescheduleBookingRequest` (поле `newSlotId: string`)
-- [ ] В `main.tsp` добавить эндпоинт `PATCH /public/bookings/{id}/reschedule` → возвращает `Booking`
-- [ ] Запустить `pnpm generate:openapi` — проверить, что `tsp-output/openapi.json` обновился
-- [ ] Запустить `pnpm generate:types` — проверить, что `packages/shared-types/src/index.ts` обновился
-- [ ] Запустить `pnpm type-check` — должно пройти без ошибок
+- [x] В `main.tsp` добавить модель `RescheduleBookingRequest` (поле `newSlotId: string`)
+- [x] В `main.tsp` добавить эндпоинт `PATCH /public/bookings/{id}/reschedule` → возвращает `Booking`
+- [x] Запустить `pnpm generate:openapi` — проверить, что `tsp-output/openapi.json` обновился
+- [x] Запустить `pnpm generate:types` — проверить, что `packages/shared-types/src/index.ts` обновился
+- [x] Запустить `pnpm type-check` — должно пройти без ошибок
 
 ### Task 2: Backend service — логика переноса
 
