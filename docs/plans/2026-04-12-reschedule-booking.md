@@ -77,11 +77,11 @@
 
 ### Task 4: API client — добавить метод rescheduleBooking
 
-- [ ] В `packages/api-client/src/` найти класс `PublicApi` (или аналог)
-- [ ] Добавить метод `rescheduleBooking(id: string, newSlotId: string): Promise<ApiResponse<Booking>>`
+- [x] В `packages/api-client/src/` найти класс `PublicApi` (или аналог)
+- [x] Добавить метод `rescheduleBooking(id: string, newSlotId: string): Promise<ApiResponse<Booking>>`
       по аналогии с `cancelBooking`
-- [ ] Экспортировать типы, если нужно
-- [ ] Запустить `pnpm type-check` — должно пройти
+- [x] Экспортировать типы, если нужно
+- [x] Запустить `pnpm type-check` — должно пройти
 
 ### Task 5: Frontend feature model — reschedule-booking
 
