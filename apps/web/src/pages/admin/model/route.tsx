@@ -1,5 +1,6 @@
 import type { RouteChild } from '@reatom/core';
 import { layoutRoute } from '@shared/router';
+import { upcomingBookings, pastBookings } from '@features/owner-bookings';
 import { AdminLayout } from '../AdminLayout';
 import { AdminBookingsPage } from '../AdminBookingsPage';
 import { AdminEventTypesPage } from '../AdminEventTypesPage';
@@ -40,6 +41,12 @@ export const adminRoute = layoutRoute.reatomRoute({
  */
 export const adminBookingsRoute = adminRoute.reatomRoute({
   path: 'bookings',
+
+  // Обновляем данные при каждой активации маршрута
+  async loader() {
+    upcomingBookings.retry();
+    pastBookings.retry();
+  },
 
   render(): RouteChild {
     return <AdminBookingsPage />;
