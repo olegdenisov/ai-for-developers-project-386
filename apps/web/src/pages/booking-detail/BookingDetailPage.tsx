@@ -200,22 +200,24 @@ export const BookingDetailPage = reatomComponent(
 
             <Divider my="xl" />
 
-            {/* Действия */}
-            <Text ta="center">
-              Хотите внести изменения?{' '}
-              <Anchor component="button" type="button" onClick={handleReschedule}>
-                Перенести
-              </Anchor>{' '}
-              или{' '}
-              <Anchor
-                component="button"
-                type="button"
-                c="red"
-                onClick={handleCancel}
-              >
-                Отмена
-              </Anchor>
-            </Text>
+            {/* Действия — только для активных бронирований */}
+            {booking.status === 'CONFIRMED' && (
+              <Text ta="center">
+                Хотите внести изменения?{' '}
+                <Anchor component="button" type="button" onClick={handleReschedule}>
+                  Перенести
+                </Anchor>{' '}
+                или{' '}
+                <Anchor
+                  component="button"
+                  type="button"
+                  c="red"
+                  onClick={handleCancel}
+                >
+                  Отмена
+                </Anchor>
+              </Text>
+            )}
 
             <Divider my="xl" />
 

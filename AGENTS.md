@@ -6,7 +6,7 @@ Turborepo monorepo: Fastify backend + React 19 frontend with FSD architecture.
 
 1. **Создай план** — перед началом работы составь план реализации. План и всё общение с пользователем вести на русском языке.
 2. **Задавай вопросы по одному** — если есть неясности, уточняй их последовательно, по одному вопросу за раз.
-3. **Зафикси план в markdown-файле** — сохрани согласованный план в файл `plan.md` в корне репозитория.
+3. **Зафикси план в markdown-файле** — сохрани согласованный план в директорию `docs/plans/` с именем вида `YYYY-MM-DD-<feature-slug>.md`.
 4. **Разбей на шаги и пронумеруй** — план должен содержать пронумерованные шаги.
 5. **В конце каждого шага**:
    - Обнови/создай/запусти тесты (`pnpm type-check`, unit и E2E при необходимости)
@@ -122,7 +122,7 @@ API response shape: `{ code, message, errors? }`
 
 ### Database Transactions
 
-Use `isolationLevel: 'Serializable'` for critical operations (booking creation/cancellation):
+Use `isolationLevel: 'Serializable'` for critical operations (booking creation, cancellation, rescheduling):
 ```typescript
 await prisma.$transaction(async (tx) => {
   // ... logic
@@ -136,7 +136,7 @@ await prisma.$transaction(async (tx) => {
 ```
 app/        # Providers (Mantine, Reatom), router, global styles
 pages/      # home/, book-catalog/, event-type/, booking-confirmation/, booking-detail/, admin/
-features/   # create-booking/, view-slots/, cancel-booking/, create-event-type/, edit-event-type/, delete-event-type/, owner-bookings/
+features/   # create-booking/, view-slots/, cancel-booking/, reschedule-booking/, create-event-type/, edit-event-type/, delete-event-type/, owner-bookings/
 entities/   # event-type/, slot/, booking/, owner/ — Reatom atoms
 shared/     # api/, config/, lib/, ui/, router/
 ```

@@ -65,10 +65,11 @@ export async function getAvailableSlotsForEventType(
     throw new ValidationError('Invalid date format');
   }
 
-  // Слоты только для данного типа события в запрошенном диапазоне
+  // Слоты только для данного типа события в запрошенном диапазоне (только доступные)
   const slots = await prisma.slot.findMany({
     where: {
       eventTypeId,
+      isAvailable: true,
       startTime: {
         gte: start,
         lte: end,

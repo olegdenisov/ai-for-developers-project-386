@@ -35,7 +35,7 @@ export function parseApiError(err: unknown): Error {
  */
 export function createRescheduleForm(bookingId: string, eventTypeId: string) {
   // Atom состояния открытости модального окна
-  const isOpen = atom(false, 'reschedule.isOpen')
+  const isOpen = atom(false, `reschedule#${bookingId}.isOpen`)
 
   // Загрузка доступных слотов (следующие 14 дней) для данного типа события.
   // Автоматически обновляется когда isOpen становится true.
@@ -44,21 +44,24 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
 
     const today = new Date()
     const startDate = today.toISOString().split('T')[0]
+    // +15 вместо +14: endDate — эксклюзивная граница для lte-фильтра на бэкенде.
+    // new Date('2026-04-28') = 2026-04-28T00:00:00Z, что обрезает слоты этого дня.
+    // Сдвиг на +15 включает все слоты 14-го дня (до 23:59 UTC).
     const endDate14 = new Date(today)
-    endDate14.setDate(today.getDate() + 14)
+    endDate14.setDate(today.getDate() + 15)
     const endDate = endDate14.toISOString().split('T')[0]
 
     const response = await wrap(
       apiClient.getAvailableSlotsForEventType(eventTypeId, startDate, endDate)
     )
     return response.data as Slot[]
-  }, 'reschedule.availableSlots').extend(withAsyncData({ initState: [] as Slot[] }))
+  }, `reschedule#${bookingId}.availableSlots`).extend(withAsyncData({ initState: [] as Slot[] }))
 
   // Форма переноса бронирования с полем выбора нового слота
   const form = reatomForm(
     { newSlotId: '' },
     {
-      name: 'rescheduleBookingForm',
+      name: `rescheduleBookingForm#${bookingId}`,
       // Сбрасываем состояние формы после успешного сабмита (очищает поле выбора слота)
       resetOnSubmit: true,
       onSubmit: async (values: { newSlotId: string }): Promise<Booking> => {
