@@ -205,9 +205,10 @@ export async function rescheduleBooking(id: string, newSlotId: string) {
       throw new ValidationError('New slot must be different from the current slot');
     }
 
-    // 3. Найти новый слот
+    // 3. Найти новый слот (с включением связанного бронирования для проверки уникальности)
     const newSlot = await tx.slot.findUnique({
       where: { id: newSlotId },
+      include: { booking: true },
     });
 
     if (!newSlot) {
@@ -219,8 +220,11 @@ export async function rescheduleBooking(id: string, newSlotId: string) {
       throw new ValidationError('New slot belongs to a different event type');
     }
 
-    // 5. Проверить доступность нового слота
-    if (!newSlot.isAvailable) {
+    // 5. Проверить доступность нового слота.
+    // Также проверяем наличие любого бронирования (в том числе отменённого):
+    // из-за @unique на slotId отменённые записи по-прежнему занимают слот,
+    // и попытка переноса к ним вызовет ошибку уникальности на уровне БД.
+    if (!newSlot.isAvailable || newSlot.booking) {
       throw new SlotConflictError();
     }
 
