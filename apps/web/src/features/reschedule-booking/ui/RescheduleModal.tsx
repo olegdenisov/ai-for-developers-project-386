@@ -18,9 +18,11 @@ interface RescheduleModalProps {
   rescheduleForm: ReturnType<typeof createRescheduleForm>
 }
 
-/** Форматирует дату в локализованную строку (например, «12 апреля 2026») */
+/** Форматирует локальную дату YYYY-MM-DD в локализованную строку (например, «12 апреля 2026») */
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('ru-RU', {
+  // Парсим как локальную дату (не UTC), чтобы избежать смещения на -1 день в timezone UTC-
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -63,9 +65,11 @@ export const RescheduleModal = reatomComponent(
       form.submit()
     }
 
-    // Группируем слоты по дате (YYYY-MM-DD)
+    // Группируем слоты по локальной дате (YYYY-MM-DD) в часовом поясе пользователя.
+    // Нельзя использовать split('T')[0] — это UTC-дата, а не локальная.
     const slotsByDay = slots.reduce<Record<string, Slot[]>>((acc: Record<string, Slot[]>, slot: Slot) => {
-      const day = slot.startTime.split('T')[0]
+      const d = new Date(slot.startTime)
+      const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       if (!acc[day]) acc[day] = []
       acc[day].push(slot)
       return acc

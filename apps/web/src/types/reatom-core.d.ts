@@ -11,4 +11,6 @@ declare module '@reatom/core' {
   export type RouteChild = import('@reatom/core/build/routing/route').RouteChild;
   export const context: import('@reatom/core/build/core/atom').ContextAtom;
   export const peek: typeof import('@reatom/core/build/methods/peek').peek;
+  export const reatomForm: typeof import('@reatom/core/build/form/reatomForm').reatomForm;
+  export type { Form, FormInitState, SubmitAction } from '@reatom/core/build/form/reatomForm';
 }

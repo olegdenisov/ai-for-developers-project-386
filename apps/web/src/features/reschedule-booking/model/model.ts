@@ -1,4 +1,3 @@
-// @ts-ignore - reatomForm доступен в runtime, но не объявлен в типах (проблема с @standard-schema/spec)
 import { reatomForm } from '@reatom/core'
 import { atom, computed, wrap, withAsyncData } from '@reatom/core'
 import { apiClient } from '@shared/api'
