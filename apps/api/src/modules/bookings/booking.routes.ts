@@ -100,7 +100,7 @@ export async function bookingRoutes(app: FastifyInstance) {
     schema: {
       summary: 'Get booking',
       params: z.object({
-        id: z.string(),
+        id: z.string().uuid(),
       }),
       response: {
         200: bookingSchema,
@@ -150,7 +150,7 @@ export async function bookingRoutes(app: FastifyInstance) {
     schema: {
       summary: 'Cancel booking',
       params: z.object({
-        id: z.string(),
+        id: z.string().uuid(),
       }),
       body: z.object({
         reason: z.string().max(500).optional(),

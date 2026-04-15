@@ -168,9 +168,11 @@ pages/[name]/
 ```
 features/[name]/
 ├── index.ts
-└── model/
-    ├── model.ts        # Feature atoms + actions
-    └── validation.ts   # Zod schemas
+├── model/
+│   ├── model.ts        # Feature atoms + actions
+│   └── validation.ts   # Zod schemas (optional)
+└── ui/                 # Feature-specific components (optional)
+    └── [Name]Modal.tsx
 ```
 
 ### Admin Panel (`/admin`)
