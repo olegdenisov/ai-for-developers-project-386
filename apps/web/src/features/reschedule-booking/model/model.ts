@@ -42,13 +42,15 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
     if (!isOpen()) return [] as Slot[]
 
     const today = new Date()
-    const startDate = today.toISOString().split('T')[0]
+    // Используем локальные компоненты даты, чтобы избежать смещения в UTC- часовых поясах
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const startDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
     // +15 вместо +14: endDate — эксклюзивная граница для lte-фильтра на бэкенде.
     // new Date('2026-04-28') = 2026-04-28T00:00:00Z, что обрезает слоты этого дня.
     // Сдвиг на +15 включает все слоты 14-го дня (до 23:59 UTC).
     const endDate14 = new Date(today)
     endDate14.setDate(today.getDate() + 15)
-    const endDate = endDate14.toISOString().split('T')[0]
+    const endDate = `${endDate14.getFullYear()}-${pad(endDate14.getMonth() + 1)}-${pad(endDate14.getDate())}`
 
     const response = await wrap(
       apiClient.getAvailableSlotsForEventType(eventTypeId, startDate, endDate)
@@ -87,7 +89,7 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
     isOpen.set(false)
     form.reset()
     // form.reset() не сбрасывает error-атом сабмита — сбрасываем напрямую
-    ;(form.submit as any).errorAtom?.set(null)
+    form.submit.error.set(undefined)
   }, `reschedule#${bookingId}.close`)
 
   return { isOpen, availableSlots, form, close }

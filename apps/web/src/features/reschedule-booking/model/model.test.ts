@@ -127,6 +127,8 @@ describe('features/reschedule-booking/model', () => {
       )
 
       const { isOpen, form } = createRescheduleForm('booking-1', 'event-1')
+      // Предустанавливаем значение, чтобы проверить что оно не изменилось после ошибки
+      currentBookingAtom.set(mockBooking)
       isOpen.set(true)
       form.fields.newSlotId.set('slot-3')
 
@@ -134,8 +136,8 @@ describe('features/reschedule-booking/model', () => {
 
       // Модальное окно остаётся открытым при ошибке
       expect(peek(isOpen)).toBe(true)
-      // Бронирование не обновляется при ошибке
-      expect(peek(currentBookingAtom)).not.toEqual(rescheduledBooking)
+      // Бронирование не обновляется при ошибке (должно остаться mockBooking, а не rescheduledBooking)
+      expect(peek(currentBookingAtom)).toEqual(mockBooking)
     })
 
     it('слот не найден: выбрасывает сообщение из ответа API', async () => {
@@ -162,6 +164,25 @@ describe('features/reschedule-booking/model', () => {
 
       expect(peek(isOpen)).toBe(false)
       expect(peek(form.fields.newSlotId)).toBe('')
+    })
+
+    it('close: сбрасывает ошибку сабмита', async () => {
+      vi.mocked(apiClient.rescheduleBooking).mockRejectedValue(
+        new Error(JSON.stringify({ code: 'SLOT_ALREADY_BOOKED', message: 'Slot already booked' }))
+      )
+
+      const { isOpen, form, close } = createRescheduleForm('booking-1', 'event-1')
+      isOpen.set(true)
+      form.fields.newSlotId.set('slot-3')
+
+      await expect(form.submit()).rejects.toThrow()
+      // Убеждаемся, что ошибка появилась
+      expect(peek(form.submit.error)).toBeInstanceOf(Error)
+
+      close()
+
+      // После закрытия ошибка должна быть сброшена
+      expect(peek(form.submit.error)).toBeUndefined()
     })
 
     describe('availableSlots', () => {

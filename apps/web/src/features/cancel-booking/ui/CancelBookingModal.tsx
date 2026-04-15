@@ -24,9 +24,7 @@ export const CancelBookingModal = reatomComponent(
 
     const handleClose = () => {
       cancelForm.fields.reason.set('')
-      if (cancelForm.submit.errorAtom) {
-        cancelForm.submit.errorAtom.set(null)
-      }
+      cancelForm.submit.error.set(undefined)
     }
 
     return (
