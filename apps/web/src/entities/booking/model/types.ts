@@ -1,30 +1,9 @@
-import { EventType } from '@entities/event-type';
-import { Slot } from '@entities/slot';
+import { components } from '@calendar-booking/shared-types';
 
 // Domain types for Booking entity
-export interface Booking {
-  id: string;
-  eventTypeId: string;
-  slotId: string;
-  guestName: string;
-  guestEmail: string;
-  guestNotes: string | null;
-  status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
-  createdAt: string;
-  updatedAt: string;
-  /** Вложенный тип события (включается при получении деталей бронирования) */
-  eventType?: EventType;
-  /** Вложенный слот (включается при получении деталей бронирования) */
-  slot?: Slot;
-}
+export type Booking  = components['schemas']['Booking'] 
 
-export interface CreateBookingRequest {
-  eventTypeId: string;
-  slotId: string;
-  guestName: string;
-  guestEmail: string;
-  guestNotes?: string;
-}
+export type CreateBookingRequest = components['schemas']['CreateBookingRequest']
 
 export interface CancelBookingRequest {
   reason?: string;

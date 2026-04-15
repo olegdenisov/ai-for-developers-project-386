@@ -1,6 +1,7 @@
 import { wrap, atom } from '@reatom/core';
 // @ts-ignore - reatomForm доступен в runtime, но не объявлен в типах
 import { reatomForm } from '@reatom/core';
+import type { RouteChild } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { bookCatalogRoute } from '@pages/book-catalog';
@@ -62,7 +63,7 @@ export function createBookingForm(
           throw new Error(errorData.message || 'Failed to create booking');
         }
 
-        const booking = response.data as Booking;
+        const booking = response.data as unknown as Booking;
 
         // Очищаем контекст бронирования
         bookingEventTypeAtom.set(null);
@@ -130,15 +131,8 @@ export const bookingConfirmationRoute = bookCatalogRoute.reatomRoute({
   /**
    * Render функция возвращает React компонент
    */
-  render(self: {
-    loader: {
-      pending: () => boolean;
-      data: () => LoaderData | null;
-      error: () => Error | null;
-    };
-  }): React.ReactNode {
-    const isPending = self.loader.pending();
-    const data = self.loader.data();
+  render(self): RouteChild {
+    const { isPending, data } = self.loader.status();
     const error = self.loader.error();
 
     if (isPending) {

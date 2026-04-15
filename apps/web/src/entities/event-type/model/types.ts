@@ -1,12 +1,7 @@
+import { components } from "@calendar-booking/shared-types";
+
 // Domain types for Event Type entity
-export interface EventType {
-  id: string;
-  name: string;
-  description: string | null;
-  durationMinutes: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export type EventType = components['schemas']['EventType']
 
 export interface CreateEventTypeRequest {
   name: string;
