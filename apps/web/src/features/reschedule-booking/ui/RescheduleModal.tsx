@@ -55,13 +55,7 @@ export const RescheduleModal = reatomComponent(
     const submitError = form.submit.error()
 
     const handleClose = () => {
-      isOpen.set(false)
-      form.reset()
-      // Сбрасываем ошибку сабмита напрямую — form.submit.reset() сбрасывает только data-атом,
-      // но не error-атом, поэтому при повторном открытии модалки старая ошибка оставалась бы видна
-      if ((form.submit as any).errorAtom) {
-        ;(form.submit as any).errorAtom.set(null)
-      }
+      rescheduleForm.close()
     }
 
     const handleSubmit = (e: React.FormEvent) => {

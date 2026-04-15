@@ -41,13 +41,8 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
    * - Создает форму отмены через factory function
    */
   async loader({ id }: { id: string }): Promise<LoaderData | null> {
-    // Загружаем бронирование
+    // Загружаем бронирование (apiClient бросает Error при статусе 4xx/5xx)
     const response = await wrap(apiClient.getBooking(id));
-
-    if (response.status >= 400) {
-      throw new Error('Booking not found');
-    }
-
     const booking = response.data as Booking;
 
     // Инициализируем atom для реактивного обновления после переноса/отмены

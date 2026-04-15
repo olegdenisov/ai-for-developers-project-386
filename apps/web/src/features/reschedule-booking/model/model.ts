@@ -1,4 +1,4 @@
-import { reatomForm } from '@reatom/core'
+import { reatomForm, action } from '@reatom/core'
 import { atom, computed, wrap, withAsyncData } from '@reatom/core'
 import { apiClient } from '@shared/api'
 import { currentBookingAtom } from '@entities/booking'
@@ -81,5 +81,14 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
     }
   )
 
-  return { isOpen, availableSlots, form }
+  // Закрыть модальное окно и сбросить все состояния формы,
+  // включая error-атом сабмита, который form.reset() не сбрасывает
+  const close = action(() => {
+    isOpen.set(false)
+    form.reset()
+    // form.reset() не сбрасывает error-атом сабмита — сбрасываем напрямую
+    ;(form.submit as any).errorAtom?.set(null)
+  }, `reschedule#${bookingId}.close`)
+
+  return { isOpen, availableSlots, form, close }
 }

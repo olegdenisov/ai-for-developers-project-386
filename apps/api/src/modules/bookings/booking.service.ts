@@ -65,7 +65,9 @@ export async function getAvailableSlotsForEventType(
     throw new ValidationError('Invalid date format');
   }
 
-  // Слоты только для данного типа события в запрошенном диапазоне (только доступные)
+  // Слоты только для данного типа события в запрошенном диапазоне (только доступные).
+  // isAvailable: true уже гарантирует отсутствие активных бронирований — дополнительная
+  // проверка через confirmedBookings не нужна.
   const slots = await prisma.slot.findMany({
     where: {
       eventTypeId,
@@ -80,26 +82,7 @@ export async function getAvailableSlotsForEventType(
     },
   });
 
-  // Все подтверждённые бронирования, чьё время пересекается с диапазоном
-  const confirmedBookings = await prisma.booking.findMany({
-    where: {
-      status: 'CONFIRMED',
-      slot: {
-        startTime: { lt: end },
-        endTime: { gt: start },
-      },
-    },
-    include: { slot: true },
-  });
-
-  // Возвращаем только слоты без временного перекрытия с существующими бронированиями
-  return slots.filter((slot) => {
-    return !confirmedBookings.some(
-      (booking) =>
-        booking.slot.startTime < slot.endTime &&
-        booking.slot.endTime > slot.startTime,
-    );
-  });
+  return slots;
 }
 
 export async function createBooking(data: {
@@ -228,16 +211,9 @@ export async function rescheduleBooking(id: string, newSlotId: string) {
       throw new SlotConflictError();
     }
 
-    // 6. Освободить старый слот, занять новый, обновить бронирование
-    const [updatedBooking] = await Promise.all([
-      tx.booking.update({
-        where: { id },
-        data: { slotId: newSlotId },
-        include: {
-          eventType: true,
-          slot: true,
-        },
-      }),
+    // 6. Освободить старый слот и занять новый (до обновления бронирования),
+    // чтобы include: { slot: true } в следующем запросе вернул актуальный isAvailable.
+    await Promise.all([
       tx.slot.update({
         where: { id: booking.slotId },
         data: { isAvailable: true },
@@ -247,6 +223,16 @@ export async function rescheduleBooking(id: string, newSlotId: string) {
         data: { isAvailable: false },
       }),
     ]);
+
+    // 7. Обновить бронирование — читает slot после обновления выше
+    const updatedBooking = await tx.booking.update({
+      where: { id },
+      data: { slotId: newSlotId },
+      include: {
+        eventType: true,
+        slot: true,
+      },
+    });
 
     return updatedBooking;
   }, {

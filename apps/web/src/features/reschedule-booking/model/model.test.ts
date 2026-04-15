@@ -126,10 +126,16 @@ describe('features/reschedule-booking/model', () => {
         )
       )
 
-      const { form } = createRescheduleForm('booking-1', 'event-1')
+      const { isOpen, form } = createRescheduleForm('booking-1', 'event-1')
+      isOpen.set(true)
       form.fields.newSlotId.set('slot-3')
 
       await expect(form.submit()).rejects.toThrow('Выбранный слот уже занят')
+
+      // Модальное окно остаётся открытым при ошибке
+      expect(peek(isOpen)).toBe(true)
+      // Бронирование не обновляется при ошибке
+      expect(peek(currentBookingAtom)).not.toEqual(rescheduledBooking)
     })
 
     it('слот не найден: выбрасывает сообщение из ответа API', async () => {
@@ -137,10 +143,25 @@ describe('features/reschedule-booking/model', () => {
         new Error(JSON.stringify({ code: 'NOT_FOUND', message: 'Slot not found' }))
       )
 
-      const { form } = createRescheduleForm('booking-1', 'event-1')
+      const { isOpen, form } = createRescheduleForm('booking-1', 'event-1')
+      isOpen.set(true)
       form.fields.newSlotId.set('slot-3')
 
       await expect(form.submit()).rejects.toThrow('Slot not found')
+
+      // Модальное окно остаётся открытым при ошибке
+      expect(peek(isOpen)).toBe(true)
+    })
+
+    it('close: закрывает модальное окно и сбрасывает форму', async () => {
+      const { isOpen, form, close } = createRescheduleForm('booking-1', 'event-1')
+      isOpen.set(true)
+      form.fields.newSlotId.set('slot-3')
+
+      close()
+
+      expect(peek(isOpen)).toBe(false)
+      expect(peek(form.fields.newSlotId)).toBe('')
     })
 
     describe('availableSlots', () => {
@@ -172,14 +193,17 @@ describe('features/reschedule-booking/model', () => {
 
         isOpen.set(true)
 
-        // Ждём завершения асинхронной операции
-        await new Promise((resolve) => setTimeout(resolve, 10))
+        // Ждём завершения асинхронной операции через детерминированную проверку состояния
+        await vi.waitFor(() => {
+          expect(apiClient.getAvailableSlotsForEventType).toHaveBeenCalledWith(
+            'event-1',
+            expect.any(String),
+            expect.any(String)
+          )
+        })
 
-        expect(apiClient.getAvailableSlotsForEventType).toHaveBeenCalledWith(
-          'event-1',
-          expect.any(String),
-          expect.any(String)
-        )
+        // Проверяем что данные попали в атом
+        expect(peek(availableSlots.data)).toEqual([mockSlot])
         unsub()
       })
 
@@ -193,10 +217,12 @@ describe('features/reschedule-booking/model', () => {
         const unsub = availableSlots.subscribe(() => {})
 
         isOpen.set(true)
-        await new Promise((resolve) => setTimeout(resolve, 10))
+
+        await vi.waitFor(() => {
+          expect(apiClient.getAvailableSlotsForEventType).toHaveBeenCalled()
+        })
 
         const calls = vi.mocked(apiClient.getAvailableSlotsForEventType).mock.calls
-        expect(calls.length).toBeGreaterThan(0)
         const [, startDate, endDate] = calls[0]
 
         const start = new Date(startDate)
