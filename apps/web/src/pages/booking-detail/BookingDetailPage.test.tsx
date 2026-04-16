@@ -31,7 +31,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     guestName: 'Иван Иванов',
     guestEmail: 'ivan@example.com',
     guestNotes: 'Тестовая заметка',
-    status: 'CONFIRMED',
+    status: 'confirmed',
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     eventType: mockEventType,
@@ -58,10 +58,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     submit: {
       ready: vi.fn().mockReturnValue(true),
       pending: vi.fn().mockReturnValue(false),
-      error: vi.fn().mockReturnValue(null),
-      errorAtom: {
-        set: vi.fn(),
-      },
+      error: Object.assign(vi.fn().mockReturnValue(null), { set: vi.fn() }),
     },
   };
 
@@ -206,15 +203,14 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     const closeButton = screen.getByText('Закрыть');
     fireEvent.click(closeButton);
 
-    // Проверяем что reason сброшен и errorAtom.set был вызван для сброса ошибки
+    // Проверяем что reason сброшен и error.set был вызван для сброса ошибки
     expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('');
-    expect(mockCancelForm.submit.errorAtom.set).toHaveBeenCalledWith(null);
+    expect(mockCancelForm.submit.error.set).toHaveBeenCalledWith(undefined);
   });
 
-  it('должен корректно закрывать модальное окно когда errorAtom отсутствует', () => {
-    // Mock без errorAtom - проверка защиты от ошибки "Cannot read properties of undefined"
+  it('должен корректно закрывать модальное окно при закрытии без ошибки', () => {
     let reasonValue2 = 'cancel_requested'; // Предустанавливаем открытое состояние
-    const mockCancelFormWithoutErrorAtom = {
+    const mockCancelFormWithoutError = {
       fields: {
         reason: Object.assign(
           vi.fn().mockImplementation(() => reasonValue2),
@@ -227,15 +223,14 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       submit: {
         ready: vi.fn().mockReturnValue(true),
         pending: vi.fn().mockReturnValue(false),
-        error: vi.fn().mockReturnValue(null),
-        // errorAtom отсутствует - имитируем старый баг
+        error: Object.assign(vi.fn().mockReturnValue(null), { set: vi.fn() }),
       },
     };
 
     render(
       <BookingDetailPage
         booking={mockBooking}
-        cancelForm={mockCancelFormWithoutErrorAtom as any}
+        cancelForm={mockCancelFormWithoutError as any}
         isLoading={false}
       />
     );
@@ -245,7 +240,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     expect(() => fireEvent.click(closeButton)).not.toThrow();
 
     // Проверяем что set('') был вызван для закрытия модалки
-    expect(mockCancelFormWithoutErrorAtom.fields.reason.set).toHaveBeenCalledWith('');
+    expect(mockCancelFormWithoutError.fields.reason.set).toHaveBeenCalledWith('');
   });
 
   it('должен отображать ошибку когда отсутствует eventType в бронировании', () => {

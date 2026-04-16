@@ -1,4 +1,5 @@
 import { wrap } from '@reatom/core';
+import type { RouteChild } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
@@ -60,15 +61,8 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
   /**
    * Render функция возвращает React компонент
    */
-  render(self: {
-    loader: {
-      pending: () => boolean;
-      data: () => LoaderData | null;
-      error: () => Error | null;
-    };
-  }): React.ReactNode {
-    const isPending = self.loader.pending();
-    const data = self.loader.data();
+  render(self): RouteChild {
+    const { isPending, data } = self.loader.status();
     const error = self.loader.error();
 
     if (isPending) {

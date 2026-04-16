@@ -22,8 +22,7 @@ const mockBooking: Booking = {
   slotId: 'slot-2',
   guestName: 'Иван Иванов',
   guestEmail: 'ivan@example.com',
-  guestNotes: null,
-  status: 'CONFIRMED',
+  status: 'confirmed',
   createdAt: '2024-01-10T00:00:00Z',
   updatedAt: '2024-01-10T00:00:00Z',
 }

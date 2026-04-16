@@ -29,7 +29,6 @@ import type { EventType } from '@entities/event-type';
  */
 export const bookCatalogRoute = layoutRoute.reatomRoute({
   path: 'bookings/new',
-  // layout: true, // свойство layout не поддерживается в reatomRoute
 
   /**
    * Loader инициализирует URL-атомы из query-параметров и загружает список типов событий
@@ -70,8 +69,6 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
    */
   render(self): RouteChild {
     const { isPending, data: eventTypes } = self.loader.status()
-    // const isPending = self.loader.pending();
-    // const eventTypes = self.loader.data();
     const error = self.loader.error();
     const children = self.outlet();
 

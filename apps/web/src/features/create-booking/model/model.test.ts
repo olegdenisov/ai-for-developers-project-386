@@ -61,7 +61,7 @@ describe('features/create-booking/model', () => {
     guestName: 'Иван Иванов',
     guestEmail: 'ivan@example.com',
     guestNotes: 'Тестовая заметка',
-    status: 'CONFIRMED',
+    status: 'confirmed',
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     eventType: mockEventType,

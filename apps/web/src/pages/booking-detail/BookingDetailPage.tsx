@@ -201,7 +201,7 @@ export const BookingDetailPage = reatomComponent(
             <Divider my="xl" />
 
             {/* Действия — только для активных бронирований */}
-            {booking.status === 'CONFIRMED' && (
+            {booking.status === 'confirmed' && (
               <Text ta="center">
                 Хотите внести изменения?{' '}
                 <Anchor component="button" type="button" onClick={handleReschedule}>
