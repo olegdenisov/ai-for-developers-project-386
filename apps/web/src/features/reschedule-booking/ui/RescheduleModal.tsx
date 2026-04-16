@@ -54,10 +54,6 @@ export const RescheduleModal = reatomComponent(
     const isSubmitting = !form.submit.ready()
     const submitError = form.submit.error()
 
-    const handleClose = () => {
-      rescheduleForm.close()
-    }
-
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
       form.submit()
@@ -78,7 +74,7 @@ export const RescheduleModal = reatomComponent(
     return (
       <Modal
         opened={opened}
-        onClose={handleClose}
+        onClose={rescheduleForm.close}
         title="Перенести встречу"
         centered
         size="md"
@@ -140,7 +136,7 @@ export const RescheduleModal = reatomComponent(
             )}
 
             <Group justify="flex-end" wrap="nowrap">
-              <Button variant="subtle" onClick={handleClose} disabled={isSubmitting}>
+              <Button variant="subtle" onClick={rescheduleForm.close} disabled={isSubmitting}>
                 Отмена
               </Button>
               <Button

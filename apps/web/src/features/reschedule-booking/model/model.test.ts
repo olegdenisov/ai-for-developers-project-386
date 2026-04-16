@@ -227,6 +227,25 @@ describe('features/reschedule-booking/model', () => {
         unsub()
       })
 
+      it('сохраняет ошибку в availableSlots.error при сбое API', async () => {
+        vi.mocked(apiClient.getAvailableSlotsForEventType).mockRejectedValue(
+          new Error('Network error')
+        )
+
+        const { isOpen, availableSlots } = createRescheduleForm('booking-1', 'event-1')
+        const unsub = availableSlots.subscribe(() => {})
+
+        isOpen.set(true)
+
+        await vi.waitFor(() => {
+          expect(availableSlots.error()).toBeInstanceOf(Error)
+        })
+
+        // данные остаются в начальном состоянии при ошибке
+        expect(peek(availableSlots.data)).toEqual([])
+        unsub()
+      })
+
       it('передаёт диапазон дат на 15 дней вперёд', async () => {
         vi.mocked(apiClient.getAvailableSlotsForEventType).mockResolvedValue({
           status: 200,

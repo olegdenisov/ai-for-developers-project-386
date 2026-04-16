@@ -66,12 +66,13 @@ export async function getAvailableSlotsForEventType(
   }
 
   // Слоты только для данного типа события в запрошенном диапазоне (только доступные).
-  // isAvailable: true уже гарантирует отсутствие активных бронирований — дополнительная
-  // проверка через confirmedBookings не нужна.
+  // booking: null исключает слоты с отменёнными бронированиями: из-за @unique на slotId
+  // запись Booking остаётся в БД даже после отмены, делая слот фактически недоступным.
   const slots = await prisma.slot.findMany({
     where: {
       eventTypeId,
       isAvailable: true,
+      booking: null,
       startTime: {
         gte: start,
         lte: end,

@@ -187,6 +187,54 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('cancel_requested');
   });
 
+  it('должен открывать модальное окно переноса при клике на Перенести', () => {
+    const mockRescheduleForm = {
+      isOpen: Object.assign(vi.fn().mockReturnValue(false), { set: vi.fn() }),
+      availableSlots: Object.assign(vi.fn().mockReturnValue([]), {
+        data: vi.fn().mockReturnValue([]),
+        ready: vi.fn().mockReturnValue(true),
+        error: vi.fn().mockReturnValue(null),
+        subscribe: vi.fn(),
+      }),
+      form: {
+        fields: { newSlotId: Object.assign(vi.fn().mockReturnValue(''), { set: vi.fn() }) },
+        submit: Object.assign(vi.fn(), {
+          ready: vi.fn().mockReturnValue(true),
+          error: Object.assign(vi.fn().mockReturnValue(null), { set: vi.fn() }),
+        }),
+        reset: vi.fn(),
+      },
+      close: vi.fn(),
+    };
+
+    render(
+      <BookingDetailPage
+        booking={mockBooking}
+        rescheduleForm={mockRescheduleForm as any}
+        isLoading={false}
+      />
+    );
+
+    const rescheduleLink = screen.getByText('Перенести');
+    fireEvent.click(rescheduleLink);
+
+    expect(mockRescheduleForm.isOpen.set).toHaveBeenCalledWith(true);
+  });
+
+  it('не должен отображать ссылки переноса и отмены для отменённого бронирования', () => {
+    const cancelledBooking = { ...mockBooking, status: 'cancelled' as const };
+
+    render(
+      <BookingDetailPage
+        booking={cancelledBooking}
+        isLoading={false}
+      />
+    );
+
+    expect(screen.queryByText('Перенести')).not.toBeInTheDocument();
+    expect(screen.queryByText('Отмена')).not.toBeInTheDocument();
+  });
+
   it('должен корректно закрывать модальное окно когда errorAtom существует', () => {
     // Предустанавливаем состояние, при котором модальное окно открыто
     reasonValue = 'cancel_requested';
