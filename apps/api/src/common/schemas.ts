@@ -28,7 +28,9 @@ export const bookingSchema = z.object({
   guestName: z.string(),
   guestEmail: z.string(),
   guestNotes: z.string().nullable(),
-  status: z.enum(['CONFIRMED', 'CANCELLED', 'COMPLETED']),
+  status: z
+    .enum(['CONFIRMED', 'CANCELLED', 'COMPLETED'])
+    .transform((s) => s.toLowerCase() as 'confirmed' | 'cancelled' | 'completed'),
   createdAt: z.preprocess(dateToIso, z.string()),
   updatedAt: z.preprocess(dateToIso, z.string()),
   eventType: eventTypeSchema,
