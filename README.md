@@ -175,6 +175,7 @@ docker-compose -f docker/docker-compose.yml up -d postgres
 - **POST** `/public/bookings` - Создать бронирование
 - **GET** `/public/bookings/:id` - Получить бронирование
 - **POST** `/public/bookings/:id/cancel` - Отменить бронирование
+- **PATCH** `/public/bookings/:id/reschedule` - Перенести бронирование на другой слот
 
 ## 🧪 Тестирование
 

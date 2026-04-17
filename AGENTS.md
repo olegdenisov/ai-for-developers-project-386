@@ -153,6 +153,8 @@ entities/[name]/
 
 Entity `types.ts` files re-export types directly from `@calendar-booking/shared-types` (`components['schemas']['TypeName']`) instead of defining interfaces manually. Do not duplicate interfaces that already exist in the generated package.
 
+`entities/booking` exports `currentBookingAtom` (`atom<Booking | null>`) for reactive in-page updates. Route loaders set it on load; mutations (cancel, reschedule) call `currentBookingAtom.set(updatedBooking)` so `BookingDetailPage` reflects changes without re-running the loader.
+
 **Booking status values are lowercase strings** (`'confirmed'`, `'cancelled'`, `'completed'`), normalised by the Zod route schema on the backend. Always compare with lowercase: `booking.status === 'confirmed'`. The Prisma enum uses uppercase (`CONFIRMED`), but the API and frontend types use lowercase.
 
 ### Page Layout

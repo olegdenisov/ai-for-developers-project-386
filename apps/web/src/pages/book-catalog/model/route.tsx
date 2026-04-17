@@ -1,5 +1,5 @@
 import { wrap } from '@reatom/core';
-import type { RouteChild } from '@reatom/core';
+import type { RouteChild, RouteRenderSelf } from '@reatom/core';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import { BookCatalogPage } from '../BookCatalogPage';
@@ -67,7 +67,7 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
    * - Если выбран тип события (?eventTypeId) — рендерим пикер слотов
    * - Иначе — рендерим каталог
    */
-  render(self): RouteChild {
+  render(self: RouteRenderSelf<EventType[]>): RouteChild {
     const { isPending, data: eventTypes } = self.loader.status()
     const error = self.loader.error();
     const children = self.outlet();

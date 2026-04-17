@@ -1,5 +1,5 @@
 import { wrap } from '@reatom/core';
-import type { RouteChild } from '@reatom/core';
+import type { RouteChild, RouteRenderSelf } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
@@ -61,7 +61,7 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
   /**
    * Render функция возвращает React компонент
    */
-  render(self): RouteChild {
+  render(self: RouteRenderSelf<LoaderData | null>): RouteChild {
     const { isPending, data } = self.loader.status();
     const error = self.loader.error();
 

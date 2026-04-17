@@ -123,7 +123,7 @@ export const submitBooking = action(async (formData: BookingFormData) => {
   }));
 
   if (response.status >= 400) {
-    const error = response.data as any;
+    const error = response.data as { message?: string };
     const errorMessage = error?.message || 'Failed to create booking';
     throw new Error(errorMessage);
   }

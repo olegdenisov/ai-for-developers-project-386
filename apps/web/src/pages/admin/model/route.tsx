@@ -1,4 +1,5 @@
 import type { RouteChild } from '@reatom/core';
+import { createElement, Fragment } from 'react';
 import { layoutRoute } from '@shared/router';
 import { upcomingBookings, pastBookings } from '@features/owner-bookings';
 import { AdminLayout } from '../AdminLayout';
@@ -16,7 +17,6 @@ import { AdminEventTypesPage } from '../AdminEventTypesPage';
  */
 export const adminRoute = layoutRoute.reatomRoute({
   path: 'admin',
-  layout: true,
 
   render(self: { outlet: () => RouteChild[] }): RouteChild {
     const children = self.outlet();
@@ -24,10 +24,10 @@ export const adminRoute = layoutRoute.reatomRoute({
     // Если нет активных дочерних роутов — перенаправляем на бронирования
     if (!children || children.length === 0) {
       adminBookingsRoute.go();
-      return null;
+      return createElement(Fragment);
     }
 
-    return <AdminLayout>{children.at(-1) ?? null}</AdminLayout>;
+    return <AdminLayout>{children.at(-1)}</AdminLayout>;
   },
 });
 

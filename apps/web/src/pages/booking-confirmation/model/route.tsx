@@ -1,7 +1,5 @@
-import { wrap, atom } from '@reatom/core';
-// @ts-ignore - reatomForm доступен в runtime, но не объявлен в типах
-import { reatomForm } from '@reatom/core';
-import type { RouteChild } from '@reatom/core';
+import { wrap, atom, reatomForm } from '@reatom/core';
+import type { RouteChild, RouteRenderSelf } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { bookCatalogRoute } from '@pages/book-catalog';
@@ -131,7 +129,7 @@ export const bookingConfirmationRoute = bookCatalogRoute.reatomRoute({
   /**
    * Render функция возвращает React компонент
    */
-  render(self): RouteChild {
+  render(self: RouteRenderSelf<{ eventType: EventType; slot: Slot; owner: Owner; form: ReturnType<typeof createBookingForm> } | null>): RouteChild {
     const { isPending, data } = self.loader.status();
     const error = self.loader.error();
 
