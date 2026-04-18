@@ -65,67 +65,67 @@ URL-флоу после рефакторинга (пути не меняются
 
 ### Task 1: Создать `bookingRoute` с loader для owner profile
 
-- [x] Создать файл `apps/web/src/pages/booking/model/route.tsx`
+- [ ] Создать файл `apps/web/src/pages/booking/model/route.tsx`
   - `bookingRoute = layoutRoute.reatomRoute({ path: 'bookings', layout: true, async loader(), render(self) })`
   - loader: вызывает `apiClient.ownerApi.getProfile()`, возвращает `Owner`
   - render: `self.outlet().at(-1) ?? <Fragment />` (прозрачный layout)
-- [x] Создать `apps/web/src/pages/booking/index.ts` — реэкспорт `bookingRoute`
-- [x] Убрать fallback-заглушку из `entities/owner/model/model.ts` — раскомментировать настоящий вызов `apiClient.ownerApi.getProfile()`
-- [x] Зарегистрировать `bookingRoute` в `apps/web/src/app/router/routes.ts` (импорт + экспорт)
-- [x] Запустить `pnpm type-check` — ошибок быть не должно
+- [ ] Создать `apps/web/src/pages/booking/index.ts` — реэкспорт `bookingRoute`
+- [ ] Убрать fallback-заглушку из `entities/owner/model/model.ts` — раскомментировать настоящий вызов `apiClient.ownerApi.getProfile()`
+- [ ] Зарегистрировать `bookingRoute` в `apps/web/src/app/router/routes.ts` (импорт + экспорт)
+- [ ] Запустить `pnpm type-check` — ошибок быть не должно
 
 ---
 
 ### Task 2: Вынести `EventTypePage` в полноценный `eventTypeRoute`
 
-- [x] Создать `eventTypeRoute = bookCatalogRoute.reatomRoute(":eventTypeId")` в новом файле `apps/web/src/pages/event-type/model/route.tsx` (сейчас там только URL-атомы и actions — перенести route туда)
+- [ ] Создать `eventTypeRoute = bookCatalogRoute.reatomRoute(":eventTypeId")` в новом файле `apps/web/src/pages/event-type/model/route.tsx` (сейчас там только URL-атомы и actions — перенести route туда)
   - loader: читает `eventTypeId` из params; загружает event type из `loader.data()` parent'а (список event types уже есть в `bookCatalogRoute.loader`); сбрасывает `selectedDateAtom`, `selectedSlotAtom`
   - render: `<EventTypePage eventTypeId={self().eventTypeId} />`
-- [x] Убрать из `bookCatalogRoute.render()` условный рендер `EventTypePage` и проверку `selectedEventTypeIdAtom`
+- [ ] Убрать из `bookCatalogRoute.render()` условный рендер `EventTypePage` и проверку `selectedEventTypeIdAtom`
   - `render(self)`: если `self.outlet().length > 0` → `self.outlet().at(-1)`, иначе → `<BookCatalogPage>`
-- [x] Убрать из `bookCatalogRoute.loader` инициализацию `selectedEventTypeIdAtom` (она больше не нужна на уровне catalog)
-- [x] Обновить `navigate` — добавить `navigate.eventType(eventTypeId: string)` → `eventTypeRoute.go({ eventTypeId })`
-- [x] Обновить `handleEventTypeClick` в `BookCatalogPage` — вместо установки атома вызывать `navigate.eventType(id)`
-- [x] Запустить `pnpm type-check` + `pnpm test` (unit)
+- [ ] Убрать из `bookCatalogRoute.loader` инициализацию `selectedEventTypeIdAtom` (она больше не нужна на уровне catalog)
+- [ ] Обновить `navigate` — добавить `navigate.eventType(eventTypeId: string)` → `eventTypeRoute.go({ eventTypeId })`
+- [ ] Обновить `handleEventTypeClick` в `BookCatalogPage` — вместо установки атома вызывать `navigate.eventType(id)`
+- [ ] Запустить `pnpm type-check` + `pnpm test` (unit)
 
 ---
 
 ### Task 3: Переместить `bookingConfirmationRoute` под `eventTypeRoute`
 
-- [x] Изменить родителя: `bookingConfirmationRoute = eventTypeRoute.reatomRoute({ path: 'confirm', ... })`
-- [x] Loader больше не читает `bookingEventTypeAtom` / `bookingSlotAtom` — вместо этого:
+- [ ] Изменить родителя: `bookingConfirmationRoute = eventTypeRoute.reatomRoute({ path: 'confirm', ... })`
+- [ ] Loader больше не читает `bookingEventTypeAtom` / `bookingSlotAtom` — вместо этого:
   - `eventTypeId` — из params (наследуется от `eventTypeRoute`)
   - `slotId` — из `new URLSearchParams(window.location.search).get('slotId')`
   - `owner` — из `bookingRoute.loader.data()` (уже загружен)
   - loader выполняет `apiClient.getSlot(slotId)` чтобы получить объект слота
   - Guard: если `slotId` отсутствует → `navigate.eventType(eventTypeId)`
-- [x] Обновить `navigate.bookingConfirmation(slotId)` → `bookingConfirmationRoute.go({}, ...)` с search param `?slotId=`
-- [x] Обновить `proceedToBooking` action в `EventTypePage` — передавать slotId через URL, не через атом
-- [x] Убрать использование `bookingEventTypeAtom` и `bookingSlotAtom` из confirmation route
-- [x] Запустить `pnpm type-check` + `pnpm test`
+- [ ] Обновить `navigate.bookingConfirmation(slotId)` → `bookingConfirmationRoute.go({}, ...)` с search param `?slotId=`
+- [ ] Обновить `proceedToBooking` action в `EventTypePage` — передавать slotId через URL, не через атом
+- [ ] Убрать использование `bookingEventTypeAtom` и `bookingSlotAtom` из confirmation route
+- [ ] Запустить `pnpm type-check` + `pnpm test`
 
 ---
 
 ### Task 4: Перенести `bookCatalogRoute` и `bookingDetailRoute` под `bookingRoute`
 
-- [x] `bookCatalogRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/new"` → `"new"`
-- [x] `bookingDetailRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/:id"` → `":id"`
+- [ ] `bookCatalogRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/new"` → `"new"`
+- [ ] `bookingDetailRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/:id"` → `":id"`
   - params refine `val !== 'new'` оставить — предотвращает матч `/bookings/new` как детальную страницу
   - Добавить комментарий: `// 'new' зарезервирован для флоу создания бронирования`
-- [x] Loader `bookingDetailRoute`: owner брать из `bookingRoute.loader.data()` вместо дублирующего запроса (если owner использовался на странице деталей)
-- [x] Обновить `isAnyRouteLoading` в `routes.ts` — добавить `bookingRoute.loader.pending()`, `eventTypeRoute.loader.pending()`
-- [x] Запустить `pnpm type-check` + `pnpm test`
+- [ ] Loader `bookingDetailRoute`: owner брать из `bookingRoute.loader.data()` вместо дублирующего запроса (если owner использовался на странице деталей)
+- [ ] Обновить `isAnyRouteLoading` в `routes.ts` — добавить `bookingRoute.loader.pending()`, `eventTypeRoute.loader.pending()`
+- [ ] Запустить `pnpm type-check` + `pnpm test`
 
 ---
 
 ### Task 5: Удалить атомы-туннели и ручную URL-синхронизацию
 
-- [x] Удалить `bookingEventTypeAtom` и `bookingSlotAtom` из `apps/web/src/features/create-booking/model/model.ts` — больше не нужны
-- [x] Удалить `updateUrlParam` и `parseDateParam` из `apps/web/src/pages/event-type/model/route.tsx` — заменить URL-синхронизацию на search params маршрута или убрать если не используется
-- [x] Удалить `selectedEventTypeIdAtom` если больше нигде не используется (оставлен — ещё используется в fetchSlotsForPeriod, fetchSlotsForCalendar)
-- [x] Убрать инициализацию URL-атомов из `bookCatalogRoute.loader` (строки `params.get('eventTypeId')` и т.д.)
-- [x] Проверить `apps/web/src/features/create-booking/index.ts` — убрать экспорт удалённых атомов
-- [x] Запустить `pnpm type-check` + `pnpm test`
+- [ ] Удалить `bookingEventTypeAtom` и `bookingSlotAtom` из `apps/web/src/features/create-booking/model/model.ts` — больше не нужны
+- [ ] Удалить `updateUrlParam` и `parseDateParam` из `apps/web/src/pages/event-type/model/route.tsx` — заменить URL-синхронизацию на search params маршрута или убрать если не используется
+- [ ] Удалить `selectedEventTypeIdAtom` если больше нигде не используется
+- [ ] Убрать инициализацию URL-атомов из `bookCatalogRoute.loader` (строки `params.get('eventTypeId')` и т.д.)
+- [ ] Проверить `apps/web/src/features/create-booking/index.ts` — убрать экспорт удалённых атомов
+- [ ] Запустить `pnpm type-check` + `pnpm test`
 
 ---
 
