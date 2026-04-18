@@ -1,7 +1,7 @@
 import { wrap } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
-import { layoutRoute } from '@shared/router';
+import { bookingRoute } from '@pages/booking';
 import { createCancelForm } from '@features/cancel-booking';
 import { createRescheduleForm } from '@features/reschedule-booking';
 import { currentBookingAtom } from '@entities/booking';
@@ -22,8 +22,9 @@ interface LoaderData {
  * Использует factory pattern: создает форму отмены внутри loader
  * Путь: /bookings/:id
  */
-export const bookingDetailRoute = layoutRoute.reatomRoute({
-  path: 'bookings/:id',
+export const bookingDetailRoute = bookingRoute.reatomRoute({
+  // 'new' зарезервирован для флоу создания бронирования
+  path: ':id',
 
   params: z.object({
     id: z.string().refine((val) => val !== 'new', {

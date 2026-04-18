@@ -1,7 +1,7 @@
 import { wrap } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { apiClient } from '@shared/api';
-import { layoutRoute } from '@shared/router';
+import { bookingRoute } from '@pages/booking';
 import { BookCatalogPage } from '../BookCatalogPage';
 import type { EventType } from '@entities/event-type';
 
@@ -10,8 +10,8 @@ import type { EventType } from '@entities/event-type';
  * Путь: /bookings/new
  * Layout route — рендерит дочерний маршрут (eventTypeRoute) или сам каталог.
  */
-export const bookCatalogRoute = layoutRoute.reatomRoute({
-  path: 'bookings/new',
+export const bookCatalogRoute = bookingRoute.reatomRoute({
+  path: 'new',
   layout: true,
 
   async loader(): Promise<EventType[]> {

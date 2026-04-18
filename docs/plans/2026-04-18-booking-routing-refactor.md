@@ -108,13 +108,13 @@ URL-флоу после рефакторинга (пути не меняются
 
 ### Task 4: Перенести `bookCatalogRoute` и `bookingDetailRoute` под `bookingRoute`
 
-- [ ] `bookCatalogRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/new"` → `"new"`
-- [ ] `bookingDetailRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/:id"` → `":id"`
+- [x] `bookCatalogRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/new"` → `"new"`
+- [x] `bookingDetailRoute`: сменить parent с `layoutRoute` на `bookingRoute`, path: `"bookings/:id"` → `":id"`
   - params refine `val !== 'new'` оставить — предотвращает матч `/bookings/new` как детальную страницу
   - Добавить комментарий: `// 'new' зарезервирован для флоу создания бронирования`
-- [ ] Loader `bookingDetailRoute`: owner брать из `bookingRoute.loader.data()` вместо дублирующего запроса (если owner использовался на странице деталей)
-- [ ] Обновить `isAnyRouteLoading` в `routes.ts` — добавить `bookingRoute.loader.pending()`, `eventTypeRoute.loader.pending()`
-- [ ] Запустить `pnpm type-check` + `pnpm test`
+- [x] Loader `bookingDetailRoute`: owner брать из `bookingRoute.loader.data()` вместо дублирующего запроса (если owner использовался на странице деталей)
+- [x] Обновить `isAnyRouteLoading` в `routes.ts` — добавить `bookingRoute.loader.pending()`, `eventTypeRoute.loader.pending()`
+- [x] Запустить `pnpm type-check` + `pnpm test`
 
 ---
 
