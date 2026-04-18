@@ -1,6 +1,7 @@
 import { computed, wrap } from '@reatom/core';
 import { layoutRoute } from '@shared/router';
 import { homeRoute } from '@pages/home';
+import { bookingRoute } from '@pages/booking';
 import { bookCatalogRoute } from '@pages/book-catalog';
 import { bookingConfirmationRoute } from '@pages/booking-confirmation';
 import { bookingDetailRoute } from '@pages/booking-detail';
@@ -12,6 +13,7 @@ import { adminRoute, adminBookingsRoute, adminEventTypesRoute } from '@pages/adm
 
 export { layoutRoute } from '@shared/router';
 export { homeRoute } from '@pages/home';
+export { bookingRoute } from '@pages/booking';
 export { bookCatalogRoute } from '@pages/book-catalog';
 export { bookingConfirmationRoute } from '@pages/booking-confirmation';
 export { bookingDetailRoute } from '@pages/booking-detail';
@@ -61,6 +63,7 @@ export const appRender = computed(() => {
 export const isAnyRouteLoading = computed(() => {
   return (
     homeRoute.loader.pending() ||
+    bookingRoute.loader.pending() ||
     bookCatalogRoute.loader.pending() ||
     bookingConfirmationRoute.loader.pending() ||
     bookingDetailRoute.loader.pending() ||

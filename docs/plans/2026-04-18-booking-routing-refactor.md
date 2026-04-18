@@ -65,14 +65,14 @@ URL-флоу после рефакторинга (пути не меняются
 
 ### Task 1: Создать `bookingRoute` с loader для owner profile
 
-- [ ] Создать файл `apps/web/src/pages/booking/model/route.tsx`
+- [x] Создать файл `apps/web/src/pages/booking/model/route.tsx`
   - `bookingRoute = layoutRoute.reatomRoute({ path: 'bookings', layout: true, async loader(), render(self) })`
   - loader: вызывает `apiClient.ownerApi.getProfile()`, возвращает `Owner`
   - render: `self.outlet().at(-1) ?? <Fragment />` (прозрачный layout)
-- [ ] Создать `apps/web/src/pages/booking/index.ts` — реэкспорт `bookingRoute`
-- [ ] Убрать fallback-заглушку из `entities/owner/model/model.ts` — раскомментировать настоящий вызов `apiClient.ownerApi.getProfile()`
-- [ ] Зарегистрировать `bookingRoute` в `apps/web/src/app/router/routes.ts` (импорт + экспорт)
-- [ ] Запустить `pnpm type-check` — ошибок быть не должно
+- [x] Создать `apps/web/src/pages/booking/index.ts` — реэкспорт `bookingRoute`
+- [x] Убрать fallback-заглушку из `entities/owner/model/model.ts` — раскомментировать настоящий вызов `apiClient.ownerApi.getProfile()`
+- [x] Зарегистрировать `bookingRoute` в `apps/web/src/app/router/routes.ts` (импорт + экспорт)
+- [x] Запустить `pnpm type-check` — ошибок быть не должно
 
 ---
 
