@@ -65,28 +65,28 @@ URL-флоу после рефакторинга (пути не меняются
 
 ### Task 1: Создать `bookingRoute` с loader для owner profile
 
-- [ ] Создать файл `apps/web/src/pages/booking/model/route.tsx`
+- [x] Создать файл `apps/web/src/pages/booking/model/route.tsx`
   - `bookingRoute = layoutRoute.reatomRoute({ path: 'bookings', layout: true, async loader(), render(self) })`
   - loader: вызывает `apiClient.ownerApi.getProfile()`, возвращает `Owner`
   - render: `self.outlet().at(-1) ?? <Fragment />` (прозрачный layout)
-- [ ] Создать `apps/web/src/pages/booking/index.ts` — реэкспорт `bookingRoute`
-- [ ] Убрать fallback-заглушку из `entities/owner/model/model.ts` — раскомментировать настоящий вызов `apiClient.ownerApi.getProfile()`
-- [ ] Зарегистрировать `bookingRoute` в `apps/web/src/app/router/routes.ts` (импорт + экспорт)
-- [ ] Запустить `pnpm type-check` — ошибок быть не должно
+- [x] Создать `apps/web/src/pages/booking/index.ts` — реэкспорт `bookingRoute`
+- [x] Убрать fallback-заглушку из `entities/owner/model/model.ts` — раскомментировать настоящий вызов `apiClient.ownerApi.getProfile()`
+- [x] Зарегистрировать `bookingRoute` в `apps/web/src/app/router/routes.ts` (импорт + экспорт)
+- [x] Запустить `pnpm type-check` — ошибок быть не должно
 
 ---
 
 ### Task 2: Вынести `EventTypePage` в полноценный `eventTypeRoute`
 
-- [ ] Создать `eventTypeRoute = bookCatalogRoute.reatomRoute(":eventTypeId")` в новом файле `apps/web/src/pages/event-type/model/route.tsx` (сейчас там только URL-атомы и actions — перенести route туда)
+- [x] Создать `eventTypeRoute = bookCatalogRoute.reatomRoute(":eventTypeId")` в новом файле `apps/web/src/pages/event-type/model/eventTypeRoute.tsx` (отдельный файл для избежания циклических импортов)
   - loader: читает `eventTypeId` из params; загружает event type из `loader.data()` parent'а (список event types уже есть в `bookCatalogRoute.loader`); сбрасывает `selectedDateAtom`, `selectedSlotAtom`
   - render: `<EventTypePage eventTypeId={self().eventTypeId} />`
-- [ ] Убрать из `bookCatalogRoute.render()` условный рендер `EventTypePage` и проверку `selectedEventTypeIdAtom`
+- [x] Убрать из `bookCatalogRoute.render()` условный рендер `EventTypePage` и проверку `selectedEventTypeIdAtom`
   - `render(self)`: если `self.outlet().length > 0` → `self.outlet().at(-1)`, иначе → `<BookCatalogPage>`
-- [ ] Убрать из `bookCatalogRoute.loader` инициализацию `selectedEventTypeIdAtom` (она больше не нужна на уровне catalog)
-- [ ] Обновить `navigate` — добавить `navigate.eventType(eventTypeId: string)` → `eventTypeRoute.go({ eventTypeId })`
-- [ ] Обновить `handleEventTypeClick` в `BookCatalogPage` — вместо установки атома вызывать `navigate.eventType(id)`
-- [ ] Запустить `pnpm type-check` + `pnpm test` (unit)
+- [x] Убрать из `bookCatalogRoute.loader` инициализацию `selectedEventTypeIdAtom` (она больше не нужна на уровне catalog)
+- [x] Обновить `navigate` — добавить `navigate.eventType(eventTypeId: string)` → `eventTypeRoute.go({ eventTypeId })`
+- [x] Обновить `handleEventTypeClick` в `BookCatalogPage` — вместо установки атома вызывать `navigate.eventType(id)`
+- [x] Запустить `pnpm type-check` + `pnpm test` (unit)
 
 ---
 
