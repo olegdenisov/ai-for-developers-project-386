@@ -1,7 +1,7 @@
 import { wrap, atom, reatomForm } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { z } from 'zod/v4';
-import { apiClient } from '@shared/api';
+import { apiClient, slotsApiClient } from '@shared/api';
 import { eventTypeRoute } from '@pages/event-type/model/eventTypeRoute';
 import { bookCatalogRoute } from '@pages/book-catalog';
 import { bookingRoute } from '@pages/booking';
@@ -82,7 +82,7 @@ export const bookingConfirmationRoute = eventTypeRoute.reatomRoute({
       return null;
     }
 
-    const slotResponse = await wrap(apiClient.getSlot(slotId));
+    const slotResponse = await wrap(slotsApiClient.getSlot(slotId));
     if (slotResponse.status >= 400) {
       const { navigate } = await import('@app/router');
       navigate.eventType(eventTypeId);

@@ -1,4 +1,3 @@
-import { wrap } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { bookCatalogRoute } from '@pages/book-catalog/model/route';
 import { EventTypePage } from '../EventTypePage';

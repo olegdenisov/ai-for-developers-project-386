@@ -3,7 +3,6 @@ import { createBooking as createBookingEntity } from '@entities/booking';
 import { selectedSlotAtom } from '@entities/slot';
 import { selectedEventTypeAtom } from '@entities/event-type';
 import { BookingFormData, validateBookingForm } from './validation';
-import { apiClient } from '@shared/api';
 
 // Form state atom
 export const bookingFormAtom = atom<Partial<BookingFormData>>(

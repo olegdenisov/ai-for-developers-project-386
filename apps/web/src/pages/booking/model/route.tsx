@@ -1,6 +1,6 @@
 import { wrap } from '@reatom/core';
 import { createElement, Fragment } from 'react';
-import { apiClient } from '@shared/api';
+import { ownerApiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import type { Owner } from '@entities/owner';
 
@@ -14,7 +14,7 @@ export const bookingRoute = layoutRoute.reatomRoute({
   layout: true,
 
   async loader(): Promise<Owner> {
-    const response = await wrap(apiClient.ownerApi.getProfile());
+    const response = await wrap(ownerApiClient.getProfile());
     if (response.status >= 400) {
       throw new Error('Failed to fetch owner profile');
     }
