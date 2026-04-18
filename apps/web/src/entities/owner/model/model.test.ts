@@ -1,7 +1,30 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { context, peek } from '@reatom/core';
 import { ownerAtom, fetchOwner, isFetchingOwner } from './model';
 import type { Owner } from './types';
+
+const mockOwnerData: Owner = {
+  id: 'test-owner-id',
+  name: 'Test Host',
+  email: 'host@test.com',
+  isPredefined: true,
+  createdAt: '2024-01-01T00:00:00Z',
+};
+
+vi.mock('@shared/api', () => ({
+  ownerApiClient: {
+    getProfile: vi.fn().mockResolvedValue({
+      status: 200,
+      data: {
+        id: 'test-owner-id',
+        name: 'Test Host',
+        email: 'host@test.com',
+        isPredefined: true,
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+    }),
+  },
+}));
 
 describe('entities/owner/model', () => {
   beforeEach(() => {
@@ -14,7 +37,7 @@ describe('entities/owner/model', () => {
     });
 
     it('ownerAtom должен обновляться при установке значения', () => {
-      const mockOwner: Owner = {
+      const owner: Owner = {
         id: 'owner-1',
         name: 'Host',
         email: 'host@example.com',
@@ -22,35 +45,23 @@ describe('entities/owner/model', () => {
         createdAt: '2024-01-01T00:00:00Z',
       };
 
-      ownerAtom.set(mockOwner);
-      expect(peek(ownerAtom)).toEqual(mockOwner);
+      ownerAtom.set(owner);
+      expect(peek(ownerAtom)).toEqual(owner);
     });
   });
 
   describe('fetchOwner', () => {
-    it('должен возвращать fallback значение для владельца', async () => {
+    it('должен возвращать данные владельца из API', async () => {
       const result = await fetchOwner();
 
-      expect(result).toEqual({
-        id: 'default',
-        name: 'Host',
-        email: '',
-        isPredefined: true,
-        createdAt: expect.any(String),
-      });
+      expect(result).toEqual(mockOwnerData);
     });
 
-    it('должен устанавливать fallback значение в ownerAtom', async () => {
+    it('должен устанавливать данные владельца в ownerAtom', async () => {
       await fetchOwner();
 
       const owner = peek(ownerAtom);
-      expect(owner).toEqual({
-        id: 'default',
-        name: 'Host',
-        email: '',
-        isPredefined: true,
-        createdAt: expect.any(String),
-      });
+      expect(owner).toEqual(mockOwnerData);
     });
 
     it('createdAt должен быть валидной ISO строкой даты', async () => {

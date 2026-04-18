@@ -6,20 +6,7 @@ import {
   updateFormField,
   setFormErrors,
   clearForm,
-  bookingEventTypeAtom,
-  bookingSlotAtom,
-  submitBooking,
 } from './model';
-import type { EventType } from '@entities/event-type';
-import type { Slot } from '@entities/slot';
-import type { Booking } from '@entities/booking';
-
-// Мок для API клиента и entities
-vi.mock('@shared/api', () => ({
-  apiClient: {
-    createBooking: vi.fn(),
-  },
-}));
 
 vi.mock('@entities/booking', () => ({
   createBooking: vi.fn(),
@@ -34,40 +21,7 @@ vi.mock('@entities/booking', () => ({
   },
 }));
 
-import { apiClient } from '@shared/api';
-
 describe('features/create-booking/model', () => {
-  const mockEventType: EventType = {
-    id: 'event-1',
-    name: 'Встреча 30 мин',
-    description: 'Короткая встреча',
-    durationMinutes: 30,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
-  };
-
-  const mockSlot: Slot = {
-    id: 'slot-1',
-    startTime: '2024-01-15T10:00:00Z',
-    endTime: '2024-01-15T10:30:00Z',
-    isAvailable: true,
-    createdAt: '2024-01-01T00:00:00Z',
-  };
-
-  const mockBooking: Booking = {
-    id: 'booking-1',
-    eventTypeId: 'event-1',
-    slotId: 'slot-1',
-    guestName: 'Иван Иванов',
-    guestEmail: 'ivan@example.com',
-    guestNotes: 'Тестовая заметка',
-    status: 'confirmed',
-    createdAt: '2024-01-10T00:00:00Z',
-    updatedAt: '2024-01-10T00:00:00Z',
-    eventType: mockEventType,
-    slot: mockSlot,
-  };
-
   beforeEach(() => {
     context.reset();
     vi.clearAllMocks();
@@ -86,13 +40,6 @@ describe('features/create-booking/model', () => {
       expect(peek(formErrorsAtom)).toEqual({});
     });
 
-    it('bookingEventTypeAtom должен иметь начальное значение - null', () => {
-      expect(peek(bookingEventTypeAtom)).toBeNull();
-    });
-
-    it('bookingSlotAtom должен иметь начальное значение - null', () => {
-      expect(peek(bookingSlotAtom)).toBeNull();
-    });
   });
 
   describe('updateFormField', () => {
@@ -172,117 +119,4 @@ describe('features/create-booking/model', () => {
     });
   });
 
-  describe('booking context atoms', () => {
-    it('bookingEventTypeAtom должен сохранять тип события для бронирования', () => {
-      bookingEventTypeAtom.set(mockEventType);
-
-      expect(peek(bookingEventTypeAtom)).toEqual(mockEventType);
-    });
-
-    it('bookingSlotAtom должен сохранять слот для бронирования', () => {
-      bookingSlotAtom.set(mockSlot);
-
-      expect(peek(bookingSlotAtom)).toEqual(mockSlot);
-    });
-  });
-
-  describe('submitBooking (shared context)', () => {
-    beforeEach(() => {
-      bookingEventTypeAtom.set(mockEventType);
-      bookingSlotAtom.set(mockSlot);
-    });
-
-    it('должен выбрасывать ошибку если тип события не выбран', async () => {
-      bookingEventTypeAtom.set(null);
-
-      await expect(
-        submitBooking({
-          guestName: 'Иван',
-          guestEmail: 'ivan@example.com',
-        })
-      ).rejects.toThrow('Не выбран тип события или слот');
-    });
-
-    it('должен выбрасывать ошибку если слот не выбран', async () => {
-      bookingSlotAtom.set(null);
-
-      await expect(
-        submitBooking({
-          guestName: 'Иван',
-          guestEmail: 'ivan@example.com',
-        })
-      ).rejects.toThrow('Не выбран тип события или слот');
-    });
-
-    it('должен создавать бронирование с данными из контекста', async () => {
-      vi.mocked(apiClient.createBooking).mockResolvedValue({
-        status: 200,
-        data: mockBooking,
-      } as unknown as Response);
-
-      const formData = {
-        guestName: 'Иван Иванов',
-        guestEmail: 'ivan@example.com',
-        guestNotes: 'Тестовая заметка',
-      };
-
-      const result = await submitBooking(formData);
-
-      expect(apiClient.createBooking).toHaveBeenCalledWith({
-        eventTypeId: 'event-1',
-        slotId: 'slot-1',
-        guestName: 'Иван Иванов',
-        guestEmail: 'ivan@example.com',
-        guestNotes: 'Тестовая заметка',
-      });
-
-      expect(result).toEqual(mockBooking);
-    });
-
-    it('должен очищать контекст бронирования после успеха', async () => {
-      vi.mocked(apiClient.createBooking).mockResolvedValue({
-        status: 200,
-        data: mockBooking,
-      } as unknown as Response);
-
-      await submitBooking({
-        guestName: 'Иван',
-        guestEmail: 'ivan@example.com',
-      });
-
-      expect(peek(bookingEventTypeAtom)).toBeNull();
-      expect(peek(bookingSlotAtom)).toBeNull();
-    });
-
-    it('должен обрабатывать ошибку API', async () => {
-      vi.mocked(apiClient.createBooking).mockResolvedValue({
-        status: 409,
-        data: { message: 'Слот уже занят' },
-      } as unknown as Response);
-
-      await expect(
-        submitBooking({
-          guestName: 'Иван',
-          guestEmail: 'ivan@example.com',
-        })
-      ).rejects.toThrow('Слот уже занят');
-
-      expect(peek(bookingEventTypeAtom)).toEqual(mockEventType);
-      expect(peek(bookingSlotAtom)).toEqual(mockSlot);
-    });
-
-    it('должен использовать дефолтное сообщение если нет message', async () => {
-      vi.mocked(apiClient.createBooking).mockResolvedValue({
-        status: 500,
-        data: {},
-      } as unknown as Response);
-
-      await expect(
-        submitBooking({
-          guestName: 'Иван',
-          guestEmail: 'ivan@example.com',
-        })
-      ).rejects.toThrow('Не удалось создать бронирование');
-    });
-  });
 });
