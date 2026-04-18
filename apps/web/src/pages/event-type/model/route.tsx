@@ -3,34 +3,7 @@ import type { Slot } from '@entities/slot';
 import { apiClient } from '@shared/api';
 
 // ============================================
-// URL HELPERS
-// ============================================
-
-/**
- * Вспомогательная функция для обновления query-параметра в URL
- * без перезагрузки страницы
- */
-export function updateUrlParam(key: string, value: string | null): void {
-  const url = new URL(window.location.href);
-  if (value === null) {
-    url.searchParams.delete(key);
-  } else {
-    url.searchParams.set(key, value);
-  }
-  window.history.replaceState(null, '', url.toString());
-}
-
-/**
- * Вспомогательная функция для разбора даты из строки ISO
- */
-export function parseDateParam(value: string | null): Date | null {
-  if (!value) return null;
-  const date = new Date(value);
-  return isNaN(date.getTime()) ? null : date;
-}
-
-// ============================================
-// URL-SYNCED ATOMS
+// ATOMS
 // ============================================
 
 /**
