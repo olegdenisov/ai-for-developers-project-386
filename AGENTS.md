@@ -31,6 +31,8 @@ Turborepo monorepo: Fastify backend + React 19 frontend with FSD architecture.
 
 ## Quick Commands
 
+All commands are also available via `make <target>` — see `Makefile` in the repo root for the full list.
+
 ```bash
 # Full stack (recommended — starts PostgreSQL, runs migrations, seeds DB, API, Web)
 pnpm start:dev
@@ -251,6 +253,12 @@ pnpm start:mock  # Frontend-only development
 ```sql
 ALTER SCHEMA public OWNER TO postgres;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+```
+
+### db:seed / db:migrate не видит DATABASE_URL при запуске из корня
+`pnpm db:seed` через turbo из корня монорепо не подхватывает `apps/api/.env` — переменная `DATABASE_URL` оказывается `undefined`, что приводит к ошибке `SASL: client password must be a string`. **Workaround**: запускать из директории пакета с явной передачей переменной:
+```bash
+cd apps/api && DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/calendar_booking" pnpm db:seed
 ```
 
 ### openapi-generator-cli Requires Java

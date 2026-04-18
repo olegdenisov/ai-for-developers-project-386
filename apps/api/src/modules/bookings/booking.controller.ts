@@ -3,7 +3,7 @@ import * as bookingService from './booking.service.js';
 
 export async function listPublicEventTypes(request: FastifyRequest, reply: FastifyReply) {
   const eventTypes = await bookingService.listPublicEventTypes();
-  return reply.send({ eventTypes });
+  return reply.send(eventTypes);
 }
 
 export async function getPublicEventType(

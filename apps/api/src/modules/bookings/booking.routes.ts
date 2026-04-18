@@ -15,9 +15,7 @@ export async function bookingRoutes(app: FastifyInstance) {
       summary: 'List public event types',
       description: 'Returns all available event types for guests',
       response: {
-        200: z.object({
-          eventTypes: z.array(eventTypeSchema),
-        }),
+        200: z.array(eventTypeSchema),
       },
     },
   }, bookingController.listPublicEventTypes);
