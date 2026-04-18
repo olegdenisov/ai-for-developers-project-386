@@ -1,5 +1,5 @@
 import { wrap } from '@reatom/core';
-import type { RouteChild, RouteRenderSelf } from '@reatom/core';
+import type { RouteChild } from '@reatom/core';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import { BookCatalogPage } from '../BookCatalogPage';
@@ -29,6 +29,7 @@ import type { EventType } from '@entities/event-type';
  */
 export const bookCatalogRoute = layoutRoute.reatomRoute({
   path: 'bookings/new',
+  layout: true,
 
   /**
    * Loader инициализирует URL-атомы из query-параметров и загружает список типов событий
@@ -57,7 +58,7 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
       throw new Error('Failed to fetch event types');
     }
 
-    const eventTypes = response.data || [];
+    const eventTypes: EventType[] = Array.isArray(response.data) ? response.data : [];
     return eventTypes;
   },
 
@@ -67,8 +68,8 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
    * - Если выбран тип события (?eventTypeId) — рендерим пикер слотов
    * - Иначе — рендерим каталог
    */
-  render(self: RouteRenderSelf<EventType[]>): RouteChild {
-    const { isPending, data: eventTypes } = self.loader.status()
+  render(self): RouteChild {
+    const { isPending, data: eventTypes } = self.loader.status();
     const error = self.loader.error();
     const children = self.outlet();
 

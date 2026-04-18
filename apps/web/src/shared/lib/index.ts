@@ -7,3 +7,5 @@ export {
   startOfWeek,
   endOfWeek,
 } from './date';
+
+export { parseApiError } from './api-error';

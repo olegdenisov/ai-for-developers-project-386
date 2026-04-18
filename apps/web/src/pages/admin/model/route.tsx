@@ -18,7 +18,7 @@ import { AdminEventTypesPage } from '../AdminEventTypesPage';
 export const adminRoute = layoutRoute.reatomRoute({
   path: 'admin',
 
-  render(self: { outlet: () => RouteChild[] }): RouteChild {
+  render(self): RouteChild {
     const children = self.outlet();
 
     // Если нет активных дочерних роутов — перенаправляем на бронирования

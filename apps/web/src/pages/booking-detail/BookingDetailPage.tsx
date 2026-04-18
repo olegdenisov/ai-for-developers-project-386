@@ -92,8 +92,7 @@ export const BookingDetailPage = reatomComponent(
 
     const handleCancel = () => {
       if (cancelForm) {
-        // Открываем модальное окно, устанавливая reason в специальное значение
-        cancelForm.fields.reason.set('cancel_requested');
+        cancelForm.open();
       }
     };
 

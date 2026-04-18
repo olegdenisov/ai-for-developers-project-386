@@ -1,5 +1,5 @@
 import { wrap, atom, reatomForm } from '@reatom/core';
-import type { RouteChild, RouteRenderSelf } from '@reatom/core';
+import type { RouteChild } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { bookCatalogRoute } from '@pages/book-catalog';
@@ -39,7 +39,7 @@ export function createBookingForm(
       guestName: '',
       guestEmail: '',
       guestNotes: '',
-    } as BookingFormData,
+    },
     {
       name: 'bookingConfirmationForm',
       schema: bookingFormSchema,
@@ -57,11 +57,14 @@ export function createBookingForm(
         );
 
         if (response.status >= 400) {
-          const errorData = response.data as { message?: string };
-          throw new Error(errorData.message || 'Failed to create booking');
+          const errorData = response.data;
+          const message = typeof errorData === 'object' && errorData !== null && 'message' in errorData
+            ? String(errorData.message)
+            : 'Failed to create booking';
+          throw new Error(message);
         }
 
-        const booking = response.data as unknown as Booking;
+        const booking = response.data;
 
         // Очищаем контекст бронирования
         bookingEventTypeAtom.set(null);
@@ -129,7 +132,7 @@ export const bookingConfirmationRoute = bookCatalogRoute.reatomRoute({
   /**
    * Render функция возвращает React компонент
    */
-  render(self: RouteRenderSelf<{ eventType: EventType; slot: Slot; owner: Owner; form: ReturnType<typeof createBookingForm> } | null>): RouteChild {
+  render(self): RouteChild {
     const { isPending, data } = self.loader.status();
     const error = self.loader.error();
 

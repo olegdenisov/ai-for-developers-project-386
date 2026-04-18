@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { context, peek } from '@reatom/core'
-import { createRescheduleForm, parseApiError } from './model'
+import { createRescheduleForm } from './model'
 import { currentBookingAtom } from '@entities/booking'
 import type { Booking } from '@entities/booking'
 import type { Slot } from '@entities/slot'
@@ -37,36 +37,6 @@ describe('features/reschedule-booking/model', () => {
   beforeEach(() => {
     context.reset()
     vi.clearAllMocks()
-  })
-
-  describe('parseApiError', () => {
-    it('должен возвращать "Выбранный слот уже занят" для SLOT_ALREADY_BOOKED', () => {
-      const err = new Error(
-        JSON.stringify({ code: 'SLOT_ALREADY_BOOKED', message: 'Slot already booked' })
-      )
-      expect(parseApiError(err).message).toBe('Выбранный слот уже занят')
-    })
-
-    it('должен возвращать message из ошибки для других кодов', () => {
-      const err = new Error(
-        JSON.stringify({ code: 'NOT_FOUND', message: 'Booking not found' })
-      )
-      expect(parseApiError(err).message).toBe('Booking not found')
-    })
-
-    it('должен возвращать дефолтное сообщение если message не задан', () => {
-      const err = new Error(JSON.stringify({ code: 'UNKNOWN' }))
-      expect(parseApiError(err).message).toBe('Не удалось перенести встречу')
-    })
-
-    it('должен возвращать сообщение ошибки если не JSON', () => {
-      const err = new Error('network error')
-      expect(parseApiError(err).message).toBe('network error')
-    })
-
-    it('должен возвращать дефолтное сообщение для не-Error значений', () => {
-      expect(parseApiError('string error').message).toBe('Не удалось перенести встречу')
-    })
   })
 
   describe('createRescheduleForm', () => {

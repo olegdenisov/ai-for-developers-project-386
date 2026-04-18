@@ -1,29 +1,11 @@
 import { reatomForm, action } from '@reatom/core'
 import { atom, computed, wrap, withAsyncData } from '@reatom/core'
 import { apiClient } from '@shared/api'
+import { parseApiError } from '@shared/lib'
 import { currentBookingAtom } from '@entities/booking'
 import type { Booking } from '@entities/booking'
 import type { Slot } from '@entities/slot'
 
-/**
- * Парсит ошибку из API клиента и возвращает читаемое сообщение.
- * API клиент бросает Error с JSON-строкой вида { code, message }.
- */
-export function parseApiError(err: unknown): Error {
-  if (!(err instanceof Error)) {
-    return new Error('Не удалось перенести встречу')
-  }
-  try {
-    const parsed = JSON.parse(err.message) as { code?: string; message?: string }
-    if (parsed.code === 'SLOT_ALREADY_BOOKED') {
-      return new Error('Выбранный слот уже занят')
-    }
-    return new Error(parsed.message || 'Не удалось перенести встречу')
-  } catch {
-    // Если не JSON — возвращаем как есть
-    return new Error(err.message || 'Не удалось перенести встречу')
-  }
-}
 
 /**
  * Factory function для создания формы переноса бронирования.
@@ -36,10 +18,13 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
   // Atom состояния открытости модального окна
   const isOpen = atom(false, `reschedule#${bookingId}.isOpen`)
 
+  // Начальное состояние списка слотов (пустой массив с явным типом для withAsyncData)
+  const emptySlots: Slot[] = []
+
   // Загрузка доступных слотов (следующие 14 дней) для данного типа события.
   // Автоматически обновляется когда isOpen становится true.
-  const availableSlots = computed(async () => {
-    if (!isOpen()) return [] as Slot[]
+  const availableSlots = computed(async (): Promise<Slot[]> => {
+    if (!isOpen()) return emptySlots
 
     const today = new Date()
     // Используем локальные компоненты даты, чтобы избежать смещения в UTC- часовых поясах
@@ -55,8 +40,8 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
     const response = await wrap(
       apiClient.getAvailableSlotsForEventType(eventTypeId, startDate, endDate)
     )
-    return response.data as Slot[]
-  }, `reschedule#${bookingId}.availableSlots`).extend(withAsyncData({ initState: [] as Slot[] }))
+    return response.data
+  }, `reschedule#${bookingId}.availableSlots`).extend(withAsyncData({ initState: emptySlots }))
 
   // Форма переноса бронирования с полем выбора нового слота
   const form = reatomForm(
@@ -70,14 +55,14 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
           const response = await wrap(
             apiClient.rescheduleBooking(bookingId, values.newSlotId)
           )
-          const booking = response.data as Booking
+          const booking = response.data
           // Обновляем данные бронирования без навигации
           currentBookingAtom.set(booking)
           // Закрываем модальное окно после успешного переноса
           isOpen.set(false)
           return booking
         } catch (err) {
-          throw parseApiError(err)
+          throw parseApiError(err, 'Не удалось перенести встречу')
         }
       },
     }

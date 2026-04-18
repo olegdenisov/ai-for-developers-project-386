@@ -10,31 +10,13 @@ import {
   Alert,
   ScrollArea,
 } from '@mantine/core'
+import { formatDate, formatTime } from '@shared/lib'
 import type { Slot } from '@entities/slot'
 import type { createRescheduleForm } from '../model/model'
 
 /** Пропсы модального окна переноса бронирования */
 interface RescheduleModalProps {
   rescheduleForm: ReturnType<typeof createRescheduleForm>
-}
-
-/** Форматирует локальную дату YYYY-MM-DD в локализованную строку (например, «12 апреля 2026») */
-function formatDate(dateStr: string): string {
-  // Парсим как локальную дату (не UTC), чтобы избежать смещения на -1 день в timezone UTC-
-  const [year, month, day] = dateStr.split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-/** Форматирует время из ISO-строки (например, «14:30») */
-function formatTime(isoStr: string): string {
-  return new Date(isoStr).toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 /**
@@ -46,7 +28,7 @@ export const RescheduleModal = reatomComponent(
     const { isOpen, availableSlots, form } = rescheduleForm
 
     const opened = isOpen()
-    const slots = availableSlots.data()
+    const slots: Slot[] = availableSlots.data() ?? []
     const isLoadingSlots = !availableSlots.ready()
     const slotsError = availableSlots.error()
 
@@ -61,7 +43,7 @@ export const RescheduleModal = reatomComponent(
 
     // Группируем слоты по локальной дате (YYYY-MM-DD) в часовом поясе пользователя.
     // Нельзя использовать split('T')[0] — это UTC-дата, а не локальная.
-    const slotsByDay = slots.reduce<Record<string, Slot[]>>((acc: Record<string, Slot[]>, slot: Slot) => {
+    const slotsByDay = slots.reduce<Record<string, Slot[]>>((acc, slot) => {
       const d = new Date(slot.startTime)
       const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       if (!acc[day]) acc[day] = []
@@ -115,7 +97,7 @@ export const RescheduleModal = reatomComponent(
                         <Text fw={600} size="sm">
                           {formatDate(day)}
                         </Text>
-                        {slotsByDay[day].map((slot: Slot) => (
+                        {slotsByDay[day].map((slot) => (
                           <Radio
                             key={slot.id}
                             value={slot.id}

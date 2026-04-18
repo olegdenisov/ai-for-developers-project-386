@@ -1,18 +1,19 @@
-// Domain types for Slot entity
-export interface Slot {
+import type { BookingStatus } from '@calendar-booking/api-client'
+
+export type { Slot } from '@calendar-booking/api-client'
+
+// Слот с данными бронирования для административного представления
+export interface SlotWithBooking {
   id: string;
   startTime: string;
   endTime: string;
   isAvailable: boolean;
   createdAt: string;
-}
-
-export interface SlotWithBooking extends Slot {
   booking?: {
     id: string;
     guestName: string;
     guestEmail: string;
-    status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
+    status: BookingStatus;
     eventType: {
       id: string;
       name: string;

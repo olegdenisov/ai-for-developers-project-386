@@ -1,5 +1,4 @@
 import { wrap } from '@reatom/core';
-import type { RouteChild, RouteRenderSelf } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
@@ -26,43 +25,27 @@ interface LoaderData {
 export const bookingDetailRoute = layoutRoute.reatomRoute({
   path: 'bookings/:id',
 
-  /**
-   * Валидация параметров URL
-   * id не может быть "new" чтобы не конфликтовать с маршрутом /bookings/new
-   */
   params: z.object({
     id: z.string().refine((val) => val !== 'new', {
       message: 'ID не может быть "new"',
     }),
   }),
 
-  /**
-   * Loader с factory pattern:
-   * - Загружает данные бронирования
-   * - Создает форму отмены через factory function
-   */
   async loader({ id }: { id: string }): Promise<LoaderData | null> {
-    // Загружаем бронирование (apiClient бросает Error при статусе 4xx/5xx)
     const response = await wrap(apiClient.getBooking(id));
-    const booking = response.data as Booking;
+    const booking = response.data;
 
-    // Инициализируем atom для реактивного обновления после переноса/отмены
     currentBookingAtom.set(booking);
 
-    // Factory: создаем форму отмены внутри loader
     const cancelForm = createCancelForm(id);
-
-    // Factory: создаем форму переноса внутри loader
     const rescheduleForm = createRescheduleForm(id, booking.eventTypeId);
 
     return { booking, cancelForm, rescheduleForm };
   },
 
-  /**
-   * Render функция возвращает React компонент
-   */
-  render(self: RouteRenderSelf<LoaderData | null>): RouteChild {
-    const { isPending, data } = self.loader.status();
+  render(self) {
+    const isPending = self.loader.pending();
+    const data = self.loader.data();
     const error = self.loader.error();
 
     if (isPending) {
@@ -70,21 +53,13 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
     }
 
     if (error) {
-      return (
-        <BookingDetailPage isLoading={false} error={error.message} />
-      );
+      return <BookingDetailPage isLoading={false} error={error.message} />;
     }
 
     if (!data) {
-      return (
-        <BookingDetailPage
-          isLoading={false}
-          error="Бронирование не найдено"
-        />
-      );
+      return <BookingDetailPage isLoading={false} error="Бронирование не найдено" />;
     }
 
-    // Читаем из currentBookingAtom для реактивного обновления после переноса/отмены
     const liveBooking = currentBookingAtom();
     const booking = (liveBooking && liveBooking.id === data.booking.id) ? liveBooking : data.booking;
 

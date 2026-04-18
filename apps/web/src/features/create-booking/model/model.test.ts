@@ -200,7 +200,7 @@ describe('features/create-booking/model', () => {
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         })
-      ).rejects.toThrow('Event type or slot not selected');
+      ).rejects.toThrow('Не выбран тип события или слот');
     });
 
     it('должен выбрасывать ошибку если слот не выбран', async () => {
@@ -211,7 +211,7 @@ describe('features/create-booking/model', () => {
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         })
-      ).rejects.toThrow('Event type or slot not selected');
+      ).rejects.toThrow('Не выбран тип события или слот');
     });
 
     it('должен создавать бронирование с данными из контекста', async () => {
@@ -282,7 +282,7 @@ describe('features/create-booking/model', () => {
           guestName: 'Иван',
           guestEmail: 'ivan@example.com',
         })
-      ).rejects.toThrow('Failed to create booking');
+      ).rejects.toThrow('Не удалось создать бронирование');
     });
   });
 });
