@@ -2,8 +2,9 @@ import { wrap, atom, reatomForm } from '@reatom/core';
 import type { RouteChild } from '@reatom/core';
 import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
+import { eventTypeRoute } from '@pages/event-type/model/eventTypeRoute';
 import { bookCatalogRoute } from '@pages/book-catalog';
-import { bookingEventTypeAtom, bookingSlotAtom } from '@features/create-booking';
+import { bookingRoute } from '@pages/booking';
 import { bookingFormSchema } from '@features/create-booking';
 import { BookingConfirmationPage } from '../BookingConfirmationPage';
 import type { EventType } from '@entities/event-type';
@@ -12,9 +13,6 @@ import type { Slot } from '@entities/slot';
 import type { BookingFormData } from '@features/create-booking';
 import type { Booking } from '@entities/booking';
 
-/**
- * Тип для данных, возвращаемых loader
- */
 interface LoaderData {
   eventType: EventType;
   slot: Slot;
@@ -22,16 +20,11 @@ interface LoaderData {
   form: ReturnType<typeof createBookingForm>;
 }
 
-/**
- * Factory function для создания формы бронирования
- * Создается внутри route loader для автоматической очистки
- */
 export function createBookingForm(
   eventType: EventType,
   slot: Slot,
   navigateFn: (id: string) => void
 ) {
-  // Флаг: была ли попытка отправить форму хотя бы раз
   const wasSubmitted = atom(false, 'bookingConfirmationForm.wasSubmitted');
 
   const form = reatomForm(
@@ -43,7 +36,6 @@ export function createBookingForm(
     {
       name: 'bookingConfirmationForm',
       schema: bookingFormSchema,
-      // Перевалидировать поля при изменении — ошибки обновляются сразу после исправления
       validateOnChange: true,
       onSubmit: async (values: BookingFormData): Promise<Booking> => {
         const response = await wrap(
@@ -65,14 +57,7 @@ export function createBookingForm(
         }
 
         const booking = response.data;
-
-        // Очищаем контекст бронирования
-        bookingEventTypeAtom.set(null);
-        bookingSlotAtom.set(null);
-
-        // Переходим на страницу деталей бронирования
         navigateFn(booking.id);
-
         return booking;
       },
     }
@@ -82,56 +67,50 @@ export function createBookingForm(
 }
 
 /**
- * Маршрут страницы подтверждения бронирования
- * Использует factory pattern: создает форму внутри loader
- * Путь: /bookings/new/confirm
+ * Маршрут страницы подтверждения бронирования.
+ * Путь: /bookings/new/:eventTypeId/confirm?slotId=
  */
-export const bookingConfirmationRoute = bookCatalogRoute.reatomRoute({
+export const bookingConfirmationRoute = eventTypeRoute.reatomRoute({
   path: 'confirm',
 
-  /**
-   * Валидация параметров URL
-   */
-  params: z.object({}),
+  search: z.object({ slotId: z.string().optional() }),
 
-  /**
-   * Loader с factory pattern:
-   * - Проверяет наличие контекста бронирования
-   * - Создает форму через factory function
-   */
-  async loader(): Promise<LoaderData | null> {
-    const eventType = bookingEventTypeAtom();
-    const slot = bookingSlotAtom();
+  async loader({ eventTypeId, slotId }: { eventTypeId: string; slotId?: string }): Promise<LoaderData | null> {
+    if (!slotId) {
+      const { navigate } = await import('@app/router');
+      navigate.eventType(eventTypeId);
+      return null;
+    }
 
-    // Guard: если нет данных, редиректим на каталог
-    if (!eventType || !slot) {
-      // Импортируем navigate динамически для избежания циклических зависимостей
+    const slotResponse = await wrap(apiClient.getSlot(slotId));
+    if (slotResponse.status >= 400) {
+      const { navigate } = await import('@app/router');
+      navigate.eventType(eventTypeId);
+      return null;
+    }
+    const slot = slotResponse.data as Slot;
+
+    const eventTypes = bookCatalogRoute.loader.data() ?? [];
+    const eventType = eventTypes.find((et) => et.id === eventTypeId);
+    if (!eventType) {
+      const { navigate } = await import('@app/router');
+      navigate.eventType(eventTypeId);
+      return null;
+    }
+
+    const owner = bookingRoute.loader.data() as Owner | undefined;
+    if (!owner) {
       const { navigate } = await import('@app/router');
       navigate.booking();
       return null;
     }
 
-    // Используем fallback значение для владельца
-    // (в текущей версии API нет метода getOwnerProfile)
-    const owner: Owner = {
-      id: 'default',
-      name: 'Host',
-      email: '',
-      isPredefined: true,
-      createdAt: '',
-    };
-
-    // Factory: создаем форму внутри loader
-    // Импортируем navigate динамически
     const { navigate } = await import('@app/router');
     const form = createBookingForm(eventType, slot, navigate.bookingDetail);
 
     return { eventType, slot, owner, form };
   },
 
-  /**
-   * Render функция возвращает React компонент
-   */
   render(self): RouteChild {
     const { isPending, data } = self.loader.status();
     const error = self.loader.error();

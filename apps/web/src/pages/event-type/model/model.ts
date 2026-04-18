@@ -9,7 +9,6 @@ import {
   currentCalendarMonthAtom,
   updateUrlParam,
 } from './route';
-import { bookingEventTypeAtom, bookingSlotAtom } from '@features/create-booking';
 import { navigate } from '@app/router';
 import type { Slot } from '@entities/slot';
 import type { EventType } from '@entities/event-type';
@@ -92,11 +91,7 @@ export const proceedToBooking = action((eventType: EventType | undefined) => {
   const selectedSlot = selectedSlotAtom();
 
   if (selectedSlot && eventType) {
-    // Сохраняем данные в atoms контекста бронирования
-    bookingEventTypeAtom.set(eventType);
-    bookingSlotAtom.set(selectedSlot);
-    // Переходим на страницу подтверждения бронирования
-    navigate.bookingConfirmation();
+    navigate.bookingConfirmation(eventType.id, selectedSlot.id);
   }
 }, 'proceedToBooking');
 

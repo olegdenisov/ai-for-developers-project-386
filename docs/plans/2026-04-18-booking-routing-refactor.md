@@ -92,17 +92,17 @@ URL-флоу после рефакторинга (пути не меняются
 
 ### Task 3: Переместить `bookingConfirmationRoute` под `eventTypeRoute`
 
-- [ ] Изменить родителя: `bookingConfirmationRoute = eventTypeRoute.reatomRoute({ path: 'confirm', ... })`
-- [ ] Loader больше не читает `bookingEventTypeAtom` / `bookingSlotAtom` — вместо этого:
+- [x] Изменить родителя: `bookingConfirmationRoute = eventTypeRoute.reatomRoute({ path: 'confirm', ... })`
+- [x] Loader больше не читает `bookingEventTypeAtom` / `bookingSlotAtom` — вместо этого:
   - `eventTypeId` — из params (наследуется от `eventTypeRoute`)
   - `slotId` — из `new URLSearchParams(window.location.search).get('slotId')`
   - `owner` — из `bookingRoute.loader.data()` (уже загружен)
   - loader выполняет `apiClient.getSlot(slotId)` чтобы получить объект слота
   - Guard: если `slotId` отсутствует → `navigate.eventType(eventTypeId)`
-- [ ] Обновить `navigate.bookingConfirmation(slotId)` → `bookingConfirmationRoute.go({}, ...)` с search param `?slotId=`
-- [ ] Обновить `proceedToBooking` action в `EventTypePage` — передавать slotId через URL, не через атом
-- [ ] Убрать использование `bookingEventTypeAtom` и `bookingSlotAtom` из confirmation route
-- [ ] Запустить `pnpm type-check` + `pnpm test`
+- [x] Обновить `navigate.bookingConfirmation(slotId)` → `bookingConfirmationRoute.go({}, ...)` с search param `?slotId=`
+- [x] Обновить `proceedToBooking` action в `EventTypePage` — передавать slotId через URL, не через атом
+- [x] Убрать использование `bookingEventTypeAtom` и `bookingSlotAtom` из confirmation route
+- [x] Запустить `pnpm type-check` + `pnpm test`
 
 ---
 
