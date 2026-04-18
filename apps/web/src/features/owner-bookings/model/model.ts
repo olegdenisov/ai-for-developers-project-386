@@ -25,27 +25,30 @@ const yesterdayISO = () => {
   return d.toISOString().split('T')[0];
 };
 
+// Начальное состояние списка бронирований (пустой массив с явным типом для withAsyncData)
+const emptyBookings: Booking[] = []
+
 /**
  * Предстоящие бронирования (startDate = сегодня).
  * Вызов .retry() обновляет список.
  */
-export const upcomingBookings = computed(async () => {
+export const upcomingBookings = computed(async (): Promise<Booking[]> => {
   const response = await wrap(
     ownerApiClient.getUpcomingBookings({ startDate: todayISO() }),
   );
-  return response.data as Booking[];
-}, 'bookings.upcoming').extend(withAsyncData({ initState: [] as Booking[] }));
+  return response.data;
+}, 'bookings.upcoming').extend(withAsyncData({ initState: emptyBookings }));
 
 /**
  * Прошедшие бронирования (endDate = вчера).
  * Вызов .retry() обновляет список.
  */
-export const pastBookings = computed(async () => {
+export const pastBookings = computed(async (): Promise<Booking[]> => {
   const response = await wrap(
     ownerApiClient.getUpcomingBookings({ endDate: yesterdayISO() }),
   );
-  return response.data as Booking[];
-}, 'bookings.past').extend(withAsyncData({ initState: [] as Booking[] }));
+  return response.data;
+}, 'bookings.past').extend(withAsyncData({ initState: emptyBookings }));
 
 // ============================================
 // ДЕЙСТВИЯ

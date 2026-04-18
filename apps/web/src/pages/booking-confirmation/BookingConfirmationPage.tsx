@@ -192,13 +192,15 @@ export const BookingConfirmationPage = reatomComponent(
                     />
 
                     {/* Дополнительная информация */}
-                    <Textarea
-                      {...bindField(fields.guestNotes)}
-                      label="Дополнительная информация"
-                      placeholder="Дополнительная информация, которая может помочь подготовиться к нашей встрече."
-                      minRows={3}
-                      error={wasSubmitted() ? fields.guestNotes.validation().error : undefined}
-                    />
+                    {fields.guestNotes && (
+                      <Textarea
+                        {...bindField(fields.guestNotes)}
+                        label="Дополнительная информация"
+                        placeholder="Дополнительная информация, которая может помочь подготовиться к нашей встрече."
+                        minRows={3}
+                        error={wasSubmitted() ? fields.guestNotes.validation().error : undefined}
+                      />
+                    )}
 
                     {/* Добавить гостей */}
                     <Button

@@ -111,7 +111,7 @@ export const submitBooking = action(async (formData: BookingFormData) => {
   const slot = bookingSlotAtom();
 
   if (!eventType || !slot) {
-    throw new Error('Event type or slot not selected');
+    throw new Error('Не выбран тип события или слот');
   }
 
   const response = await wrap(apiClient.createBooking({
@@ -123,8 +123,9 @@ export const submitBooking = action(async (formData: BookingFormData) => {
   }));
 
   if (response.status >= 400) {
-    const error = response.data;
-    throw new Error(error.message || 'Failed to create booking');
+    const error = response.data as { message?: string };
+    const errorMessage = error?.message || 'Не удалось создать бронирование';
+    throw new Error(errorMessage);
   }
 
   const booking: Booking = response.data;

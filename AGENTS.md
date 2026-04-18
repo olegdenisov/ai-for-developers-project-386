@@ -6,7 +6,7 @@ Turborepo monorepo: Fastify backend + React 19 frontend with FSD architecture.
 
 1. **Создай план** — перед началом работы составь план реализации. План и всё общение с пользователем вести на русском языке.
 2. **Задавай вопросы по одному** — если есть неясности, уточняй их последовательно, по одному вопросу за раз.
-3. **Зафикси план в markdown-файле** — сохрани согласованный план в файл `plan.md` в корне репозитория.
+3. **Зафикси план в markdown-файле** — сохрани согласованный план в директорию `docs/plans/` с именем вида `YYYY-MM-DD-<feature-slug>.md`.
 4. **Разбей на шаги и пронумеруй** — план должен содержать пронумерованные шаги.
 5. **В конце каждого шага**:
    - Обнови/создай/запусти тесты (`pnpm type-check`, unit и E2E при необходимости)
@@ -30,6 +30,8 @@ Turborepo monorepo: Fastify backend + React 19 frontend with FSD architecture.
 4. Relative imports (`./validation`, `../model/model`)
 
 ## Quick Commands
+
+All commands are also available via `make <target>` — see `Makefile` in the repo root for the full list.
 
 ```bash
 # Full stack (recommended — starts PostgreSQL, runs migrations, seeds DB, API, Web)
@@ -122,7 +124,7 @@ API response shape: `{ code, message, errors? }`
 
 ### Database Transactions
 
-Use `isolationLevel: 'Serializable'` for critical operations (booking creation/cancellation):
+Use `isolationLevel: 'Serializable'` for critical operations (booking creation, cancellation, rescheduling):
 ```typescript
 await prisma.$transaction(async (tx) => {
   // ... logic
@@ -136,7 +138,7 @@ await prisma.$transaction(async (tx) => {
 ```
 app/        # Providers (Mantine, Reatom), router, global styles
 pages/      # home/, book-catalog/, event-type/, booking-confirmation/, booking-detail/, admin/
-features/   # create-booking/, view-slots/, cancel-booking/, create-event-type/, edit-event-type/, delete-event-type/, owner-bookings/
+features/   # create-booking/, view-slots/, cancel-booking/, reschedule-booking/, create-event-type/, edit-event-type/, delete-event-type/, owner-bookings/
 entities/   # event-type/, slot/, booking/, owner/ — Reatom atoms
 shared/     # api/, config/, lib/, ui/, router/
 ```
@@ -150,6 +152,12 @@ entities/[name]/
     ├── types.ts    # Domain interfaces
     └── model.ts    # Reatom atoms + actions (all in one file)
 ```
+
+Entity `types.ts` files re-export types directly from `@calendar-booking/shared-types` (`components['schemas']['TypeName']`) instead of defining interfaces manually. Do not duplicate interfaces that already exist in the generated package.
+
+`entities/booking` exports `currentBookingAtom` (`atom<Booking | null>`) for reactive in-page updates. Route loaders set it on load; mutations (cancel, reschedule) call `currentBookingAtom.set(updatedBooking)` so `BookingDetailPage` reflects changes without re-running the loader.
+
+**Booking status values are lowercase strings** (`'confirmed'`, `'cancelled'`, `'completed'`), normalised by the Zod route schema on the backend. Always compare with lowercase: `booking.status === 'confirmed'`. The Prisma enum uses uppercase (`CONFIRMED`), but the API and frontend types use lowercase.
 
 ### Page Layout
 
@@ -168,9 +176,11 @@ pages/[name]/
 ```
 features/[name]/
 ├── index.ts
-└── model/
-    ├── model.ts        # Feature atoms + actions
-    └── validation.ts   # Zod schemas
+├── model/
+│   ├── model.ts        # Feature atoms + actions
+│   └── validation.ts   # Zod schemas (optional)
+└── ui/                 # Feature-specific components (optional)
+    └── [Name]Modal.tsx
 ```
 
 ### Admin Panel (`/admin`)
@@ -243,6 +253,12 @@ pnpm start:mock  # Frontend-only development
 ```sql
 ALTER SCHEMA public OWNER TO postgres;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+```
+
+### db:seed / db:migrate не видит DATABASE_URL при запуске из корня
+`pnpm db:seed` через turbo из корня монорепо не подхватывает `apps/api/.env` — переменная `DATABASE_URL` оказывается `undefined`, что приводит к ошибке `SASL: client password must be a string`. **Workaround**: запускать из директории пакета с явной передачей переменной:
+```bash
+cd apps/api && DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/calendar_booking" pnpm db:seed
 ```
 
 ### openapi-generator-cli Requires Java

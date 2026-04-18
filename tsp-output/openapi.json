@@ -516,6 +516,77 @@
         }
       }
     },
+    "/public/bookings/{id}/reschedule": {
+      "patch": {
+        "operationId": "GuestPublicApi_rescheduleBooking",
+        "description": "Перенести бронирование на другой слот того же типа события.\nОсвобождает текущий слот и занимает новый в рамках одной транзакции.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with the current state of the server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotConflictError"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Guest Public API"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleBookingRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/public/event-types": {
       "get": {
         "operationId": "GuestPublicApi_listPublicEventTypes",
@@ -1049,6 +1120,20 @@
           }
         },
         "description": "Owner - единый предопределённый профиль владельца календаря.\nВ системе нет регистрации и авторизации, владелец - один заранее заданный профиль."
+      },
+      "RescheduleBookingRequest": {
+        "type": "object",
+        "required": [
+          "newSlotId"
+        ],
+        "properties": {
+          "newSlotId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID нового слота того же типа события"
+          }
+        },
+        "description": "DTO для переноса бронирования на другой слот"
       },
       "Slot": {
         "type": "object",

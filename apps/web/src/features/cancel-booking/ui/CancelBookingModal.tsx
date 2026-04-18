@@ -8,31 +8,21 @@ interface CancelBookingModalProps {
 
 /**
  * Модальное окно подтверждения отмены бронирования.
- * Управляет открытием/закрытием через поле reason формы.
  */
 export const CancelBookingModal = reatomComponent(
   ({ cancelForm }: CancelBookingModalProps) => {
-    const isOpen =
-      cancelForm.fields.reason() === 'cancel_requested' ||
-      !!cancelForm.submit.error()
-    const isCancelling = !cancelForm.submit.ready()
+    const opened = cancelForm.isOpen()
+    const isCancelling = !cancelForm.form.submit.ready()
 
     const handleConfirm = (e: React.FormEvent) => {
       e.preventDefault()
-      cancelForm.submit()
-    }
-
-    const handleClose = () => {
-      cancelForm.fields.reason.set('')
-      if (cancelForm.submit.errorAtom) {
-        cancelForm.submit.errorAtom.set(null)
-      }
+      cancelForm.form.submit()
     }
 
     return (
       <Modal
-        opened={isOpen}
-        onClose={handleClose}
+        opened={opened}
+        onClose={cancelForm.close}
         title="Отменить бронирование"
         centered
       >
@@ -42,13 +32,13 @@ export const CancelBookingModal = reatomComponent(
               Вы уверены, что хотите отменить бронирование? Это действие нельзя
               отменить.
             </Text>
-            {cancelForm.submit.error() && (
+            {cancelForm.form.submit.error() && (
               <Text c="red" size="sm">
-                {cancelForm.submit.error()?.message}
+                {cancelForm.form.submit.error()?.message}
               </Text>
             )}
             <Group justify="flex-end" wrap="nowrap">
-              <Button variant="subtle" onClick={handleClose}>
+              <Button variant="subtle" onClick={cancelForm.close}>
                 Закрыть
               </Button>
               <Button

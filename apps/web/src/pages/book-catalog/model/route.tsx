@@ -19,18 +19,6 @@ import type { EventType } from '@entities/event-type';
 // ============================================
 
 /**
- * Тип для self параметра в render функции
- */
-interface RouteSelf {
-  loader: {
-    pending: () => boolean;
-    data: () => EventType[] | null;
-    error: () => Error | null;
-  };
-  outlet: () => RouteChild[];
-}
-
-/**
  * Book catalog route - страница каталога и выбора слотов
  * Путь: '/bookings/new'
  * Layout route - рендерится при любом match, поддерживает вложенные роуты
@@ -70,8 +58,7 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
       throw new Error('Failed to fetch event types');
     }
 
-    const data = response.data;
-    const eventTypes = data.eventTypes || [];
+    const eventTypes: EventType[] = Array.isArray(response.data) ? response.data : [];
     return eventTypes;
   },
 
@@ -81,15 +68,14 @@ export const bookCatalogRoute = layoutRoute.reatomRoute({
    * - Если выбран тип события (?eventTypeId) — рендерим пикер слотов
    * - Иначе — рендерим каталог
    */
-  render(self: RouteSelf): RouteChild {
-    const isPending = self.loader.pending();
-    const eventTypes = self.loader.data();
+  render(self): RouteChild {
+    const { isPending, data: eventTypes } = self.loader.status();
     const error = self.loader.error();
     const children = self.outlet();
 
     // Если есть вложенные маршруты (страница confirm), рендерим их
     if (children && children.length > 0) {
-      return children.at(-1) ?? null;
+      return children.at(-1)!; // гарантировано, т.к. children.length > 0
     }
 
     // Если выбран тип события — рендерим пикер слотов

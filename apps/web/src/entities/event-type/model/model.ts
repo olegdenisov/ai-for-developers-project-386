@@ -14,9 +14,7 @@ export const fetchEventTypes = action(async () => {
   if (response.status >= 400) {
     throw new Error('Failed to fetch event types');
   }
-  // API возвращает { eventTypes: [...] }
-  const data = response.data;
-  const eventTypes = data.eventTypes || [];
+  const eventTypes = Array.isArray(response.data) ? response.data : [];
   eventTypesAtom.set(eventTypes);
   return eventTypes;
 }, 'fetchEventTypes').extend(withAsync());

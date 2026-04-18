@@ -91,7 +91,7 @@ describe('entities/event-type/model', () => {
 
       vi.mocked(apiClient.listPublicEventTypes).mockResolvedValue({
         status: 200,
-        data: { eventTypes: mockEventTypes },
+        data: mockEventTypes,
       } as unknown as Response);
 
       const result = await fetchEventTypes();
@@ -103,7 +103,7 @@ describe('entities/event-type/model', () => {
     it('должен обрабатывать пустой ответ', async () => {
       vi.mocked(apiClient.listPublicEventTypes).mockResolvedValue({
         status: 200,
-        data: { eventTypes: [] },
+        data: [],
       } as unknown as Response);
 
       const result = await fetchEventTypes();

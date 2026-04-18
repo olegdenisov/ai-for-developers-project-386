@@ -35,6 +35,7 @@ const app = Fastify({
 await app.register(cors, {
   origin: process.env.WEB_URL || 'http://localhost:5173',
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
 });
 
 await app.register(swagger, {

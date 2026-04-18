@@ -31,37 +31,36 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     guestName: 'Иван Иванов',
     guestEmail: 'ivan@example.com',
     guestNotes: 'Тестовая заметка',
-    status: 'CONFIRMED',
+    status: 'confirmed',
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     eventType: mockEventType,
     slot: mockSlot,
   };
 
-  // Статeful мок для reason, чтобы модальное окно корректно открывалось/закрывалось
-  let reasonValue = '';
+  // Статeful мок для isOpen, чтобы модальное окно корректно открывалось/закрывалось
+  let isOpenValue = false;
 
   beforeEach(() => {
-    reasonValue = '';
+    isOpenValue = false;
     vi.clearAllMocks();
   });
+
   const mockCancelForm = {
-    fields: {
-      reason: Object.assign(
-        vi.fn().mockImplementation(() => reasonValue),
-        {
-          set: vi.fn().mockImplementation((val: string) => { reasonValue = val; }),
-          reset: vi.fn(),
-        }
-      ),
-    },
-    submit: {
-      ready: vi.fn().mockReturnValue(true),
-      pending: vi.fn().mockReturnValue(false),
-      error: vi.fn().mockReturnValue(null),
-      errorAtom: {
-        set: vi.fn(),
+    isOpen: vi.fn().mockImplementation(() => isOpenValue),
+    open: vi.fn().mockImplementation(() => { isOpenValue = true; }),
+    close: vi.fn().mockImplementation(() => { isOpenValue = false; }),
+    form: {
+      fields: {
+        reason: Object.assign(vi.fn().mockReturnValue(''), { set: vi.fn(), reset: vi.fn() }),
       },
+      submit: Object.assign(vi.fn(), {
+        ready: vi.fn().mockReturnValue(true),
+        pending: vi.fn().mockReturnValue(false),
+        error: Object.assign(vi.fn().mockReturnValue(null), { set: vi.fn() }),
+        reset: vi.fn(),
+      }),
+      reset: vi.fn(),
     },
   };
 
@@ -186,13 +185,61 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     const cancelLink = screen.getByText('Отмена');
     fireEvent.click(cancelLink);
 
-    // Проверяем что устанавливается флаг открытия модалки
-    expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('cancel_requested');
+    // Проверяем что вызван open() для открытия модалки
+    expect(mockCancelForm.open).toHaveBeenCalled();
   });
 
-  it('должен корректно закрывать модальное окно когда errorAtom существует', () => {
+  it('должен открывать модальное окно переноса при клике на Перенести', () => {
+    const mockRescheduleForm = {
+      isOpen: Object.assign(vi.fn().mockReturnValue(false), { set: vi.fn() }),
+      availableSlots: Object.assign(vi.fn().mockReturnValue([]), {
+        data: vi.fn().mockReturnValue([]),
+        ready: vi.fn().mockReturnValue(true),
+        error: vi.fn().mockReturnValue(null),
+        subscribe: vi.fn(),
+      }),
+      form: {
+        fields: { newSlotId: Object.assign(vi.fn().mockReturnValue(''), { set: vi.fn() }) },
+        submit: Object.assign(vi.fn(), {
+          ready: vi.fn().mockReturnValue(true),
+          error: Object.assign(vi.fn().mockReturnValue(null), { set: vi.fn() }),
+        }),
+        reset: vi.fn(),
+      },
+      close: vi.fn(),
+    };
+
+    render(
+      <BookingDetailPage
+        booking={mockBooking}
+        rescheduleForm={mockRescheduleForm as any}
+        isLoading={false}
+      />
+    );
+
+    const rescheduleLink = screen.getByText('Перенести');
+    fireEvent.click(rescheduleLink);
+
+    expect(mockRescheduleForm.isOpen.set).toHaveBeenCalledWith(true);
+  });
+
+  it('не должен отображать ссылки переноса и отмены для отменённого бронирования', () => {
+    const cancelledBooking = { ...mockBooking, status: 'cancelled' as const };
+
+    render(
+      <BookingDetailPage
+        booking={cancelledBooking}
+        isLoading={false}
+      />
+    );
+
+    expect(screen.queryByText('Перенести')).not.toBeInTheDocument();
+    expect(screen.queryByText('Отмена')).not.toBeInTheDocument();
+  });
+
+  it('должен корректно закрывать модальное окно через close()', () => {
     // Предустанавливаем состояние, при котором модальное окно открыто
-    reasonValue = 'cancel_requested';
+    isOpenValue = true;
 
     render(
       <BookingDetailPage
@@ -206,46 +253,8 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     const closeButton = screen.getByText('Закрыть');
     fireEvent.click(closeButton);
 
-    // Проверяем что reason сброшен и errorAtom.set был вызван для сброса ошибки
-    expect(mockCancelForm.fields.reason.set).toHaveBeenCalledWith('');
-    expect(mockCancelForm.submit.errorAtom.set).toHaveBeenCalledWith(null);
-  });
-
-  it('должен корректно закрывать модальное окно когда errorAtom отсутствует', () => {
-    // Mock без errorAtom - проверка защиты от ошибки "Cannot read properties of undefined"
-    let reasonValue2 = 'cancel_requested'; // Предустанавливаем открытое состояние
-    const mockCancelFormWithoutErrorAtom = {
-      fields: {
-        reason: Object.assign(
-          vi.fn().mockImplementation(() => reasonValue2),
-          {
-            set: vi.fn().mockImplementation((val: string) => { reasonValue2 = val; }),
-            reset: vi.fn(),
-          }
-        ),
-      },
-      submit: {
-        ready: vi.fn().mockReturnValue(true),
-        pending: vi.fn().mockReturnValue(false),
-        error: vi.fn().mockReturnValue(null),
-        // errorAtom отсутствует - имитируем старый баг
-      },
-    };
-
-    render(
-      <BookingDetailPage
-        booking={mockBooking}
-        cancelForm={mockCancelFormWithoutErrorAtom as any}
-        isLoading={false}
-      />
-    );
-
-    // Модальное окно открыто, закрываем - не должно выбрасывать ошибку
-    const closeButton = screen.getByText('Закрыть');
-    expect(() => fireEvent.click(closeButton)).not.toThrow();
-
-    // Проверяем что set('') был вызван для закрытия модалки
-    expect(mockCancelFormWithoutErrorAtom.fields.reason.set).toHaveBeenCalledWith('');
+    // Проверяем что close() был вызван
+    expect(mockCancelForm.close).toHaveBeenCalled();
   });
 
   it('должен отображать ошибку когда отсутствует eventType в бронировании', () => {

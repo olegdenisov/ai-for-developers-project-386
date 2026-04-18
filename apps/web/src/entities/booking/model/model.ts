@@ -30,7 +30,7 @@ export const createBooking = action(async (data: CreateBookingRequest) => {
   const response = await wrap(apiClient.createBooking(data));
 
   if (response.status >= 400) {
-    const error = response.data;
+    const error = response.data as { message?: string };
     const errorMessage = error.message || 'Failed to create booking';
     bookingErrorAtom.set(errorMessage);
     throw new Error(errorMessage);

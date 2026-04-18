@@ -65,10 +65,14 @@ export async function getAvailableSlotsForEventType(
     throw new ValidationError('Invalid date format');
   }
 
-  // Слоты только для данного типа события в запрошенном диапазоне
+  // Слоты только для данного типа события в запрошенном диапазоне (только доступные).
+  // booking: null исключает слоты с отменёнными бронированиями: из-за @unique на slotId
+  // запись Booking остаётся в БД даже после отмены, делая слот фактически недоступным.
   const slots = await prisma.slot.findMany({
     where: {
       eventTypeId,
+      isAvailable: true,
+      booking: null,
       startTime: {
         gte: start,
         lte: end,
@@ -79,26 +83,7 @@ export async function getAvailableSlotsForEventType(
     },
   });
 
-  // Все подтверждённые бронирования, чьё время пересекается с диапазоном
-  const confirmedBookings = await prisma.booking.findMany({
-    where: {
-      status: 'CONFIRMED',
-      slot: {
-        startTime: { lt: end },
-        endTime: { gt: start },
-      },
-    },
-    include: { slot: true },
-  });
-
-  // Возвращаем только слоты без временного перекрытия с существующими бронированиями
-  return slots.filter((slot) => {
-    return !confirmedBookings.some(
-      (booking) =>
-        booking.slot.startTime < slot.endTime &&
-        booking.slot.endTime > slot.startTime,
-    );
-  });
+  return slots;
 }
 
 export async function createBooking(data: {
@@ -181,6 +166,79 @@ export async function getBookingById(id: string) {
   }
 
   return booking;
+}
+
+export async function rescheduleBooking(id: string, newSlotId: string) {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // 1. Найти бронирование
+    const booking = await tx.booking.findUnique({
+      where: { id },
+      include: { slot: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundError('Booking not found');
+    }
+
+    if (booking.status !== 'CONFIRMED') {
+      throw new ValidationError('Only confirmed bookings can be rescheduled');
+    }
+
+    // 2. Проверить, что не переносят на тот же слот
+    if (booking.slotId === newSlotId) {
+      throw new ValidationError('New slot must be different from the current slot');
+    }
+
+    // 3. Найти новый слот (с включением связанного бронирования для проверки уникальности)
+    const newSlot = await tx.slot.findUnique({
+      where: { id: newSlotId },
+      include: { booking: true },
+    });
+
+    if (!newSlot) {
+      throw new NotFoundError('New slot not found');
+    }
+
+    // 4. Проверить, что новый слот принадлежит тому же типу события
+    if (newSlot.eventTypeId !== booking.eventTypeId) {
+      throw new ValidationError('New slot belongs to a different event type');
+    }
+
+    // 5. Проверить доступность нового слота.
+    // Также проверяем наличие любого бронирования (в том числе отменённого):
+    // из-за @unique на slotId отменённые записи по-прежнему занимают слот,
+    // и попытка переноса к ним вызовет ошибку уникальности на уровне БД.
+    if (!newSlot.isAvailable || newSlot.booking) {
+      throw new SlotConflictError();
+    }
+
+    // 6. Освободить старый слот и занять новый (до обновления бронирования),
+    // чтобы include: { slot: true } в следующем запросе вернул актуальный isAvailable.
+    await Promise.all([
+      tx.slot.update({
+        where: { id: booking.slotId },
+        data: { isAvailable: true },
+      }),
+      tx.slot.update({
+        where: { id: newSlotId },
+        data: { isAvailable: false },
+      }),
+    ]);
+
+    // 7. Обновить бронирование — читает slot после обновления выше
+    const updatedBooking = await tx.booking.update({
+      where: { id },
+      data: { slotId: newSlotId },
+      include: {
+        eventType: true,
+        slot: true,
+      },
+    });
+
+    return updatedBooking;
+  }, {
+    isolationLevel: 'Serializable',
+  });
 }
 
 export async function cancelBooking(

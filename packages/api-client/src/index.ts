@@ -147,6 +147,23 @@ export class PublicApi extends BaseApiClient {
     );
     return { data: response.data, status: response.status };
   }
+
+  /**
+   * Перенести бронирование на другой слот
+   */
+  async rescheduleBooking(
+    id: string,
+    newSlotId: string
+  ): Promise<ApiResponse<components['schemas']['Booking']>> {
+    const response = await this.fetch<components['schemas']['Booking']>(
+      `/public/bookings/${id}/reschedule`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ newSlotId }),
+      }
+    );
+    return { data: response.data, status: response.status };
+  }
 }
 
 /**
@@ -331,6 +348,7 @@ export type CreateEventTypeRequest = components['schemas']['CreateEventTypeReque
 export type UpdateEventTypeRequest = components['schemas']['UpdateEventTypeRequest'];
 export type CreateBookingRequest = components['schemas']['CreateBookingRequest'];
 export type CancelBookingRequest = components['schemas']['CancelBookingRequest'];
+export type RescheduleBookingRequest = components['schemas']['RescheduleBookingRequest'];
 export type ErrorResponse = components['schemas']['ErrorResponse'];
 export type NotFoundError = components['schemas']['NotFoundError'];
 export type ValidationError = components['schemas']['ValidationError'];

@@ -3,6 +3,8 @@ import { z } from 'zod/v4';
 import { apiClient } from '@shared/api';
 import { layoutRoute } from '@shared/router';
 import { createCancelForm } from '@features/cancel-booking';
+import { createRescheduleForm } from '@features/reschedule-booking';
+import { currentBookingAtom } from '@entities/booking';
 import { BookingDetailPage } from '../BookingDetailPage';
 import type { Booking } from '@entities/booking';
 
@@ -12,6 +14,7 @@ import type { Booking } from '@entities/booking';
 interface LoaderData {
   booking: Booking;
   cancelForm: ReturnType<typeof createCancelForm>;
+  rescheduleForm: ReturnType<typeof createRescheduleForm>;
 }
 
 /**
@@ -22,47 +25,25 @@ interface LoaderData {
 export const bookingDetailRoute = layoutRoute.reatomRoute({
   path: 'bookings/:id',
 
-  /**
-   * Валидация параметров URL
-   * id не может быть "new" чтобы не конфликтовать с маршрутом /bookings/new
-   */
   params: z.object({
     id: z.string().refine((val) => val !== 'new', {
       message: 'ID не может быть "new"',
     }),
   }),
 
-  /**
-   * Loader с factory pattern:
-   * - Загружает данные бронирования
-   * - Создает форму отмены через factory function
-   */
   async loader({ id }: { id: string }): Promise<LoaderData | null> {
-    // Загружаем бронирование
     const response = await wrap(apiClient.getBooking(id));
+    const booking = response.data;
 
-    if (response.status >= 400) {
-      throw new Error('Booking not found');
-    }
+    currentBookingAtom.set(booking);
 
-    const booking = response.data as Booking;
-
-    // Factory: создаем форму отмены внутри loader
     const cancelForm = createCancelForm(id);
+    const rescheduleForm = createRescheduleForm(id, booking.eventTypeId);
 
-    return { booking, cancelForm };
+    return { booking, cancelForm, rescheduleForm };
   },
 
-  /**
-   * Render функция возвращает React компонент
-   */
-  render(self: {
-    loader: {
-      pending: () => boolean;
-      data: () => LoaderData | null;
-      error: () => Error | null;
-    };
-  }): React.ReactNode {
+  render(self) {
     const isPending = self.loader.pending();
     const data = self.loader.data();
     const error = self.loader.error();
@@ -72,24 +53,21 @@ export const bookingDetailRoute = layoutRoute.reatomRoute({
     }
 
     if (error) {
-      return (
-        <BookingDetailPage isLoading={false} error={error.message} />
-      );
+      return <BookingDetailPage isLoading={false} error={error.message} />;
     }
 
     if (!data) {
-      return (
-        <BookingDetailPage
-          isLoading={false}
-          error="Бронирование не найдено"
-        />
-      );
+      return <BookingDetailPage isLoading={false} error="Бронирование не найдено" />;
     }
+
+    const liveBooking = currentBookingAtom();
+    const booking = (liveBooking && liveBooking.id === data.booking.id) ? liveBooking : data.booking;
 
     return (
       <BookingDetailPage
-        booking={data.booking}
+        booking={booking}
         cancelForm={data.cancelForm}
+        rescheduleForm={data.rescheduleForm}
         isLoading={false}
       />
     );

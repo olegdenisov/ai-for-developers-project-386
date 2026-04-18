@@ -52,7 +52,7 @@ describe('entities/booking/model', () => {
     guestName: 'Иван Иванов',
     guestEmail: 'ivan@example.com',
     guestNotes: 'Тестовая заметка',
-    status: 'CONFIRMED',
+    status: 'confirmed',
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     eventType: mockEventType,
@@ -214,7 +214,7 @@ describe('entities/booking/model', () => {
   describe('cancelBooking', () => {
     const cancelledBooking: Booking = {
       ...mockBooking,
-      status: 'CANCELLED',
+      status: 'cancelled',
     };
 
     it('должен отменять бронирование с причиной', async () => {
@@ -321,7 +321,7 @@ describe('entities/booking/model', () => {
       it('должен отслеживать состояние отмены', async () => {
         vi.mocked(apiClient.cancelBooking).mockResolvedValue({
           status: 200,
-          data: { ...mockBooking, status: 'CANCELLED' },
+          data: { ...mockBooking, status: 'cancelled' },
         } as unknown as Response);
 
         expect(peek(isCancellingBooking)).toBe(false);

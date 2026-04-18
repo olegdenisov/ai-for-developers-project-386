@@ -3,7 +3,7 @@ import * as bookingService from './booking.service.js';
 
 export async function listPublicEventTypes(request: FastifyRequest, reply: FastifyReply) {
   const eventTypes = await bookingService.listPublicEventTypes();
-  return reply.send({ eventTypes });
+  return reply.send(eventTypes);
 }
 
 export async function getPublicEventType(
@@ -60,5 +60,16 @@ export async function cancelBooking(
   reply: FastifyReply
 ) {
   const booking = await bookingService.cancelBooking(request.params.id, request.body);
+  return reply.send(booking);
+}
+
+export async function rescheduleBooking(
+  request: FastifyRequest<{
+    Params: { id: string };
+    Body: { newSlotId: string };
+  }>,
+  reply: FastifyReply
+) {
+  const booking = await bookingService.rescheduleBooking(request.params.id, request.body.newSlotId);
   return reply.send(booking);
 }

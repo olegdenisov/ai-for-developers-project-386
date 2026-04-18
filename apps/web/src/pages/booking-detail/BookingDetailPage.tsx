@@ -26,6 +26,8 @@ import { formatDate, formatTime } from '@shared/lib';
 import type { Booking } from '@entities/booking';
 import { CancelBookingModal } from '@features/cancel-booking';
 import type { createCancelForm } from '@features/cancel-booking';
+import { RescheduleModal } from '@features/reschedule-booking';
+import type { createRescheduleForm } from '@features/reschedule-booking';
 
 /**
  * Props для компонента страницы деталей бронирования
@@ -33,6 +35,7 @@ import type { createCancelForm } from '@features/cancel-booking';
 interface BookingDetailPageProps {
   booking?: Booking;
   cancelForm?: ReturnType<typeof createCancelForm>;
+  rescheduleForm?: ReturnType<typeof createRescheduleForm>;
   isLoading: boolean;
   error?: string | null;
 }
@@ -45,6 +48,7 @@ export const BookingDetailPage = reatomComponent(
   ({
     booking,
     cancelForm,
+    rescheduleForm,
     isLoading,
     error,
   }: BookingDetailPageProps) => {
@@ -88,8 +92,13 @@ export const BookingDetailPage = reatomComponent(
 
     const handleCancel = () => {
       if (cancelForm) {
-        // Открываем модальное окно, устанавливая reason в специальное значение
-        cancelForm.fields.reason.set('cancel_requested');
+        cancelForm.open();
+      }
+    };
+
+    const handleReschedule = () => {
+      if (rescheduleForm) {
+        rescheduleForm.isOpen.set(true);
       }
     };
 
@@ -190,22 +199,24 @@ export const BookingDetailPage = reatomComponent(
 
             <Divider my="xl" />
 
-            {/* Действия */}
-            <Text ta="center">
-              Хотите внести изменения?{' '}
-              <Anchor component="button" type="button">
-                Перенести
-              </Anchor>{' '}
-              или{' '}
-              <Anchor
-                component="button"
-                type="button"
-                c="red"
-                onClick={handleCancel}
-              >
-                Отмена
-              </Anchor>
-            </Text>
+            {/* Действия — только для активных бронирований */}
+            {booking.status === 'confirmed' && (
+              <Text ta="center">
+                Хотите внести изменения?{' '}
+                <Anchor component="button" type="button" onClick={handleReschedule}>
+                  Перенести
+                </Anchor>{' '}
+                или{' '}
+                <Anchor
+                  component="button"
+                  type="button"
+                  c="red"
+                  onClick={handleCancel}
+                >
+                  Отмена
+                </Anchor>
+              </Text>
+            )}
 
             <Divider my="xl" />
 
@@ -235,6 +246,9 @@ export const BookingDetailPage = reatomComponent(
 
         {/* Модальное окно отмены бронирования */}
         {cancelForm && <CancelBookingModal cancelForm={cancelForm} />}
+
+        {/* Модальное окно переноса бронирования */}
+        {rescheduleForm && <RescheduleModal rescheduleForm={rescheduleForm} />}
       </Layout>
     );
   },

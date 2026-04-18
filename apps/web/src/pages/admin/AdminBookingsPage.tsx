@@ -35,7 +35,7 @@ function BookingRow({
   const endTime = booking.slot?.endTime ?? '';
 
   return (
-    <Table.Tr style={booking.status === 'CANCELLED' ? { opacity: 0.45 } : undefined}>
+    <Table.Tr style={booking.status === 'cancelled' ? { opacity: 0.45 } : undefined}>
       <Table.Td>
         <Text size="sm">{startTime ? formatDate(startTime, 'DD.MM.YYYY') : '—'}</Text>
       </Table.Td>
@@ -69,7 +69,7 @@ function BookingRow({
         </Text>
       </Table.Td>
       <Table.Td>
-        {booking.status === 'CONFIRMED' && (
+        {booking.status === 'confirmed' && (
           <ActionIcon
             variant="subtle"
             color="red"
@@ -154,11 +154,11 @@ export const AdminBookingsPage = reatomComponent(() => {
   const tab = bookingsTab();
 
   const upcomingData = upcomingBookings.data();
-  const upcomingPending = upcomingBookings.pending();
+  const upcomingPending = upcomingBookings.pending() > 0;
   const upcomingError = upcomingBookings.error();
 
   const pastData = pastBookings.data();
-  const pastPending = pastBookings.pending();
+  const pastPending = pastBookings.pending() > 0;
   const pastError = pastBookings.error();
 
   const handleRefresh = () => {
