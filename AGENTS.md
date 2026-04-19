@@ -233,8 +233,7 @@ layoutRoute ("")
 
 ### Reatom v1000 Patterns
 
-@docs/reatom-summary-doc.md
-@docs/reatom-v1000.md
+Документация: `docs/reatom-summary-doc.md` (краткая) и `docs/reatom-v1000.md` (полная) — читай по необходимости.
 
 ### Component Patterns
 - Use `reatomComponent()` from `@reatom/react` for components with atoms
