@@ -137,7 +137,7 @@ await prisma.$transaction(async (tx) => {
 
 ```
 app/        # Providers (Mantine, Reatom), router, global styles
-pages/      # home/, book-catalog/, event-type/, booking-confirmation/, booking-detail/, admin/
+pages/      # home/, booking/, book-catalog/, event-type/, booking-confirmation/, booking-detail/, admin/
 features/   # create-booking/, view-slots/, cancel-booking/, reschedule-booking/, create-event-type/, edit-event-type/, delete-event-type/, owner-bookings/
 entities/   # event-type/, slot/, booking/, owner/ — Reatom atoms
 shared/     # api/, config/, lib/, ui/, router/
@@ -191,7 +191,37 @@ features/[name]/
 
 ### Routing (`apps/web/src/shared/router/`)
 
-Routes use Reatom `reatomRoute` with loaders and `render`. The app tree: `layoutRoute` → page routes. Navigation helpers in `apps/web/src/app/router/routes.ts` (`navigate.home()`, `navigate.admin()`, etc.).
+Routes use Reatom `reatomRoute` with loaders and `render`. Navigation helpers in `apps/web/src/app/router/routes.ts`:
+
+```ts
+navigate.home()
+navigate.booking()                                  // → /bookings/new (каталог)
+navigate.eventType(eventTypeId)                     // → /bookings/new/:eventTypeId
+navigate.bookingConfirmation(eventTypeId, slotId)   // → /bookings/new/:eventTypeId/confirm?slotId=
+navigate.bookingDetail(id)                          // → /bookings/:id
+navigate.admin()                                    // → /admin/bookings
+navigate.back()
+```
+
+Route tree (booking flow):
+```
+layoutRoute ("")
+├── homeRoute ("")
+├── bookingRoute ("bookings")          ← layout: true, loader: Owner
+│   ├── bookCatalogRoute ("new")       ← layout: true, loader: EventType[]
+│   │   └── eventTypeRoute (":eventTypeId")       ← loader: finds EventType in parent data
+│   │       └── bookingConfirmationRoute ("confirm")  ← search: ?slotId=
+│   └── bookingDetailRoute (":id")     ← params: id ≠ "new" (guarded by Zod refine)
+└── adminRoute ("admin") ...
+```
+
+**Note:** `pages/event-type/` splits routing into two files: `model/route.tsx` contains shared atoms (selectedEventTypeIdAtom, selectedSlotAtom, slotsAtom, fetch actions), and `model/eventTypeRoute.tsx` contains the `reatomRoute` definition. This split avoids a circular dependency with `booking-confirmation/model/route.tsx` which imports the atoms directly.
+
+**Shared API clients** (`shared/api/client.ts`):
+- `apiClient` (PublicApi) — public endpoints (event types, bookings)
+- `ownerApiClient` (OwnerApi) — owner profile
+- `eventTypesApiClient` (EventTypesApi) — admin event type CRUD
+- `slotsApiClient` (SlotsApi) — slot lookup by ID
 
 ### Path Aliases (vite.config.ts + tsconfig.json)
 - `@/` → `src/`

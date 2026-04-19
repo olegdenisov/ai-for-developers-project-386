@@ -131,7 +131,7 @@ export const fetchSlotsForDate = action(async () => {
  * Computed для отслеживания состояния загрузки слотов
  */
 export const isSlotsLoading = computed(() => {
-  return fetchSlotsForDate.pending();
+  return fetchSlotsForDate.pending() > 0 || fetchSlotsForCalendar.pending() > 0;
 }, 'isSlotsLoading');
 
 // ============================================

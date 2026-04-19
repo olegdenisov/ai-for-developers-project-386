@@ -58,24 +58,23 @@ import 'dayjs/locale/ru';
 
 interface EventTypePageProps {
   eventTypeId?: string;
+  eventType?: EventType;
+  owner?: Owner;
 }
 
 // ============================================
 // COMPONENT
 // ============================================
 
-export const EventTypePage = reatomComponent(({ eventTypeId }: EventTypePageProps) => {
-  // Состояние загрузки данных типа события
-  const [eventType, setEventType] = useState<EventType | undefined>(undefined);
-  const [owner] = useState<Owner>({
-    id: 'default',
-    name: 'Host',
-    email: '',
-    isPredefined: true,
-    createdAt: '',
-  });
-  const [isLoading, setIsLoading] = useState(true);
+export const EventTypePage = reatomComponent(({ eventTypeId, eventType: eventTypeProp, owner: ownerProp }: EventTypePageProps) => {
+  // Если данные переданы через props (из route loader), используем их напрямую
+  const [localEventType, setLocalEventType] = useState<EventType | undefined>(undefined);
+  const [localIsLoading, setLocalIsLoading] = useState(!eventTypeProp);
   const [error, setError] = useState<string | null>(null);
+
+  const eventType = eventTypeProp ?? localEventType;
+  const owner = ownerProp ?? { id: 'default', name: 'Host', email: '', isPredefined: true as const, createdAt: '' };
+  const isLoading = eventTypeProp ? false : localIsLoading;
 
   // Получаем состояние из atoms
   const selectedDate = selectedDateAtom();
@@ -86,15 +85,17 @@ export const EventTypePage = reatomComponent(({ eventTypeId }: EventTypePageProp
   const calendarDays = calendarDaysAtom();
   const slotsForSelectedDate = slotsForSelectedDateAtom();
 
-  // Загружаем данные типа события при монтировании или смене ID
+  // Загружаем данные типа события через API только если не переданы через props
   useEffect(() => {
+    if (eventTypeProp) return;
+
     if (!eventTypeId) {
-      setIsLoading(false);
+      setLocalIsLoading(false);
       setError('Тип события не найден');
       return;
     }
 
-    setIsLoading(true);
+    setLocalIsLoading(true);
     setError(null);
 
     apiClient.getPublicEventType(eventTypeId)
@@ -103,15 +104,15 @@ export const EventTypePage = reatomComponent(({ eventTypeId }: EventTypePageProp
           setError('Не удалось загрузить тип события');
           return;
         }
-        setEventType(response.data as EventType);
+        setLocalEventType(response.data as EventType);
       })
       .catch(() => {
         setError('Не удалось загрузить тип события');
       })
       .finally(() => {
-        setIsLoading(false);
+        setLocalIsLoading(false);
       });
-  }, [eventTypeId]);
+  }, [eventTypeId, eventTypeProp]);
 
   // Загружаем слоты при изменении выбранной даты
   useEffect(() => {

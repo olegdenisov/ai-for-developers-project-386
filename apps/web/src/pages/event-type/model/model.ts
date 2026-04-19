@@ -89,10 +89,11 @@ export const proceedToBooking = action((eventType: EventType | undefined) => {
   }
 }, 'proceedToBooking');
 
-// Возврат на страницу каталога — очищает локальное состояние
+// Возврат на страницу каталога — очищает локальное состояние и навигирует
 export const goBack = action(() => {
   selectedEventTypeIdAtom.set(null);
   selectedDateAtom.set(null);
   selectedSlotAtom.set(null);
   selectedSlotIdAtom.set(null);
+  navigate.booking();
 }, 'goBack');

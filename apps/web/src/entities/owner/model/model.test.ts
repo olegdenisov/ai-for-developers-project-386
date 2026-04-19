@@ -68,7 +68,14 @@ describe('entities/owner/model', () => {
       await fetchOwner();
 
       const owner = peek(ownerAtom);
-      expect(() => new Date(owner!.createdAt)).not.toThrow();
+      expect(isNaN(new Date(owner!.createdAt).getTime())).toBe(false);
+    });
+
+    it('должен выбрасывать ошибку если API вернул статус >= 400', async () => {
+      const { ownerApiClient } = await import('@shared/api');
+      vi.mocked(ownerApiClient.getProfile).mockResolvedValueOnce({ status: 500, data: null } as never);
+
+      await expect(fetchOwner()).rejects.toThrow('Failed to fetch owner');
     });
   });
 

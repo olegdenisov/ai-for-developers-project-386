@@ -76,15 +76,15 @@ export const bookingConfirmationRoute = eventTypeRoute.reatomRoute({
   search: z.object({ slotId: z.string().optional() }),
 
   async loader({ eventTypeId, slotId }: { eventTypeId: string; slotId?: string }): Promise<LoaderData | null> {
+    const { navigate } = await import('@app/router');
+
     if (!slotId) {
-      const { navigate } = await import('@app/router');
       navigate.eventType(eventTypeId);
       return null;
     }
 
     const slotResponse = await wrap(slotsApiClient.getSlot(slotId));
     if (slotResponse.status >= 400) {
-      const { navigate } = await import('@app/router');
       navigate.eventType(eventTypeId);
       return null;
     }
@@ -93,19 +93,16 @@ export const bookingConfirmationRoute = eventTypeRoute.reatomRoute({
     const eventTypes = bookCatalogRoute.loader.data() ?? [];
     const eventType = eventTypes.find((et) => et.id === eventTypeId);
     if (!eventType) {
-      const { navigate } = await import('@app/router');
       navigate.eventType(eventTypeId);
       return null;
     }
 
     const owner = bookingRoute.loader.data() as Owner | undefined;
     if (!owner) {
-      const { navigate } = await import('@app/router');
       navigate.booking();
       return null;
     }
 
-    const { navigate } = await import('@app/router');
     const form = createBookingForm(eventType, slot, navigate.bookingDetail);
 
     return { eventType, slot, owner, form };

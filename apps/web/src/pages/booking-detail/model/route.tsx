@@ -34,6 +34,9 @@ export const bookingDetailRoute = bookingRoute.reatomRoute({
 
   async loader({ id }: { id: string }): Promise<LoaderData | null> {
     const response = await wrap(apiClient.getBooking(id));
+    if (response.status >= 400) {
+      return null;
+    }
     const booking = response.data;
 
     currentBookingAtom.set(booking);

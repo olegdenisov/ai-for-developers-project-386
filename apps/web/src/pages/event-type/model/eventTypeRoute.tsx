@@ -1,5 +1,6 @@
 import type { RouteChild } from '@reatom/core';
 import { bookCatalogRoute } from '@pages/book-catalog/model/route';
+import { bookingRoute } from '@pages/booking';
 import { EventTypePage } from '../EventTypePage';
 import {
   selectedEventTypeIdAtom,
@@ -34,6 +35,8 @@ export const eventTypeRoute = bookCatalogRoute.reatomRoute({
   },
 
   render(self): RouteChild {
-    return <EventTypePage eventTypeId={self().eventTypeId} />;
+    const eventType = self.loader.data() ?? undefined;
+    const owner = bookingRoute.loader.data() ?? undefined;
+    return <EventTypePage eventTypeId={self().eventTypeId} eventType={eventType} owner={owner} />;
   },
 });
