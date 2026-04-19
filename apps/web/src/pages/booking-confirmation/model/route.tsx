@@ -73,15 +73,10 @@ export function createBookingForm(
 export const bookingConfirmationRoute = eventTypeRoute.reatomRoute({
   path: 'confirm',
 
-  search: z.object({ slotId: z.string().optional() }),
+  search: z.object({ slotId: z.string() }),
 
-  async loader({ eventTypeId, slotId }: { eventTypeId: string; slotId?: string }): Promise<LoaderData | null> {
+  async loader({ eventTypeId, slotId }: { eventTypeId: string; slotId: string }): Promise<LoaderData | null> {
     const { navigate } = await import('@app/router');
-
-    if (!slotId) {
-      navigate.eventType(eventTypeId);
-      return null;
-    }
 
     const slotResponse = await wrap(slotsApiClient.getSlot(slotId));
     if (slotResponse.status >= 400) {

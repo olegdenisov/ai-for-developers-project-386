@@ -29,7 +29,11 @@ export const navigate = {
   home: () => wrap(homeRoute.go()),
   booking: () => wrap(bookCatalogRoute.go()),
   eventType: (eventTypeId: string) => wrap(eventTypeRoute.go({ eventTypeId })),
-  bookingConfirmation: (eventTypeId: string, slotId: string) => wrap(bookingConfirmationRoute.go({ eventTypeId, slotId })),
+  bookingConfirmation: (eventTypeId: string, slotId: string) => {
+    // reatom не выводит тип search params из Zod v4 в .go(), обходим через переменную
+    const params = { eventTypeId, slotId };
+    return wrap(bookingConfirmationRoute.go(params));
+  },
   bookingDetail: (id: string) => wrap(bookingDetailRoute.go({ id })),
   admin: () => wrap(adminBookingsRoute.go()),
   back: () => window.history.back(),

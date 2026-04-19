@@ -12,7 +12,7 @@ const App = reatomComponent(function App() {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   // <React.StrictMode>
-  <reatomContext.Provider value={undefined}>
+  <reatomContext.Provider value={null}>
     <AppProviders>
       <App />
     </AppProviders>
