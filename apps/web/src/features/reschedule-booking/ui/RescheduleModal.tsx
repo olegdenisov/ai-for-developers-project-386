@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { reatomComponent } from '@reatom/react'
 import {
   Modal,
@@ -28,6 +29,8 @@ export const RescheduleModal = reatomComponent(
   ({ rescheduleForm, currentSlot }: RescheduleModalProps) => {
     const { isOpen, availableSlots, form } = rescheduleForm
 
+    const [selectedDay, setSelectedDay] = useState<string | null>(null)
+
     const opened = isOpen()
     const slots: Slot[] = availableSlots.data() ?? []
     const isLoadingSlots = !availableSlots.ready()
@@ -36,6 +39,11 @@ export const RescheduleModal = reatomComponent(
     const selectedSlotId = form.fields.newSlotId()
     const isSubmitting = !form.submit.ready()
     const submitError = form.submit.error()
+
+    const handleClose = () => {
+      setSelectedDay(null)
+      rescheduleForm.close()
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
@@ -53,11 +61,13 @@ export const RescheduleModal = reatomComponent(
     }, {})
 
     const sortedDays = Object.keys(slotsByDay).sort()
+    // При активном фильтре показываем только выбранный день
+    const visibleDays = selectedDay ? sortedDays.filter((d) => d === selectedDay) : sortedDays
 
     return (
       <Modal
         opened={opened}
-        onClose={rescheduleForm.close}
+        onClose={handleClose}
         title="Перенести встречу"
         centered
         size="md"
@@ -91,30 +101,47 @@ export const RescheduleModal = reatomComponent(
             )}
 
             {!isLoadingSlots && !slotsError && slots.length > 0 && (
-              <ScrollArea mah={360} offsetScrollbars>
-                <Radio.Group
-                  value={selectedSlotId}
-                  onChange={(value) => form.fields.newSlotId.set(value)}
-                  name="newSlotId"
-                >
-                  <Stack gap="sm">
+              <>
+                <ScrollArea type="scroll" offsetScrollbars>
+                  <Group gap="xs" wrap="nowrap" pb="xs">
                     {sortedDays.map((day) => (
-                      <Stack key={day} gap="xs">
-                        <Text fw={600} size="sm">
-                          {formatDate(day, 'dddd, D MMMM')}
-                        </Text>
-                        {slotsByDay[day].map((slot) => (
-                          <Radio
-                            key={slot.id}
-                            value={slot.id}
-                            label={`${formatTime(slot.startTime)} — ${formatTime(slot.endTime)}`}
-                          />
-                        ))}
-                      </Stack>
+                      <Button
+                        key={day}
+                        variant={selectedDay === day ? 'filled' : 'default'}
+                        size="compact-sm"
+                        onClick={() => setSelectedDay(selectedDay === day ? null : day)}
+                      >
+                        {formatDate(day, 'D MMM')}
+                      </Button>
                     ))}
-                  </Stack>
-                </Radio.Group>
-              </ScrollArea>
+                  </Group>
+                </ScrollArea>
+
+                <ScrollArea mah={360} offsetScrollbars>
+                  <Radio.Group
+                    value={selectedSlotId}
+                    onChange={(value) => form.fields.newSlotId.set(value)}
+                    name="newSlotId"
+                  >
+                    <Stack gap="sm">
+                      {visibleDays.map((day) => (
+                        <Stack key={day} gap="xs">
+                          <Text fw={600} size="sm">
+                            {formatDate(day, 'dddd, D MMMM')}
+                          </Text>
+                          {slotsByDay[day].map((slot) => (
+                            <Radio
+                              key={slot.id}
+                              value={slot.id}
+                              label={`${formatTime(slot.startTime)} — ${formatTime(slot.endTime)}`}
+                            />
+                          ))}
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </Radio.Group>
+                </ScrollArea>
+              </>
             )}
 
             {submitError && (
@@ -124,7 +151,7 @@ export const RescheduleModal = reatomComponent(
             )}
 
             <Group justify="flex-end" wrap="nowrap">
-              <Button variant="subtle" onClick={rescheduleForm.close} disabled={isSubmitting}>
+              <Button variant="subtle" onClick={handleClose} disabled={isSubmitting}>
                 Отмена
               </Button>
               <Button
