@@ -40,7 +40,7 @@ test.describe('Навигация', () => {
     await page.getByTestId('event-type-card').first().click();
 
     // Проверяем что мы на странице выбора слотов
-    await expect(page).toHaveURL(/.*\?eventTypeId=/);
+    await expect(page).toHaveURL(/.*\/bookings\/new\/.+/);
 
     // Кликаем "Назад"
     await page.getByRole('button', { name: 'Назад' }).first().click();
@@ -104,7 +104,7 @@ test.describe('Навигация', () => {
     await eventTypeCard.click();
 
     // Проверяем что URL обновился с eventTypeId
-    await expect(page).toHaveURL(/.*\?eventTypeId=/);
+    await expect(page).toHaveURL(/.*\/bookings\/new\/.+/);
     // Проверяем что тип события отображается на странице выбора слотов
     await expect(page.getByText(eventName || '')).toBeVisible();
   });

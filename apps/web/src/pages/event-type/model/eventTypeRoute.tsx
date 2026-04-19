@@ -35,6 +35,10 @@ export const eventTypeRoute = bookCatalogRoute.reatomRoute({
   },
 
   render(self): RouteChild {
+    const children = self.outlet();
+    if (children && children.length > 0) {
+      return children.at(-1)!;
+    }
     const eventType = self.loader.data() ?? undefined;
     const owner = bookingRoute.loader.data() ?? undefined;
     return <EventTypePage eventTypeId={self().eventTypeId} eventType={eventType} owner={owner} />;

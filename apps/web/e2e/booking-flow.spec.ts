@@ -39,7 +39,7 @@ test.describe('Полный флоу бронирования', () => {
     await page.getByTestId('event-type-card').first().click();
 
     // 6. Проверяем переход на страницу выбора слотов
-    await expect(page).toHaveURL(/.*\?eventTypeId=/);
+    await expect(page).toHaveURL(/.*\/bookings\/new\/.+/);
     await expect(page.getByText('Календарь')).toBeVisible();
 
     // 7. Выбираем доступную дату (динамически, по наличию слотов)

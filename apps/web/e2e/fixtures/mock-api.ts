@@ -10,6 +10,14 @@ const BOOKING_ID = '22222222-2222-2222-2222-222222222222';
 
 const now = new Date();
 
+const mockOwner = {
+  id: '00000000-0000-0000-0000-000000000001',
+  name: 'Tota',
+  email: 'tota@example.com',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
+
 const mockEventType = {
   id: EVENT_TYPE_ID,
   name: 'Консультация 30 мин',
@@ -75,13 +83,22 @@ function createMockBooking(overrides: Record<string, unknown> = {}) {
 
 export const test = base.extend({
   page: async ({ page }, use) => {
+    // GET /owner/profile — профиль хоста
+    await page.route('**/owner/profile', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockOwner),
+      });
+    });
+
     // GET /public/event-types — список типов событий
     await page.route('**/public/event-types', async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ eventTypes: [mockEventType] }),
+          body: JSON.stringify([mockEventType]),
         });
       } else {
         await route.continue();
@@ -104,6 +121,22 @@ export const test = base.extend({
         contentType: 'application/json',
         body: JSON.stringify(mockEventType),
       });
+    });
+
+    // GET /slots/:id — слот по ID (используется в bookingConfirmationRoute)
+    await page.route(/\/slots\/[^/]+$/, async (route) => {
+      if (route.request().method() === 'GET') {
+        const url = route.request().url();
+        const slotId = url.split('/slots/')[1]?.split('?')[0];
+        const slot = mockSlots.find((s) => s.id === slotId) ?? mockSlots[0];
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(slot),
+        });
+      } else {
+        await route.continue();
+      }
     });
 
     // POST /public/bookings/:id/cancel — отмена бронирования
