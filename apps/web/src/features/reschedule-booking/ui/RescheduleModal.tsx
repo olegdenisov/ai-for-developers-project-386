@@ -144,6 +144,16 @@ export const RescheduleModal = reatomComponent(
               </>
             )}
 
+            {selectedSlotId && (() => {
+              const selectedSlotData = slots.find((s) => s.id === selectedSlotId)
+              return selectedSlotData ? (
+                <Text size="sm" c="dimmed" ta="center">
+                  Вы выбрали: {formatDate(selectedSlotData.startTime, 'dddd, D MMMM')} •{' '}
+                  {formatTime(selectedSlotData.startTime)} — {formatTime(selectedSlotData.endTime)}
+                </Text>
+              ) : null
+            })()}
+
             {submitError && (
               <Text c="red" size="sm">
                 {submitError.message}
