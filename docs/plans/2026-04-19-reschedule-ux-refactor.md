@@ -36,17 +36,17 @@
 
 **Проблема:** пользователь не видит, с какого времени переносится встреча.
 
-- [ ] Добавить prop `currentSlot: Slot` в интерфейс `RescheduleModalProps`
-- [ ] Передать `booking.slot` в `RescheduleModal` из `BookingDetailPage`
-- [ ] В модалке, перед списком слотов, добавить блок «Текущий слот»:
+- [x] Добавить prop `currentSlot: Slot` в интерфейс `RescheduleModalProps`
+- [x] Передать `booking.slot` в `RescheduleModal` из `BookingDetailPage`
+- [x] В модалке, перед списком слотов, добавить блок «Текущий слот»:
   ```tsx
   <Alert variant="light" color="blue" title="Текущее время встречи">
     {formatDate(currentSlot.startTime, 'dddd, D MMMM')} •{' '}
     {formatTime(currentSlot.startTime)} — {formatTime(currentSlot.endTime)}
   </Alert>
   ```
-- [ ] Запустить тесты + type-check
-- [ ] Сделать коммит: `feat: показывать текущий слот в модалке переноса`
+- [x] Запустить тесты + type-check
+- [x] Сделать коммит: `feat: показывать текущий слот в модалке переноса`
 
 ---
 

@@ -240,7 +240,9 @@ export const BookingDetailPage = reatomComponent(
         {cancelForm && <CancelBookingModal cancelForm={cancelForm} />}
 
         {/* Модальное окно переноса бронирования */}
-        {rescheduleForm && <RescheduleModal rescheduleForm={rescheduleForm} />}
+        {rescheduleForm && (
+          <RescheduleModal rescheduleForm={rescheduleForm} currentSlot={booking.slot} />
+        )}
       </Layout>
     );
   },

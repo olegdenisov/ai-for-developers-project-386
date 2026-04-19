@@ -17,6 +17,7 @@ import type { createRescheduleForm } from '../model/model'
 /** Пропсы модального окна переноса бронирования */
 interface RescheduleModalProps {
   rescheduleForm: ReturnType<typeof createRescheduleForm>
+  currentSlot: Slot
 }
 
 /**
@@ -24,7 +25,7 @@ interface RescheduleModalProps {
  * Слоты сгруппированы по дням, выбор через Radio.
  */
 export const RescheduleModal = reatomComponent(
-  ({ rescheduleForm }: RescheduleModalProps) => {
+  ({ rescheduleForm, currentSlot }: RescheduleModalProps) => {
     const { isOpen, availableSlots, form } = rescheduleForm
 
     const opened = isOpen()
@@ -63,6 +64,11 @@ export const RescheduleModal = reatomComponent(
       >
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
+            <Alert variant="light" color="blue" title="Текущее время встречи">
+              {formatDate(currentSlot.startTime, 'dddd, D MMMM')} •{' '}
+              {formatTime(currentSlot.startTime)} — {formatTime(currentSlot.endTime)}
+            </Alert>
+
             {isLoadingSlots && (
               <Group justify="center" py="xl">
                 <Loader size="sm" />
