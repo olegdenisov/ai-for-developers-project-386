@@ -20,10 +20,9 @@ describe('shared/ui/LoadingSpinner', () => {
   });
 
   it('должен принимать размер через пропсы', () => {
-    const { container } = render(<LoadingSpinner size="sm" />);
+    render(<LoadingSpinner size="sm" />);
 
-    // Проверяем что компонент рендерится с кастомным размером
-    const spinner = container.firstChild;
-    expect(spinner).toBeInTheDocument();
+    const loader = document.querySelector('[data-size="sm"]');
+    expect(loader).toBeInTheDocument();
   });
 });

@@ -8,9 +8,6 @@ import {
   createBooking,
   cancelBooking,
   clearCurrentBooking,
-  isFetchingBooking,
-  isCreatingBooking,
-  isCancellingBooking,
 } from './model';
 import type { Booking, CreateBookingRequest } from './types';
 import type { EventType } from '@entities/event-type';
@@ -277,61 +274,4 @@ describe('entities/booking/model', () => {
     });
   });
 
-  describe('computed states', () => {
-    describe('isFetchingBooking', () => {
-      it('должен отслеживать состояние загрузки', async () => {
-        vi.mocked(apiClient.getBooking).mockResolvedValue({
-          status: 200,
-          data: mockBooking,
-        } as unknown as Response);
-
-        expect(peek(isFetchingBooking)).toBe(false);
-
-        const promise = fetchBooking('booking-1');
-        expect(peek(isFetchingBooking)).toBe(true);
-
-        await promise;
-        expect(peek(isFetchingBooking)).toBe(false);
-      });
-    });
-
-    describe('isCreatingBooking', () => {
-      it('должен отслеживать состояние создания', async () => {
-        vi.mocked(apiClient.createBooking).mockResolvedValue({
-          status: 200,
-          data: mockBooking,
-        } as unknown as Response);
-
-        expect(peek(isCreatingBooking)).toBe(false);
-
-        const promise = createBooking({
-          eventTypeId: 'event-1',
-          slotId: 'slot-1',
-          guestName: 'Иван',
-          guestEmail: 'ivan@example.com',
-        });
-        expect(peek(isCreatingBooking)).toBe(true);
-
-        await promise;
-        expect(peek(isCreatingBooking)).toBe(false);
-      });
-    });
-
-    describe('isCancellingBooking', () => {
-      it('должен отслеживать состояние отмены', async () => {
-        vi.mocked(apiClient.cancelBooking).mockResolvedValue({
-          status: 200,
-          data: { ...mockBooking, status: 'cancelled' },
-        } as unknown as Response);
-
-        expect(peek(isCancellingBooking)).toBe(false);
-
-        const promise = cancelBooking('booking-1');
-        expect(peek(isCancellingBooking)).toBe(true);
-
-        await promise;
-        expect(peek(isCancellingBooking)).toBe(false);
-      });
-    });
-  });
 });

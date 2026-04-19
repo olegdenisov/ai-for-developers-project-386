@@ -1,4 +1,4 @@
-import { atom, action, wrap, withAsync, computed } from '@reatom/core';
+import { atom, action, wrap, withAsync } from '@reatom/core';
 import { apiClient } from '@shared/api';
 import { Booking, CreateBookingRequest } from './types';
 
@@ -60,15 +60,3 @@ export const clearCurrentBooking = action(() => {
   isBookingSuccessAtom.set(false);
 }, 'clearCurrentBooking');
 
-// Computed: check if operations are pending
-export const isFetchingBooking = computed(() => {
-  return fetchBooking.pending() > 0;
-}, 'isFetchingBooking');
-
-export const isCreatingBooking = computed(() => {
-  return createBooking.pending() > 0;
-}, 'isCreatingBooking');
-
-export const isCancellingBooking = computed(() => {
-  return cancelBooking.pending() > 0;
-}, 'isCancellingBooking');

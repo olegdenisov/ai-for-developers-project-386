@@ -7,7 +7,7 @@ interface LoadingSpinnerProps {
 export function LoadingSpinner({ size = 'md' }: LoadingSpinnerProps) {
   return (
     <Center py="xl">
-      <Loader size={size} />
+      <Loader size={size} data-size={size} />
     </Center>
   );
 }

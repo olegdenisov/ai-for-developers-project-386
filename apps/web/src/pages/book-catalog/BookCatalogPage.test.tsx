@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders as render } from '@/test/setup';
 import { BookCatalogPage } from './BookCatalogPage';
@@ -12,6 +12,9 @@ vi.mock('./model/model', () => ({
 import { handleEventTypeClick } from './model/model';
 
 describe('pages/book-catalog/BookCatalogPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   const mockEventTypes: EventType[] = [
     {
       id: '1',
@@ -98,14 +101,9 @@ describe('pages/book-catalog/BookCatalogPage', () => {
   it('должен вызывать handleEventTypeClick при клике на карточку', () => {
     render(<BookCatalogPage eventTypes={mockEventTypes} isLoading={false} />);
 
-    const card = screen.getByText('Встреча 30 мин').closest('[role="button"]') ||
-                 screen.getByText('Встреча 30 мин').parentElement;
+    const cards = screen.getAllByTestId('event-type-card');
+    fireEvent.click(cards[0]);
 
-    if (card) {
-      fireEvent.click(card);
-    }
-
-    // Проверяем что обработчик был вызван
-    expect(handleEventTypeClick).toBeDefined();
+    expect(handleEventTypeClick).toHaveBeenCalledWith('1');
   });
 });

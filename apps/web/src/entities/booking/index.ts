@@ -8,7 +8,4 @@ export {
   createBooking,
   cancelBooking,
   clearCurrentBooking,
-  isFetchingBooking,
-  isCreatingBooking,
-  isCancellingBooking,
 } from './model/model';
