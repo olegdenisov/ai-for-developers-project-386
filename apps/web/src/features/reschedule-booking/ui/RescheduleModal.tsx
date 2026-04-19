@@ -101,7 +101,7 @@ export const RescheduleModal = reatomComponent(
                     {sortedDays.map((day) => (
                       <Stack key={day} gap="xs">
                         <Text fw={600} size="sm">
-                          {formatDate(day)}
+                          {formatDate(day, 'dddd, D MMMM')}
                         </Text>
                         {slotsByDay[day].map((slot) => (
                           <Radio
