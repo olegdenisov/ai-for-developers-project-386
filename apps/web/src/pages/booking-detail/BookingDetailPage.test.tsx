@@ -161,7 +161,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
     expect(screen.getByText('На главную')).toBeInTheDocument();
   });
 
-  it('должен отображать ссылки на изменение и отмену', () => {
+  it('должен отображать кнопки переноса и отмены', () => {
     render(
       <BookingDetailPage
         booking={mockBooking}
@@ -169,11 +169,11 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       />
     );
 
-    expect(screen.getByText('Перенести')).toBeInTheDocument();
-    expect(screen.getByText('Отмена')).toBeInTheDocument();
+    expect(screen.getByText('Перенести встречу')).toBeInTheDocument();
+    expect(screen.getByText('Отменить встречу')).toBeInTheDocument();
   });
 
-  it('должен открывать модальное окно отмены при клике на Отмена', () => {
+  it('должен открывать модальное окно отмены при клике на Отменить встречу', () => {
     render(
       <BookingDetailPage
         booking={mockBooking}
@@ -182,14 +182,14 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       />
     );
 
-    const cancelLink = screen.getByText('Отмена');
+    const cancelLink = screen.getByText('Отменить встречу');
     fireEvent.click(cancelLink);
 
     // Проверяем что вызван open() для открытия модалки
     expect(mockCancelForm.open).toHaveBeenCalled();
   });
 
-  it('должен открывать модальное окно переноса при клике на Перенести', () => {
+  it('должен открывать модальное окно переноса при клике на Перенести встречу', () => {
     const mockRescheduleForm = {
       isOpen: Object.assign(vi.fn().mockReturnValue(false), { set: vi.fn() }),
       availableSlots: Object.assign(vi.fn().mockReturnValue([]), {
@@ -217,7 +217,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       />
     );
 
-    const rescheduleLink = screen.getByText('Перенести');
+    const rescheduleLink = screen.getByText('Перенести встречу');
     fireEvent.click(rescheduleLink);
 
     expect(mockRescheduleForm.isOpen.set).toHaveBeenCalledWith(true);
@@ -233,8 +233,8 @@ describe('pages/booking-detail/BookingDetailPage', () => {
       />
     );
 
-    expect(screen.queryByText('Перенести')).not.toBeInTheDocument();
-    expect(screen.queryByText('Отмена')).not.toBeInTheDocument();
+    expect(screen.queryByText('Перенести встречу')).not.toBeInTheDocument();
+    expect(screen.queryByText('Отменить встречу')).not.toBeInTheDocument();
   });
 
   it('должен корректно закрывать модальное окно через close()', () => {

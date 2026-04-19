@@ -7,7 +7,6 @@ import {
   Group,
   Card,
   Badge,
-  Anchor,
   Divider,
   Container,
   ThemeIcon,
@@ -201,21 +200,14 @@ export const BookingDetailPage = reatomComponent(
 
             {/* Действия — только для активных бронирований */}
             {booking.status === 'confirmed' && (
-              <Text ta="center">
-                Хотите внести изменения?{' '}
-                <Anchor component="button" type="button" onClick={handleReschedule}>
-                  Перенести
-                </Anchor>{' '}
-                или{' '}
-                <Anchor
-                  component="button"
-                  type="button"
-                  c="red"
-                  onClick={handleCancel}
-                >
-                  Отмена
-                </Anchor>
-              </Text>
+              <Group justify="center" gap="sm">
+                <Button variant="outline" onClick={handleReschedule}>
+                  Перенести встречу
+                </Button>
+                <Button variant="outline" color="red" onClick={handleCancel}>
+                  Отменить встречу
+                </Button>
+              </Group>
             )}
 
             <Divider my="xl" />
