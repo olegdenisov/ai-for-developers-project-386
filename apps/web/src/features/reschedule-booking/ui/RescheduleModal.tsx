@@ -27,7 +27,7 @@ interface RescheduleModalProps {
  */
 export const RescheduleModal = reatomComponent(
   ({ rescheduleForm, currentSlot }: RescheduleModalProps) => {
-    const { isOpen, availableSlots, form } = rescheduleForm
+    const { isOpen, availableSlots, form, retry } = rescheduleForm
 
     const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
@@ -90,7 +90,16 @@ export const RescheduleModal = reatomComponent(
 
             {!isLoadingSlots && slotsError && (
               <Alert color="red" title="Ошибка загрузки">
-                Не удалось загрузить доступные слоты. Попробуйте позже.
+                Не удалось загрузить доступные слоты.
+                <Button
+                  size="compact-sm"
+                  variant="subtle"
+                  color="red"
+                  mt="xs"
+                  onClick={() => retry()}
+                >
+                  Повторить
+                </Button>
               </Alert>
             )}
 

@@ -21,10 +21,14 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
   // Начальное состояние списка слотов (пустой массив с явным типом для withAsyncData)
   const emptySlots: Slot[] = []
 
+  // Счётчик для ручного повтора запроса слотов при ошибке
+  const retryTrigger = atom(0, `reschedule#${bookingId}.retryTrigger`)
+
   // Загрузка доступных слотов (следующие 14 дней) для данного типа события.
-  // Автоматически обновляется когда isOpen становится true.
+  // Автоматически обновляется когда isOpen становится true или при ручном повторе.
   const availableSlots = computed(async (): Promise<Slot[]> => {
     if (!isOpen()) return emptySlots
+    retryTrigger() // подписываемся для поддержки ручного повтора
 
     const today = new Date()
     // Используем локальные компоненты даты, чтобы избежать смещения в UTC- часовых поясах
@@ -77,5 +81,10 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
     form.submit.error.set(undefined)
   }, `reschedule#${bookingId}.close`)
 
-  return { isOpen, availableSlots, form, close }
+  // Повторить загрузку слотов без закрытия модалки (инкремент триггера)
+  const retry = action(() => {
+    retryTrigger.set((v) => v + 1)
+  }, `reschedule#${bookingId}.retry`)
+
+  return { isOpen, availableSlots, form, close, retry }
 }
