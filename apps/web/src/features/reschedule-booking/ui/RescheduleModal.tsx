@@ -40,10 +40,6 @@ export const RescheduleModal = reatomComponent(
     const isSubmitting = !form.submit.ready()
     const submitError = form.submit.error()
 
-    const handleClose = () => {
-      rescheduleForm.close()
-    }
-
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
       form.submit()
@@ -60,7 +56,6 @@ export const RescheduleModal = reatomComponent(
     }, {})
 
     const sortedDays = Object.keys(slotsByDay).sort()
-    const sortedDaysKey = sortedDays.join(',')
 
     // Сбрасываем фильтр при закрытии модалки — submit закрывает через isOpen.set(false), минуя handleClose
     useEffect(() => {
@@ -71,11 +66,10 @@ export const RescheduleModal = reatomComponent(
 
     // Сбрасываем фильтр если выбранный день исчез из обновлённых слотов (после retry)
     useEffect(() => {
-      const days = new Set(sortedDaysKey ? sortedDaysKey.split(',') : [])
-      if (selectedDay !== null && !days.has(selectedDay)) {
+      if (selectedDay !== null && !slotsByDay[selectedDay]) {
         setSelectedDay(null)
       }
-    }, [sortedDaysKey, selectedDay])
+    }, [slotsByDay, selectedDay])
 
     // При активном фильтре показываем только выбранный день
     const visibleDays = selectedDay ? sortedDays.filter((d) => d === selectedDay) : sortedDays
@@ -93,7 +87,7 @@ export const RescheduleModal = reatomComponent(
     return (
       <Modal
         opened={opened}
-        onClose={handleClose}
+        onClose={rescheduleForm.close}
         title="Перенести встречу"
         centered
         size="md"
@@ -193,7 +187,7 @@ export const RescheduleModal = reatomComponent(
             )}
 
             <Group justify="flex-end" wrap="nowrap">
-              <Button variant="subtle" onClick={handleClose} disabled={isSubmitting}>
+              <Button variant="subtle" onClick={rescheduleForm.close} disabled={isSubmitting}>
                 Отмена
               </Button>
               <Button

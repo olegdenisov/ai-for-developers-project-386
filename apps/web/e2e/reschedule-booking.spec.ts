@@ -29,11 +29,9 @@ test.describe('Перенос бронирования', () => {
     // Блок с текущим временем встречи
     await expect(page.getByText('Текущее время встречи')).toBeVisible();
 
-    // Ждём загрузки слотов (radio-кнопки)
+    // Ждём загрузки слотов и проверяем что таблетки по датам отображаются
     await expect(page.getByRole('radio').first()).toBeVisible({ timeout: 5000 });
-
-    // Проверяем что таблетки по датам отображаются (формат "D MMM", напр. "21 апр.")
-    await expect(page.getByRole('radio').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /\d+ \S+/ }).first()).toBeVisible();
   });
 
   test('пользователь может успешно перенести бронирование', async ({ page }) => {
