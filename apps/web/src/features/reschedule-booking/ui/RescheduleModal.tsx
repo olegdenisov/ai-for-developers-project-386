@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { reatomComponent } from '@reatom/react'
 import {
   Modal,
@@ -41,7 +41,6 @@ export const RescheduleModal = reatomComponent(
     const submitError = form.submit.error()
 
     const handleClose = () => {
-      setSelectedDay(null)
       rescheduleForm.close()
     }
 
@@ -61,8 +60,26 @@ export const RescheduleModal = reatomComponent(
     }, {})
 
     const sortedDays = Object.keys(slotsByDay).sort()
+    const sortedDaysKey = sortedDays.join(',')
+
+    // Сбрасываем фильтр при закрытии модалки — submit закрывает через isOpen.set(false), минуя handleClose
+    useEffect(() => {
+      if (!opened) {
+        setSelectedDay(null)
+      }
+    }, [opened])
+
+    // Сбрасываем фильтр если выбранный день исчез из обновлённых слотов (после retry)
+    useEffect(() => {
+      const days = new Set(sortedDaysKey ? sortedDaysKey.split(',') : [])
+      if (selectedDay !== null && !days.has(selectedDay)) {
+        setSelectedDay(null)
+      }
+    }, [sortedDaysKey, selectedDay])
+
     // При активном фильтре показываем только выбранный день
     const visibleDays = selectedDay ? sortedDays.filter((d) => d === selectedDay) : sortedDays
+    const selectedSlotData = selectedSlotId ? slots.find((s) => s.id === selectedSlotId) : null
 
     return (
       <Modal
@@ -96,7 +113,7 @@ export const RescheduleModal = reatomComponent(
                   variant="subtle"
                   color="red"
                   mt="xs"
-                  onClick={() => retry()}
+                  onClick={retry}
                 >
                   Повторить
                 </Button>
@@ -118,7 +135,14 @@ export const RescheduleModal = reatomComponent(
                         key={day}
                         variant={selectedDay === day ? 'filled' : 'default'}
                         size="compact-sm"
-                        onClick={() => setSelectedDay(selectedDay === day ? null : day)}
+                        onClick={() => {
+                          const newDay = selectedDay === day ? null : day
+                          setSelectedDay(newDay)
+                          // Сбрасываем выбранный слот если он не принадлежит новому дню
+                          if (newDay && selectedSlotId && !slotsByDay[newDay]?.some((s) => s.id === selectedSlotId)) {
+                            form.fields.newSlotId.set('')
+                          }
+                        }}
                       >
                         {formatDate(day, 'D MMM')}
                       </Button>
@@ -153,15 +177,12 @@ export const RescheduleModal = reatomComponent(
               </>
             )}
 
-            {selectedSlotId && (() => {
-              const selectedSlotData = slots.find((s) => s.id === selectedSlotId)
-              return selectedSlotData ? (
-                <Text size="sm" c="dimmed" ta="center">
-                  Вы выбрали: {formatDate(selectedSlotData.startTime, 'dddd, D MMMM')} •{' '}
-                  {formatTime(selectedSlotData.startTime)} — {formatTime(selectedSlotData.endTime)}
-                </Text>
-              ) : null
-            })()}
+            {selectedSlotData && (
+              <Text size="sm" c="dimmed" ta="center">
+                Вы выбрали: {formatDate(selectedSlotData.startTime, 'dddd, D MMMM')} •{' '}
+                {formatTime(selectedSlotData.startTime)} — {formatTime(selectedSlotData.endTime)}
+              </Text>
+            )}
 
             {submitError && (
               <Text c="red" size="sm">

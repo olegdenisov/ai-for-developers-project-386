@@ -207,6 +207,7 @@ describe('pages/booking-detail/BookingDetailPage', () => {
         reset: vi.fn(),
       },
       close: vi.fn(),
+      retry: vi.fn(),
     };
 
     render(
