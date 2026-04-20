@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { reatomComponent } from '@reatom/react'
 import {
   Modal,
@@ -6,11 +6,15 @@ import {
   Text,
   Group,
   Button,
-  Radio,
   Loader,
   Alert,
-  ScrollArea,
+  Box,
+  SimpleGrid,
+  Divider,
+  Paper,
 } from '@mantine/core'
+import { IconArrowNarrowRight } from '@tabler/icons-react'
+import dayjs from 'dayjs'
 import { formatDate, formatTime } from '@shared/lib'
 import type { Slot } from '@entities/slot'
 import type { createRescheduleForm } from '../model/model'
@@ -21,9 +25,31 @@ interface RescheduleModalProps {
   currentSlot: Slot
 }
 
+// Парсим строку YYYY-MM-DD как локальную дату (new Date('2026-04-20') даёт UTC-полночь,
+// что у пользователей в UTC-N сдвигает день на предыдущий).
+function localDateFromStr(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+// Группируем слоты по локальной дате (YYYY-MM-DD) в часовом поясе пользователя.
+// Нельзя использовать split('T')[0] — это UTC-дата, а не локальная.
+function groupSlotsByDay(slots: Slot[]): Record<string, Slot[]> {
+  return slots.reduce<Record<string, Slot[]>>((acc, slot) => {
+    const d = new Date(slot.startTime)
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    if (!acc[day]) acc[day] = []
+    acc[day].push(slot)
+    return acc
+  }, {})
+}
+
+const WEEKDAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+
 /**
- * Модальное окно выбора нового слота для переноса бронирования.
- * Слоты сгруппированы по дням, выбор через Radio.
+ * Модальное окно переноса бронирования.
+ * Шаг 1 — выбор дня в мини-календаре (14 дней, выровнено по дням недели).
+ * Шаг 2 — выбор времени из доступных слотов выбранного дня.
  */
 export const RescheduleModal = reatomComponent(
   ({ rescheduleForm, currentSlot }: RescheduleModalProps) => {
@@ -40,48 +66,54 @@ export const RescheduleModal = reatomComponent(
     const isSubmitting = !form.submit.ready()
     const submitError = form.submit.error()
 
+    const slotsByDay = useMemo(() => groupSlotsByDay(slots), [slots])
+    const selectedSlotData = selectedSlotId ? slots.find((s) => s.id === selectedSlotId) : null
+    const visibleSlots = selectedDay ? (slotsByDay[selectedDay] ?? []) : []
+
+    // Строим 14-дневную сетку с выравниванием по понедельнику
+    const { gridItems, monthLabel } = useMemo(() => {
+      const today = new Date()
+      // Смещение: сколько пустых ячеек добавить перед первым днём (0=Пн, 6=Вс)
+      const offset = (today.getDay() + 6) % 7
+
+      const days: { dateStr: string; dayNum: number; hasSlots: boolean }[] = []
+      const months = new Set<string>()
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(today)
+        d.setDate(today.getDate() + i)
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        days.push({ dateStr, dayNum: d.getDate(), hasSlots: !!slotsByDay[dateStr] })
+        // dayjs(d) — локальный Date-объект, locale('ru') настроен глобально в @shared/lib
+        months.add(dayjs(d).format('MMMM'))
+      }
+
+      return {
+        gridItems: [...(Array(offset).fill(null) as null[]), ...days],
+        monthLabel: Array.from(months).join(' — '),
+      }
+    }, [slotsByDay])
+
+    // Сбрасываем выбор дня при закрытии модалки
+    useEffect(() => {
+      if (!opened) setSelectedDay(null)
+    }, [opened])
+
+    // Сбрасываем выбор дня если после retry он исчез из доступных
+    useEffect(() => {
+      if (selectedDay && !slotsByDay[selectedDay]) setSelectedDay(null)
+    }, [slotsByDay, selectedDay])
+
+    const handleDaySelect = (dateStr: string) => {
+      setSelectedDay(dateStr)
+      // Сбрасываем выбранный слот, если он не принадлежит новому дню
+      if (selectedSlotId && !slotsByDay[dateStr]?.some((s) => s.id === selectedSlotId)) {
+        form.fields.newSlotId.set('')
+      }
+    }
+
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
       form.submit()
-    }
-
-    // Группируем слоты по локальной дате (YYYY-MM-DD) в часовом поясе пользователя.
-    // Нельзя использовать split('T')[0] — это UTC-дата, а не локальная.
-    const slotsByDay = slots.reduce<Record<string, Slot[]>>((acc, slot) => {
-      const d = new Date(slot.startTime)
-      const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      if (!acc[day]) acc[day] = []
-      acc[day].push(slot)
-      return acc
-    }, {})
-
-    const sortedDays = Object.keys(slotsByDay).sort()
-
-    // Сбрасываем фильтр при закрытии модалки — submit закрывает через isOpen.set(false), минуя handleClose
-    useEffect(() => {
-      if (!opened) {
-        setSelectedDay(null)
-      }
-    }, [opened])
-
-    // Сбрасываем фильтр если выбранный день исчез из обновлённых слотов (после retry)
-    useEffect(() => {
-      if (selectedDay !== null && !slotsByDay[selectedDay]) {
-        setSelectedDay(null)
-      }
-    }, [slotsByDay, selectedDay])
-
-    // При активном фильтре показываем только выбранный день
-    const visibleDays = selectedDay ? sortedDays.filter((d) => d === selectedDay) : sortedDays
-    const selectedSlotData = selectedSlotId ? slots.find((s) => s.id === selectedSlotId) : null
-
-    const handleDaySelect = (day: string) => {
-      const newDay = selectedDay === day ? null : day
-      setSelectedDay(newDay)
-      // Сбрасываем выбранный слот если он не принадлежит новому дню
-      if (newDay && selectedSlotId && !slotsByDay[newDay]?.some((s) => s.id === selectedSlotId)) {
-        form.fields.newSlotId.set('')
-      }
     }
 
     return (
@@ -94,30 +126,26 @@ export const RescheduleModal = reatomComponent(
       >
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
-            <Alert variant="light" color="blue" title="Текущее время встречи">
-              {formatDate(currentSlot.startTime, 'dddd, D MMMM')} •{' '}
-              {formatTime(currentSlot.startTime)} — {formatTime(currentSlot.endTime)}
-            </Alert>
+            {/* Текущее время встречи */}
+            <Group gap="xs">
+              <Text size="sm" c="dimmed">Сейчас:</Text>
+              <Text size="sm" fw={500}>
+                {formatDate(currentSlot.startTime, 'D MMMM, dddd')} •{' '}
+                {formatTime(currentSlot.startTime)} — {formatTime(currentSlot.endTime)}
+              </Text>
+            </Group>
 
             {isLoadingSlots && (
               <Group justify="center" py="xl">
                 <Loader size="sm" />
-                <Text size="sm" c="dimmed">
-                  Загрузка доступных слотов…
-                </Text>
+                <Text size="sm" c="dimmed">Загрузка доступных слотов…</Text>
               </Group>
             )}
 
             {!isLoadingSlots && slotsError && (
               <Alert color="red" title="Ошибка загрузки">
                 Не удалось загрузить доступные слоты.
-                <Button
-                  size="compact-sm"
-                  variant="subtle"
-                  color="red"
-                  mt="xs"
-                  onClick={retry}
-                >
+                <Button size="compact-sm" variant="subtle" color="red" mt="xs" onClick={retry}>
                   Повторить
                 </Button>
               </Alert>
@@ -131,59 +159,96 @@ export const RescheduleModal = reatomComponent(
 
             {!isLoadingSlots && !slotsError && slots.length > 0 && (
               <>
-                <ScrollArea type="scroll" offsetScrollbars>
-                  <Group gap="xs" wrap="nowrap" pb="xs">
-                    {sortedDays.map((day) => (
-                      <Button
-                        key={day}
-                        variant={selectedDay === day ? 'filled' : 'default'}
-                        size="compact-sm"
-                        onClick={() => handleDaySelect(day)}
-                      >
-                        {formatDate(day, 'D MMM')}
-                      </Button>
-                    ))}
-                  </Group>
-                </ScrollArea>
+                {/* Мини-календарь: выбор дня */}
+                <Box>
+                  <Text size="xs" c="dimmed" mb={6} tt="capitalize">{monthLabel}</Text>
 
-                <ScrollArea mah={360} offsetScrollbars>
-                  <Radio.Group
-                    value={selectedSlotId}
-                    onChange={(value) => form.fields.newSlotId.set(value)}
-                    name="newSlotId"
-                  >
-                    <Stack gap="sm">
-                      {visibleDays.map((day) => (
-                        <Stack key={day} gap="xs">
-                          <Text fw={600} size="sm">
-                            {formatDate(day, 'dddd, D MMMM')}
-                          </Text>
-                          {slotsByDay[day].map((slot) => (
-                            <Radio
-                              key={slot.id}
-                              value={slot.id}
-                              label={`${formatTime(slot.startTime)} — ${formatTime(slot.endTime)}`}
-                            />
-                          ))}
-                        </Stack>
+                  {/* Заголовки дней недели */}
+                  <SimpleGrid cols={7} spacing={4} mb={4}>
+                    {WEEKDAY_LABELS.map((label) => (
+                      <Text key={label} size="xs" ta="center" c="dimmed" fw={600}>{label}</Text>
+                    ))}
+                  </SimpleGrid>
+
+                  {/* Сетка дней: пустые ячейки для выравнивания + дни */}
+                  <SimpleGrid cols={7} spacing={4}>
+                    {gridItems.map((item, idx) =>
+                      item === null ? (
+                        <Box key={`empty-${idx}`} />
+                      ) : (
+                        <Button
+                          key={item.dateStr}
+                          variant={
+                            selectedDay === item.dateStr
+                              ? 'filled'
+                              : item.hasSlots
+                                ? 'light'
+                                : 'subtle'
+                          }
+                          disabled={!item.hasSlots}
+                          onClick={() => handleDaySelect(item.dateStr)}
+                          size="compact-md"
+                          h={40}
+                          w="100%"
+                          p={4}
+                          fw={selectedDay === item.dateStr ? 700 : 400}
+                        >
+                          {item.dayNum}
+                        </Button>
+                      )
+                    )}
+                  </SimpleGrid>
+                </Box>
+
+                {/* Выбор времени: появляется после выбора дня */}
+                {selectedDay && (
+                  <>
+                    <Divider
+                      label={formatDate(localDateFromStr(selectedDay), 'dddd, D MMMM')}
+                      labelPosition="left"
+                    />
+                    <SimpleGrid cols={3} spacing="xs">
+                      {visibleSlots.map((slot) => (
+                        <Button
+                          key={slot.id}
+                          variant={selectedSlotId === slot.id ? 'filled' : 'light'}
+                          onClick={() => form.fields.newSlotId.set(slot.id)}
+                          h="auto"
+                          py={8}
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          {formatTime(slot.startTime)} — {formatTime(slot.endTime)}
+                        </Button>
                       ))}
-                    </Stack>
-                  </Radio.Group>
-                </ScrollArea>
+                    </SimpleGrid>
+                  </>
+                )}
               </>
             )}
 
+            {/* Итоговая карточка: было → станет */}
             {selectedSlotData && (
-              <Text size="sm" c="dimmed" ta="center">
-                Вы выбрали: {formatDate(selectedSlotData.startTime, 'dddd, D MMMM')} •{' '}
-                {formatTime(selectedSlotData.startTime)} — {formatTime(selectedSlotData.endTime)}
-              </Text>
+              <Paper withBorder p="sm" radius="md" bg="green.0">
+                <Group justify="center" gap="md" wrap="nowrap">
+                  <Stack gap={1} align="center">
+                    <Text size="xs" c="dimmed">Было</Text>
+                    <Text size="sm" fw={500}>
+                      {formatDate(currentSlot.startTime, 'D MMM')} • {formatTime(currentSlot.startTime)}
+                    </Text>
+                  </Stack>
+                  <IconArrowNarrowRight size={16} />
+                  <Stack gap={1} align="center">
+                    <Text size="xs" c="dimmed">Станет</Text>
+                    <Text size="sm" fw={600} c="green.7">
+                      {formatDate(selectedSlotData.startTime, 'D MMM')} • {formatTime(selectedSlotData.startTime)}
+                    </Text>
+                  </Stack>
+                </Group>
+              </Paper>
             )}
 
             {submitError && (
-              <Text c="red" size="sm">
-                {submitError.message}
-              </Text>
+              <Text c="red" size="sm">{submitError.message}</Text>
             )}
 
             <Group justify="flex-end" wrap="nowrap">
