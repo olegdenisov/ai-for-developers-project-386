@@ -14,7 +14,6 @@ import {
   Paper,
 } from '@mantine/core'
 import { IconArrowNarrowRight } from '@tabler/icons-react'
-import dayjs from 'dayjs'
 import { formatDate, formatTime } from '@shared/lib'
 import type { Slot } from '@entities/slot'
 import type { createRescheduleForm } from '../model/model'
@@ -25,19 +24,14 @@ interface RescheduleModalProps {
   currentSlot: Slot
 }
 
-// Парсим строку YYYY-MM-DD как локальную дату (new Date('2026-04-20') даёт UTC-полночь,
-// что у пользователей в UTC-N сдвигает день на предыдущий).
-function localDateFromStr(dateStr: string): Date {
-  const [year, month, day] = dateStr.split('-').map(Number)
-  return new Date(year, month - 1, day)
+// Нельзя использовать split('T')[0] — это UTC-дата, а не локальная дата пользователя.
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-// Группируем слоты по локальной дате (YYYY-MM-DD) в часовом поясе пользователя.
-// Нельзя использовать split('T')[0] — это UTC-дата, а не локальная.
 function groupSlotsByDay(slots: Slot[]): Record<string, Slot[]> {
   return slots.reduce<Record<string, Slot[]>>((acc, slot) => {
-    const d = new Date(slot.startTime)
-    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const day = toLocalDateStr(new Date(slot.startTime))
     if (!acc[day]) acc[day] = []
     acc[day].push(slot)
     return acc
@@ -70,28 +64,28 @@ export const RescheduleModal = reatomComponent(
     const selectedSlotData = selectedSlotId ? slots.find((s) => s.id === selectedSlotId) : null
     const visibleSlots = selectedDay ? (slotsByDay[selectedDay] ?? []) : []
 
-    // Строим 14-дневную сетку с выравниванием по понедельнику
-    const { gridItems, monthLabel } = useMemo(() => {
-      const today = new Date()
-      // Смещение: сколько пустых ячеек добавить перед первым днём (0=Пн, 6=Вс)
-      const offset = (today.getDay() + 6) % 7
+    // Строим 14-дневную сетку с выравниванием по понедельнику.
+    // today стабилизирован через useMemo([]), иначе new Date() !== new Date() → gridItems пересчитывался бы каждый рендер.
+    const today = useMemo(() => new Date(), [])
+    const months = new Set<string>()
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today)
+      d.setDate(today.getDate() + i)
+      months.add(formatDate(d, 'MMMM'))
+    }
+    const monthLabel = Array.from(months).join(' — ')
 
+    const gridItems = useMemo(() => {
+      const offset = (today.getDay() + 6) % 7
       const days: { dateStr: string; dayNum: number; hasSlots: boolean }[] = []
-      const months = new Set<string>()
       for (let i = 0; i < 14; i++) {
         const d = new Date(today)
         d.setDate(today.getDate() + i)
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        const dateStr = toLocalDateStr(d)
         days.push({ dateStr, dayNum: d.getDate(), hasSlots: !!slotsByDay[dateStr] })
-        // dayjs(d) — локальный Date-объект, locale('ru') настроен глобально в @shared/lib
-        months.add(dayjs(d).format('MMMM'))
       }
-
-      return {
-        gridItems: [...(Array(offset).fill(null) as null[]), ...days],
-        monthLabel: Array.from(months).join(' — '),
-      }
-    }, [slotsByDay])
+      return [...(Array(offset).fill(null) as null[]), ...days]
+    }, [slotsByDay, today])
 
     // Сбрасываем выбор дня при закрытии модалки
     useEffect(() => {
@@ -204,7 +198,7 @@ export const RescheduleModal = reatomComponent(
                 {selectedDay && (
                   <>
                     <Divider
-                      label={formatDate(localDateFromStr(selectedDay), 'dddd, D MMMM')}
+                      label={formatDate(visibleSlots[0].startTime, 'dddd, D MMMM')}
                       labelPosition="left"
                     />
                     <SimpleGrid cols={3} spacing="xs">
