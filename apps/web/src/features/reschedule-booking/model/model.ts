@@ -1,4 +1,4 @@
-import { reatomForm, action } from '@reatom/core'
+import { reatomForm, action, type Action } from '@reatom/core'
 import { atom, computed, wrap, withAsyncData } from '@reatom/core'
 import { apiClient } from '@shared/api'
 import { parseApiError } from '@shared/lib'
@@ -82,7 +82,7 @@ export function createRescheduleForm(bookingId: string, eventTypeId: string) {
   }, `reschedule#${bookingId}.close`)
 
   // Повторить загрузку слотов без закрытия модалки (инкремент триггера)
-  const retry = action(() => {
+  const retry: Action<[], void> = action(() => {
     retryTrigger.set((v) => v + 1)
   }, `reschedule#${bookingId}.retry`)
 

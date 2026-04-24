@@ -1,6 +1,24 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures/mock-api';
 
 const BOOKING_ID = '22222222-2222-2222-2222-222222222222';
+
+async function openModal(page: Page) {
+  await page.getByRole('button', { name: 'Перенести встречу' }).click();
+  await expect(page.getByRole('heading', { name: 'Перенести встречу' })).toBeVisible();
+}
+
+async function selectFirstAvailableSlot(page: Page) {
+  const dialog = page.getByRole('dialog');
+  // Ждём первой активной кнопки дня (hasSlots=true → enabled)
+  const firstEnabledDay = dialog.getByRole('button', { name: /^\d+$/, disabled: false }).first();
+  await expect(firstEnabledDay).toBeVisible({ timeout: 5000 });
+  await firstEnabledDay.click();
+  // Выбираем первый слот времени
+  const firstTimeSlot = dialog.getByRole('button', { name: /\d{2}:\d{2}/ }).first();
+  await expect(firstTimeSlot).toBeVisible();
+  await firstTimeSlot.click();
+}
 
 test.describe('Перенос бронирования', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,71 +33,126 @@ test.describe('Перенос бронирования', () => {
 
   test('пользователь может открыть и закрыть модалку переноса', async ({ page }) => {
     await page.getByRole('button', { name: 'Перенести встречу' }).click();
-
     await expect(page.getByRole('heading', { name: 'Перенести встречу' })).toBeVisible();
 
-    // Закрываем по кнопке «Отмена»
     await page.getByRole('button', { name: /^Отмена$/ }).click();
     await expect(page.getByRole('heading', { name: 'Перенести встречу' })).not.toBeVisible();
   });
 
-  test('модалка показывает текущий слот и таблетки по датам', async ({ page }) => {
-    await page.getByRole('button', { name: 'Перенести встречу' }).click();
+  test('модалка показывает текущий слот и мини-календарь', async ({ page }) => {
+    await openModal(page);
+    const dialog = page.getByRole('dialog');
 
-    // Блок с текущим временем встречи
-    await expect(page.getByText('Текущее время встречи')).toBeVisible();
+    // Текст текущего времени встречи
+    await expect(dialog.getByText('Сейчас:')).toBeVisible();
 
-    // Ждём загрузки слотов и проверяем что таблетки по датам отображаются
-    await expect(page.getByRole('radio').first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole('button', { name: /\d+ \S+/ }).first()).toBeVisible();
+    // Ждём загрузки и проверяем кнопки дней в мини-календаре
+    await expect(dialog.getByRole('button', { name: /^\d+$/ }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('пользователь может успешно перенести бронирование', async ({ page }) => {
-    await page.getByRole('button', { name: 'Перенести встречу' }).click();
-    await expect(page.getByText('Текущее время встречи')).toBeVisible();
+    await openModal(page);
+    const dialog = page.getByRole('dialog');
 
-    // Ждём загрузки слотов (появление radio-кнопок)
-    await expect(page.getByRole('radio').first()).toBeVisible({ timeout: 5000 });
+    await selectFirstAvailableSlot(page);
 
-    // Выбираем второй слот (отличный от текущего)
-    await page.getByRole('radio').nth(1).click();
-
-    // Проверяем блок «Вы выбрали»
-    await expect(page.getByText(/Вы выбрали:/)).toBeVisible();
+    // Карточка «Было → Станет» появляется после выбора слота
+    await expect(dialog.getByText('Было')).toBeVisible();
+    await expect(dialog.getByText('Станет')).toBeVisible();
 
     // Подтверждаем перенос
-    await page.getByRole('button', { name: 'Перенести', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Перенести', exact: true }).click();
 
     // Модалка закрывается
     await expect(page.getByRole('heading', { name: 'Перенести встречу' })).not.toBeVisible();
   });
 
-  test('фильтр по дате показывает только слоты выбранного дня', async ({ page }) => {
-    await page.getByRole('button', { name: 'Перенести встречу' }).click();
+  test('выбор дня показывает слоты только этого дня', async ({ page }) => {
+    await openModal(page);
+    const dialog = page.getByRole('dialog');
 
-    // Ждём загрузки слотов
-    await expect(page.getByRole('radio').first()).toBeVisible({ timeout: 5000 });
-    const totalSlots = await page.getByRole('radio').count();
+    // До выбора дня слоты времени не видны
+    await expect(dialog.getByRole('button', { name: /^\d+$/, disabled: false }).first()).toBeVisible({ timeout: 5000 });
+    await expect(dialog.getByRole('button', { name: /\d{2}:\d{2}/ })).toHaveCount(0);
 
-    // Нажимаем первую таблетку дня
-    const firstDayPill = page.getByRole('button', { name: /\d+ \S+/ }).first();
-    await firstDayPill.click();
+    // После клика первого дня — 3 слота (по тестовому моку: 3 слота на день)
+    await dialog.getByRole('button', { name: /^\d+$/, disabled: false }).first().click();
+    await expect(dialog.getByRole('button', { name: /\d{2}:\d{2}/ })).toHaveCount(3);
 
-    // Слотов должно стать меньше или столько же (только один день)
-    const filteredSlots = await page.getByRole('radio').count();
-    expect(filteredSlots).toBeLessThanOrEqual(totalSlots);
-
-    // Повторный клик снимает фильтр — слоты возвращаются
-    await firstDayPill.click();
-    await expect(page.getByRole('radio')).toHaveCount(totalSlots);
+    // После клика второго дня — снова 3 слота (другой день)
+    await dialog.getByRole('button', { name: /^\d+$/, disabled: false }).nth(1).click();
+    await expect(dialog.getByRole('button', { name: /\d{2}:\d{2}/ })).toHaveCount(3);
   });
 
-  test('кнопка "Перенести" неактивна без выбора нового слота', async ({ page }) => {
-    await page.getByRole('button', { name: 'Перенести встречу' }).click();
+  test('кнопка "Перенести" неактивна без выбора слота и активируется после выбора', async ({ page }) => {
+    await openModal(page);
+    const dialog = page.getByRole('dialog');
 
-    // Ждём загрузки слотов прежде чем проверять кнопку
-    await expect(page.getByRole('radio').first()).toBeVisible({ timeout: 5000 });
+    // Сразу неактивна (нет выбранного слота)
+    await expect(dialog.getByRole('button', { name: 'Перенести', exact: true })).toBeDisabled();
 
-    await expect(page.getByRole('button', { name: 'Перенести', exact: true })).toBeDisabled();
+    // Выбираем день и слот — кнопка активируется
+    await selectFirstAvailableSlot(page);
+    await expect(dialog.getByRole('button', { name: 'Перенести', exact: true })).toBeEnabled();
+  });
+
+  test('отображает ошибку при конфликте слота (409)', async ({ page }) => {
+    // Переопределяем маршрут — возвращаем конфликт бронирования
+    await page.route(/\/public\/bookings\/[^/]+\/reschedule/, async (route) => {
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({ code: 'SLOT_ALREADY_BOOKED', message: 'Выбранный слот уже занят' }),
+      });
+    });
+
+    await openModal(page);
+    await selectFirstAvailableSlot(page);
+
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: 'Перенести', exact: true }).click();
+
+    // Модалка остаётся открытой, ошибка видна
+    await expect(page.getByRole('heading', { name: 'Перенести встречу' })).toBeVisible();
+    await expect(page.getByText('Выбранный слот уже занят')).toBeVisible();
+  });
+
+  test('показывает сообщение при отсутствии доступных слотов', async ({ page }) => {
+    // Переопределяем маршрут слотов — пустой список
+    await page.route(/\/public\/event-types\/[^/]+\/slots/, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    });
+
+    await openModal(page);
+
+    await expect(page.getByText('Нет доступных слотов в ближайшие 14 дней')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('показывает ошибку загрузки слотов и кнопку «Повторить»', async ({ page }) => {
+    // Переопределяем маршрут слотов — серверная ошибка
+    await page.route(/\/public\/event-types\/[^/]+\/slots/, async (route) => {
+      await route.fulfill({ status: 500 });
+    });
+
+    await openModal(page);
+
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('button', { name: 'Повторить' })).toBeVisible();
+  });
+
+  test('страница отражает новые данные бронирования после успешного переноса', async ({ page }) => {
+    await openModal(page);
+    await selectFirstAvailableSlot(page);
+
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: 'Перенести', exact: true }).click();
+
+    // Модалка закрылась — страница по-прежнему показывает статус confirmed
+    await expect(page.getByRole('heading', { name: 'Перенести встречу' })).not.toBeVisible();
+    await expect(page.getByText('Встреча запланирована')).toBeVisible();
   });
 });
