@@ -38,8 +38,8 @@ test.describe('Отмена бронирования', () => {
     // Ждем перехода на страницу деталей
     await expect(page.getByText('Встреча запланирована')).toBeVisible();
 
-    // Нажимаем на ссылку "Отмена"
-    await page.getByText('Отмена').click();
+    // Нажимаем кнопку "Отменить встречу"
+    await page.getByRole('button', { name: 'Отменить встречу' }).click();
 
     // Проверяем что открылось модальное окно
     await expect(page.getByRole('heading', { name: 'Отменить бронирование' })).toBeVisible();
@@ -71,7 +71,7 @@ test.describe('Отмена бронирования', () => {
     await expect(page.getByText('Встреча запланирована')).toBeVisible();
 
     // Открываем модалку отмены
-    await page.getByText('Отмена').click();
+    await page.getByRole('button', { name: 'Отменить встречу' }).click();
     await expect(page.getByRole('heading', { name: 'Отменить бронирование' })).toBeVisible();
 
     // Закрываем модалку по кнопке "Закрыть"

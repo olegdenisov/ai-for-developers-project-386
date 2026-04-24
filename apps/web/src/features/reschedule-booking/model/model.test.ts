@@ -88,6 +88,22 @@ describe('features/reschedule-booking/model', () => {
       expect(peek(isOpen)).toBe(false)
     })
 
+    it('успешный перенос: сбрасывает newSlotId (resetOnSubmit)', async () => {
+      vi.mocked(apiClient.rescheduleBooking).mockResolvedValue({
+        status: 200,
+        data: rescheduledBooking,
+      })
+
+      const { form } = createRescheduleForm('booking-1', 'event-1')
+      form.fields.newSlotId.set('slot-3')
+      expect(peek(form.fields.newSlotId)).toBe('slot-3')
+
+      await form.submit()
+
+      // resetOnSubmit сбрасывает поле в '' после успешного сабмита
+      expect(peek(form.fields.newSlotId)).toBe('')
+    })
+
     it('конфликт слота: выбрасывает "Выбранный слот уже занят"', async () => {
       vi.mocked(apiClient.rescheduleBooking).mockRejectedValue(
         new Error(
@@ -213,6 +229,33 @@ describe('features/reschedule-booking/model', () => {
 
         // данные остаются в начальном состоянии при ошибке
         expect(peek(availableSlots.data)).toEqual([])
+        unsub()
+      })
+
+      it('retry: повторно загружает слоты после ошибки', async () => {
+        let callCount = 0
+        vi.mocked(apiClient.getAvailableSlotsForEventType).mockImplementation(async () => {
+          callCount++
+          if (callCount === 1) throw new Error('Network error')
+          return { status: 200, data: [mockSlot] }
+        })
+
+        const { isOpen, availableSlots, retry } = createRescheduleForm('booking-1', 'event-1')
+        const unsub = availableSlots.subscribe(() => {})
+
+        isOpen.set(true)
+
+        await vi.waitFor(() => {
+          expect(availableSlots.error()).toBeInstanceOf(Error)
+        })
+
+        retry()
+
+        await vi.waitFor(() => {
+          expect(peek(availableSlots.data)).toEqual([mockSlot])
+        })
+
+        expect(apiClient.getAvailableSlotsForEventType).toHaveBeenCalledTimes(2)
         unsub()
       })
 

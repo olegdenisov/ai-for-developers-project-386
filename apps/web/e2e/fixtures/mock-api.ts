@@ -139,6 +139,21 @@ export const test = base.extend({
       }
     });
 
+    // PATCH /public/bookings/:id/reschedule — перенос бронирования
+    await page.route(/\/public\/bookings\/[^/]+\/reschedule/, async (route) => {
+      if (route.request().method() === 'PATCH') {
+        const postData = route.request().postDataJSON();
+        const newSlot = mockSlots.find((s) => s.id === postData?.newSlotId) ?? mockSlots[1];
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(createMockBooking({ slotId: newSlot.id, slot: newSlot })),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
     // POST /public/bookings/:id/cancel — отмена бронирования
     await page.route(/\/public\/bookings\/[^/]+\/cancel/, async (route) => {
       await route.fulfill({
